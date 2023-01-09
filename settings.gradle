@@ -23,5 +23,5 @@ dependencyResolutionManagement {
         // maven { url 'https://google.bintray.com/exoplayer/' }
     }
 }
-rootProject.name = "Pepul Liv"
+rootProject.name = "Android Template"
 include ':app'
