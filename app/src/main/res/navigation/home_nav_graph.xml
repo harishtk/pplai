@@ -4,7 +4,7 @@
     android:id="@+id/home_nav_graph">
 
     <fragment android:id="@+id/stream_list"
-        android:name="com.pepul.app.pepulliv.feature.stream.presentation.streamlist.StreamListFragment"
+        android:name="com.example.app.feature.stream.presentation.streamlist.StreamListFragment"
         android:label="Stream List">
 
         <action
@@ -29,11 +29,11 @@
     </fragment>
 
     <fragment android:id="@+id/watch_live"
-        android:name="com.pepul.app.pepulliv.feature.stream.presentation.watch.WatchFragment"
+        android:name="com.example.app.feature.stream.presentation.watch.WatchFragment"
         android:label="Watch Live" />
 
     <fragment android:id="@+id/publish_live"
-        android:name="com.pepul.app.pepulliv.feature.stream.presentation.publish.PublishFragment"
+        android:name="com.example.app.feature.stream.presentation.publish.PublishFragment"
         android:label="Publish Live" />
 
 </navigation>

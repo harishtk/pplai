@@ -38,7 +38,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.pepul.app.pepulliv"
+        applicationId "com.example.app"
         minSdk(project.ext.minSdk)
         targetSdk(project.ext.targetSdk)
         versionCode(generateVersionCode())

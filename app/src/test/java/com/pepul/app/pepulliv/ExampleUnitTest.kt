@@ -1,4 +1,4 @@
-package com.pepul.app.pepulliv
+package com.example.app
 
 import org.junit.Test
 
