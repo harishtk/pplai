@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Widget.App.LinearProgressIndicator" parent="Widget.MaterialComponents.LinearProgressIndicator">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.LinearProgressIndicator</item>
+        <item name="trackHeight">6dp</item>
+    </style>
+
+    <style name="AnimationStyle.Popup" parent="">
+        <item name="android:windowEnterAnimation">@anim/pop_enter</item>
+        <item name="android:windowExitAnimation">@anim/pop_exit</item>
+    </style>
+
+    <style name="Widget.App.EditText.OutlinedBox" parent="@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="Widget.App.EditText.OutlinedBox.Rounded" parent="@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="background">@drawable/bg_outline_rounded_alt</item>
+        <item name="android:background">@drawable/bg_outline_rounded_alt</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textColorHint">@color/text_secondary_alt</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+    </style>
+
+    <style name="Widget.App.EditText.Transparent" parent="@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="background">@null</item>
+        <item name="android:background">@null</item>
+    </style>
+
+    <style name="Widget.App.EditText.Transparent.Bold" parent="@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox">
+        <item name="android:textAppearance">@style/Base.TextAppearance.Bold</item>
+        <item name="background">@null</item>
+        <item name="android:background">@null</item>
+    </style>
+
+    <style name="Widget.App.EditText.OutlinedBox.Alt" parent="Widget.App.EditText">
+        <item name="android:background">@drawable/bg_outline_curved_secondary</item>
+        <item name="background">@drawable/bg_outline_curved_secondary</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+    </style>
+
+    <style name="Widget.App.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:textAppearance">@style/Base.TextAppearance</item>
+    </style>
+
+    <style name="MaterialAlertDialog.App" parent="MaterialAlertDialog.MaterialComponents">
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent</item>
+        <item name="android:backgroundDimAmount">0.6</item>
+    </style>
+
+    <style name="MaterialAlertDialog.App.Title.Text" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textAppearance">@style/Base.TextAppearance.Bold</item>
+    </style>
+
+    <style name="MaterialAlertDialog.App.Body.Text" parent="MaterialAlertDialog.MaterialComponents.Body.Text">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textAppearance">@style/Base.TextAppearance</item>
+    </style>
+
+    <style name="Widget.App.Button.TextButton.Dialog" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.SmallComponent</item>
+    </style>
+
+    <style name="Widget.App.Button.TextButton.Dialog.Outline" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.SmallComponent</item>
+    </style>
+
+    <style name="Widget.App.Button.TextButton.Dialog.Alt" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton.Alt</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.SmallComponent</item>
+    </style>
+
+    <style name="Widget.App.ImageButton" parent="">
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="background">@drawable/ripple_rounded</item>
+        <item name="android:background">@drawable/ripple_rounded</item>
+    </style>
+
+    <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+    </style>
+
+    <style name="Widget.App.Button.Alt" parent="Widget.MaterialComponents.Button">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.Alt</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+    </style>
+
+    <style name="Widget.App.TextButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+    </style>
+
+    <style name="Widget.App.TextButton.Alt" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton.Alt</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+    </style>
+
+    <style name="Widget.App.FancyButton" parent="Widget.MaterialComponents.Button">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.FancyButton</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+    </style>
+
+    <style name="Widget.App.Button.Small" parent="Widget.App.Button">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+    </style>
+
+    <style name="Widget.App.FancyButton.Small" parent="Widget.App.FancyButton">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+    </style>
+
+    <style name="Widget.App.Button.Tiny" parent="Widget.MaterialComponents.Button">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">@dimen/text_size_tiny</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="minWidth">0dp</item>
+        <item name="minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="iconSize">16dp</item>
+        <item name="iconPadding">2dp</item>
+    </style>
+
+    <style name="Widget.App.FancyButton.Tiny" parent="Widget.MaterialComponents.Button">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.FancyButton</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">@dimen/text_size_tiny</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="minWidth">0dp</item>
+        <item name="minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="iconSize">16dp</item>
+        <item name="iconPadding">2dp</item>
+    </style>
+
+    <style name="Widget.App.FancyButton.Outline" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.FancyButton</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">@dimen/text_size_tiny</item>
+        <item name="strokeColor">@color/teal_200</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="minWidth">0dp</item>
+        <item name="minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="iconSize">16dp</item>
+        <item name="iconPadding">2dp</item>
+    </style>
+
+    <style name="Widget.App.Button.Outline" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="strokeColor">@color/white</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+    </style>
+
+    <style name="Widget.App.Button.Outline.Small" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">@dimen/text_size_very_small</item>
+        <item name="strokeColor">@color/white</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+    </style>
+
+    <style name="Widget.App.Button.Outline.Tiny" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="elevation">0dp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="strokeColor">@color/white</item>
+        <item name="android:textSize">@dimen/text_size_tiny</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="minWidth">0dp</item>
+        <item name="minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="iconSize">16dp</item>
+        <item name="iconPadding">2dp</item>
+        <item name="iconTint">@color/white</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button" parent="">
+        <item name="colorPrimary">@color/teal_200</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+        <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.Alt" parent="">
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+        <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+    </style>
+
+    <style name="ThemeOverlay.App.FancyButton" parent="">
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+        <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.TextButton" parent="">
+        <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+        <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+        <item name="android:textAppearance">@style/Base.TextAppearance.Bold</item>
+        <item name="colorPrimary">@color/teal_200</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.TextButton.Danger" parent="">
+        <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+        <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+        <item name="android:textAppearance">@style/Base.TextAppearance.Bold</item>
+        <item name="colorPrimary">@color/purple_500</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Button.TextButton.Alt" parent="">
+        <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+        <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
+        <item name="android:textAppearance">@style/Base.TextAppearance.Bold</item>
+        <item name="colorPrimary">@color/text_secondary_alt</item>
+    </style>
+
+    <style name="Widget.App.Dialog" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:windowMinWidthMajor">95%</item>
+        <item name="android:windowMinWidthMinor">95%</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowAnimationStyle">@style/CenterDialogStyleParent</item>
+    </style>
+
+    <style name="Widget.App.Dialog.Small" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:windowMinWidthMajor">70%</item>
+        <item name="android:windowMinWidthMinor">70%</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowAnimationStyle">@style/CenterDialogStyleParent</item>
+    </style>
+
+    <style name="Widget.App.Dialog.FullScreen" parent="Theme.AppCompat">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:windowMinWidthMajor">100%</item>
+        <item name="android:windowMinWidthMinor">100%</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <style name="CenterDialogStyleParent">
+        <item name="android:windowEnterAnimation">@anim/scale_in_animation</item>
+        <item name="android:windowExitAnimation">@anim/scale_out_animation</item>
+    </style>
+
+    <style name="AnimationStyle.Dialog" parent="" />
+
+    <style name="AnimationStyle.Dialog.Default" parent="">
+        <item name="android:windowEnterAnimation">@anim/fade_in_anim</item>
+        <item name="android:windowExitAnimation">@anim/fade_out_anim</item>
+    </style>
+
+    <style name="ShapeAppearance.App.MediumComponent" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/default_corner_size</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.App" parent="" />
+
+    <style name="ShapeAppearanceOverlay.App.Circle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+
+    <style name="ShapeAppearance.App.MediumComponent.Rounded" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/default_corner_size</item>
+    </style>
+
+    <style name="ShapeAppearance.App.LargeComponent.Rounded" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/corner_size_large</item>
+    </style>
+
+    <style name="ShapeAppearance.App.SmallComponent.Rounded" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+
+    <style name="TextAppearance.App.Subtitle1" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="fontFamily">@font/roboto_regular</item>
+        <item name="android:fontFamily">@font/roboto_regular</item>
+    </style>
+
+    <style name="TextAppearance.App.Caption" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="fontFamily">@font/roboto_regular</item>
+        <item name="android:fontFamily">@font/roboto_regular</item>
+    </style>
+
+
+    <style name="TextStyle.Medium" parent="Base.TextAppearance">
+        <item name="android:textSize">@dimen/text_size_medium</item>
+    </style>
+
+    <style name="TextStyle.Medium.Bold" parent="Base.TextAppearance.Bold">
+        <item name="android:textSize">@dimen/text_size_medium</item>
+    </style>
+
+    <style name="TextStyle.Medium.Heavy" parent="Base.TextAppearance.Heavy">
+        <item name="android:textSize">@dimen/text_size_medium</item>
+    </style>
+
+    <style name="TextStyle.Tiny" parent="Base.TextAppearance">
+        <item name="android:textSize">@dimen/text_size_tiny</item>
+    </style>
+
+    <style name="TextStyle.Tiny.Bold" parent="Base.TextAppearance.Bold">
+        <item name="android:textSize">@dimen/text_size_tiny</item>
+    </style>
+
+    <style name="TextStyle.Small" parent="Base.TextAppearance">
+        <item name="android:textSize">@dimen/text_size_small</item>
+    </style>
+
+    <style name="TextStyle.Small.Bold" parent="Base.TextAppearance.Bold">
+        <item name="android:textSize">@dimen/text_size_small</item>
+    </style>
+
+    <style name="TextStyle.Small.Heavy" parent="Base.TextAppearance.Heavy">
+        <item name="android:textSize">@dimen/text_size_small</item>
+    </style>
+
+    <style name="TextStyle.VerySmall" parent="Base.TextAppearance">
+        <item name="android:textSize">@dimen/text_size_very_small</item>
+    </style>
+
+    <style name="TextStyle.VerySmall.Medium" parent="Base.TextAppearance.Medium">
+        <item name="android:textSize">@dimen/text_size_very_small</item>
+    </style>
+
+    <style name="TextStyle.VerySmall.Bold" parent="Base.TextAppearance.Bold">
+        <item name="android:textSize">@dimen/text_size_very_small</item>
+    </style>
+
+    <style name="TextStyle.VerySmall.Heavy" parent="Base.TextAppearance.Heavy">
+        <item name="android:textSize">@dimen/text_size_very_small</item>
+    </style>
+
+    <style name="TextStyle.Large" parent="Base.TextAppearance">
+        <item name="android:textSize">@dimen/text_size_large</item>
+    </style>
+
+    <style name="TextStyle.Large.Bold" parent="Base.TextAppearance.Bold">
+        <item name="android:textSize">@dimen/text_size_large</item>
+    </style>
+
+    <style name="TextStyle.Huge.Bold" parent="Base.TextAppearance.Bold">
+        <item name="android:textSize">@dimen/text_size_huge</item>
+    </style>
+
+    <style name="TextStyle.Huge" parent="Base.TextAppearance">
+        <item name="android:textSize">@dimen/text_size_huge</item>
+    </style>
+
+    <style name="TextStyle.Large.Heavy" parent="Base.TextAppearance.Heavy">
+        <item name="android:textSize">@dimen/text_size_large</item>
+    </style>
+
+    <style name="Base.TextAppearance.Light" parent="TextAppearance.AppCompat">
+        <item name="fontFamily">@font/roboto_light</item>
+        <item name="android:fontFamily">@font/roboto_light</item>
+    </style>
+
+    <style name="Base.TextAppearance.Bold" parent="TextAppearance.AppCompat">
+        <item name="fontFamily">@font/roboto_bold</item>
+        <item name="android:fontFamily">@font/roboto_bold</item>
+    </style>
+
+    <style name="Base.TextAppearance.Heavy" parent="TextAppearance.AppCompat">
+        <item name="fontFamily">@font/roboto_bold</item>
+        <item name="android:fontFamily">@font/roboto_bold</item>
+    </style>
+
+    <style name="Base.TextAppearance.Medium" parent="TextAppearance.AppCompat">
+        <item name="fontFamily">@font/roboto_medium</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
+    </style>
+
+    <style name="Base.TextAppearance" parent="TextAppearance.AppCompat">
+        <item name="fontFamily">@font/roboto_regular</item>
+        <item name="android:fontFamily">@font/roboto_regular</item>
+    </style>
+
+</resources>

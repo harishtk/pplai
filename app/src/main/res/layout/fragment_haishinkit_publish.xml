@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    android:keepScreenOn="true">
+
+    <com.haishinkit.view.HkSurfaceView
+        android:id="@+id/surface_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.haishinkit.view.HkTextureView
+        android:id="@+id/texture_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/switch_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginStart="16px"
+            android:layout_marginTop="16px"
+            android:layout_marginEnd="16px"
+            android:layout_marginBottom="16px"
+            android:text="Switch"
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/filter_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="16px"
+            android:layout_marginTop="16px"
+            android:layout_marginEnd="16px"
+            android:layout_marginBottom="16px"
+            android:text="Normal"
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/save_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="false"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="16px"
+            android:layout_marginTop="16px"
+            android:layout_marginEnd="16px"
+            android:layout_marginBottom="16px"
+            android:text="Save"
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="16px"
+            android:layout_marginTop="16px"
+            android:layout_marginEnd="16px"
+            android:layout_marginBottom="16px"
+            android:text="Publish"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/stream_status_text"
+            style="@style/TextStyle.Medium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="@dimen/inset_small"
+            android:layout_marginTop="@dimen/inset_small"
+            android:layout_marginEnd="@dimen/inset_small"
+            android:layout_marginBottom="@dimen/inset_small"
+            android:gravity="center_horizontal"
+            android:shadowColor="@color/black"
+            android:shadowDx="0.5"
+            android:shadowDy="0.5"
+            android:shadowRadius="1"
+            android:text="Please wait.."
+            android:textColor="@color/white"
+            android:visibility="visible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.5"
+            app:layout_constraintVertical_chainStyle="packed" />
+    </RelativeLayout>
+
+    <FrameLayout android:id="@+id/live_record_button"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_margin="@dimen/touchable_padding_large"
+        android:background="@drawable/ripple_rounded"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="@dimen/default_fab_elevation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/iv_switch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintVertical_bias="0.7">
+
+        <ImageView android:id="@+id/outline_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/bg_rounded_outline_white"
+            android:contentDescription="@string/content_description_live_record_button"/>
+
+        <ImageView android:id="@+id/center_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="20dp"
+            android:src="@drawable/squared_fill"
+            android:contentDescription="@string/content_description_live_record_button"/>
+
+    </FrameLayout>
+
+    <ImageView android:id="@+id/iv_switch"
+        android:layout_width="@dimen/xxlarge_icon_size"
+        android:layout_height="@dimen/xxlarge_icon_size"
+        android:layout_margin="@dimen/default_touchable_inset"
+        android:src="@drawable/ic_switch"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@drawable/ripple_rounded"
+        app:layout_constraintTop_toBottomOf="@id/live_record_button"
+        app:layout_constraintEnd_toEndOf="@id/live_record_button"
+        app:layout_constraintStart_toStartOf="@id/live_record_button"
+        app:layout_constraintBottom_toTopOf="@id/iv_filter"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <ImageView android:id="@+id/iv_filter"
+        android:layout_width="@dimen/xxlarge_icon_size"
+        android:layout_height="@dimen/xxlarge_icon_size"
+        android:layout_margin="@dimen/default_touchable_inset"
+        android:src="@drawable/ic_baseline_filter_alt_24"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@drawable/ripple_rounded"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/iv_switch"
+        app:layout_constraintEnd_toEndOf="@id/live_record_button"
+        app:layout_constraintStart_toStartOf="@id/live_record_button"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <LinearLayout android:orientation="horizontal"
+        android:id="@+id/live_label_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/inset_small"
+        android:background="@drawable/round_corner_red"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintVertical_bias="0.0"
+        tools:visibility="visible">
+
+        <ImageView
+            android:layout_width="@dimen/default_icon_size"
+            android:layout_height="@dimen/default_icon_size"
+            android:layout_marginStart="@dimen/inset_small"
+            android:src="@drawable/ic_watch"
+            android:layout_gravity="center"/>
+
+        <TextView style="@style/TextStyle.VerySmall.Heavy"
+            android:id="@+id/watch_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/inset_very_small"
+            android:textColor="@color/white"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            app:layout_constraintHorizontal_bias="0.0"
+            tools:text="1k"/>
+
+        <TextView style="@style/TextStyle.VerySmall.Bold"
+            android:id="@+id/live_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/round_corner_red"
+            android:gravity="center"
+            android:paddingBottom="10dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="10dp"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"
+            android:visibility="visible"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintVertical_bias="0.0"
+            tools:text="LIVE  00:00"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    <tyrantgit.widget.HeartLayout android:id="@+id/heart_layout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/input_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.5"
+        app:layout_constraintHeight_percent="0.5" />
+
+    <FrameLayout android:id="@+id/live_comments_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/input_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.6"
+        app:layout_constraintHeight_percent="0.5"
+        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.0">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/live_comments_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:reverseLayout="false"
+            tools:listitem="@layout/comment_item"/>
+
+    </FrameLayout>
+
+    <RelativeLayout android:id="@+id/input_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/comment_input_background"
+        android:padding="@dimen/inset_very_small"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/ed_message"
+            style="@style/Widget.App.EditText.OutlinedBox.Rounded"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_touchable_inset"
+            android:layout_marginTop="@dimen/default_touchable_inset"
+            android:layout_marginEnd="@dimen/default_touchable_inset"
+            android:layout_marginBottom="@dimen/default_touchable_inset"
+            android:layout_toStartOf="@id/send_button"
+            android:hint="Write.."
+            android:inputType="textMultiLine"
+            android:maxHeight="@dimen/multiline_text_max_height"
+            android:maxLength="100"
+            android:maxLines="2"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="10dp"
+            android:textAppearance="@style/Base.TextAppearance"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_size_very_small" />
+
+        <ImageView
+            android:id="@+id/send_button"
+            android:layout_width="@dimen/xlarge_icon_size"
+            android:layout_height="@dimen/xlarge_icon_size"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginHorizontal="@dimen/default_touchable_inset"
+            android:background="@drawable/rounded_fill"
+            android:backgroundTint="@color/red_200"
+            android:padding="6dp"
+            android:src="@drawable/ic_baseline_send_24" />
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

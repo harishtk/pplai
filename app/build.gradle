@@ -1,0 +1,208 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+    id 'com.google.dagger.hilt.android'
+    id 'kotlin-parcelize'
+}
+
+
+ext {
+    versionMajor = 1 // Major
+    versionMinor = 0 // Minor
+    versionPatch = 1 // Patches, updates
+    versionClassifier = null
+    versionRevision = "-revision-1"
+    isSnapshot = false
+    minSdk = 26
+    targetSdk = 33
+}
+
+android {
+    compileSdk COMPILE_SDK_VERSION as int
+
+    signingConfigs {
+        Properties localProps = new Properties()
+        if (rootProject.file('local.properties').exists()) {
+            localProps.load(rootProject.file('local.properties').newDataInputStream())
+        }
+        release {
+            /*storeFile file(localProps.RELEASE_STORE_FILE)
+            storePassword localProps.RELEASE_STORE_PASSWORD
+            keyAlias localProps.RELEASE_KEY_ALIAS
+            keyPassword localProps.RELEASE_KEY_PASSWORD*/
+
+            /*enableV3Signing = true
+            enableV4Signing = true*/
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.pepul.app.pepulliv"
+        minSdk(project.ext.minSdk)
+        targetSdk(project.ext.targetSdk)
+        versionCode(generateVersionCode())
+        versionName(generateVersionName())
+        resConfigs "en"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    sourceSets {
+        main {
+            // The libs directory contains prebuilt libraries that are used by the
+            // app's library defined in CMakeLists.txt via an IMPORTED target.
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+    packagingOptions {
+        pickFirst "**/lib/**"
+    }
+
+    flavorDimensions "default"
+    productFlavors {
+        dev {
+            dimension "default"
+
+            // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
+            buildConfigField "String", "BASE_URL", '"http://43.205.53.52/api/v1/"'
+            buildConfigField "String", "THUMBNAIL_BASE_URL", '"http://43.205.53.52/thumbnail/"'
+            // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
+            buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
+            buildConfigField "String", "ENV", '"dev"'
+        }
+
+        prod {
+            dimension "default"
+
+            // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
+            buildConfigField "String", "BASE_URL", '"http://43.205.53.52/api/v1/"'
+            buildConfigField "String", "THUMBNAIL_BASE_URL", '"http://43.205.53.52/thumbnail/"'
+            // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
+            buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
+            buildConfigField "String", "ENV", '"prod"'
+        }
+    }
+}
+
+dependencies {
+    implementation(fileTree(includes: ["*.jar", "*.aar"], dir: "libs"))
+
+    implementation 'androidx.core:core-ktx:1.7.0'
+
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
+    implementation("androidx.core:core-splashscreen:1.0.0")
+
+    /* Google libs */
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+    implementation "androidx.datastore:datastore:1.0.0"
+
+    /* Hilt */
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
+
+    /* Timber */
+    implementation 'com.jakewharton.timber:timber:5.0.1'
+
+    /* EventBus */
+    implementation 'org.greenrobot:eventbus:3.3.1'
+
+    /* Retrofit */
+    def retrofit_version = "2.9.0"
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
+
+    /* Exoplayer */
+    /*implementation "com.google.android.exoplayer:exoplayer-core:$exoplayer_version"
+    implementation "com.google.android.exoplayer:exoplayer-ui:$exoplayer_version"
+    implementation "com.google.android.exoplayer:extension-rtmp:$exoplayer_version"
+    implementation "com.google.android.exoplayer:exoplayer:$exoplayer_version"*/
+
+    /* Exoplayer */
+    /*implementation 'com.google.android.exoplayer:exoplayer:2.17.1'
+    androidTestImplementation 'junit:junit:4.12'*/
+
+    /* Navigation Components */
+    def nav_version = "2.5.3"
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+    implementation("androidx.hilt:hilt-navigation:1.0.0")
+    implementation("androidx.hilt:hilt-navigation-fragment:1.0.0")
+
+    /* Lifecycle */
+    def lifecycle_version = "2.5.1"
+    def lifecycle_view_model_version = "2.4.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_view_model_version"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+    implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_view_model_version"
+    implementation "androidx.lifecycle:lifecycle-common:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-process:$lifecycle_version"
+
+    def glide_version = "4.13.0"
+    implementation "com.github.bumptech.glide:glide:$glide_version"
+    kapt "com.github.bumptech.glide:compiler:$glide_version"
+
+    /* Socket Connection */
+    implementation("io.socket:socket.io-client:2.0.0") {
+        exclude group: 'org.json', module: 'json'
+    }
+
+    /* Time Convertor */
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.1")
+
+    /* Lottie Animation */
+    implementation 'com.airbnb.android:lottie:5.0.3'
+
+    implementation 'com.facebook.shimmer:shimmer:0.5.0'
+
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+}
+
+@SuppressWarnings("GrMethodMayBeStatic")
+private Integer generateVersionCode() {
+    return ext.minSdk * 10000000 + ext.versionMajor * 10000 + ext.versionMinor * 100 + ext.versionPatch
+}
+
+@SuppressWarnings("GrMethodMayBeStatic")
+private String generateVersionName() {
+    String versionName = "${ext.versionMajor}.${ext.versionMinor}.${ext.versionPatch}"
+    if (ext.versionClassifier == null && ext.isSnapshot) {
+        ext.versionClassifier = "SNAPSHOT"
+    }
+
+    if (ext.versionClassifier != null) {
+        versionName += "-" + ext.versionClassifier
+    }
+    return versionName;
+}

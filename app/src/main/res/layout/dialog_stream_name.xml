@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@null">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="@drawable/bg_curved_white">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layout_input_streamHost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textfield.TextInputEditText style="@style/Widget.AppCompat.EditText"
+                android:id="@+id/ed_streamHost"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:hint="@string/ip_host" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layout_input_streamName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/layout_input_streamHost">
+
+            <com.google.android.material.textfield.TextInputEditText style="@style/Widget.AppCompat.EditText"
+                android:id="@+id/ed_streamName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:hint="@string/stream_name"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Space android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_below="@id/layout_input_streamName"/>
+
+        <TextView android:id="@+id/tv_urlPreview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:layout_below="@id/divider"
+            tools:text="rtmp://localhost:1935/live/"/>
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_urlPreview"
+            android:background="@drawable/border_coloured">
+
+            <Button style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_weight="1"
+                android:id="@+id/btn_cancel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/label_cancel"/>
+
+            <Button style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_weight="1"
+                android:id="@+id/btn_go"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/label_go"/>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+    </RelativeLayout>
+
+</FrameLayout>

@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Pepul Liv</string>
+
+    <string name="start_publishing">Start Publishing</string>
+    <string name="stop_publishing">Stop Publishing</string>
+    <string name="started_publishing">Publishing Started</string>
+    <string name="stopped_publishing">Publishing Stopped</string>
+    <string name="disconnected_publishing">Publishing Disconnected</string>
+    <string name="failed_publishing">Failed To Connect</string>
+
+    <string name="error_empty_url">url is empty</string>
+
+    <string name="publishing_label">LIVE  %1$s:%2$s</string>
+    <string name="label_publish">Publish</string>
+    <string name="label_watch">Watch</string>
+    <string name="label_go">GO</string>
+    <string name="label_cancel">Cancel</string>
+    <string name="stream_name">Stream Name</string>
+    <string name="retry">Retry</string>
+    <string name="url">URL</string>
+    <string name="ip_host">Host / IP Address</string>
+    <string name="watch_here">Watch here!</string>
+
+    <string name="something_went_wrong_try_later">Something went wrong! try again later.</string>
+    <string name="check_your_internet">Please check your internet connection!</string>
+    <string name="unknown_error">Unknown Error</string>
+    <string name="streams">Streams</string>
+    <string name="initializing">Initializing..</string>
+    <string name="content_description_live_record_button">Live record button</string>
+    <string name="content_description_login_button">Login Button</string>
+    <string name="label_yes">Yes</string>
+    <string name="content_description_options">Options</string>
+    <string name="content_description_no_internet">No Internet</string>
+</resources>
