@@ -38,7 +38,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.app"
+        applicationId "com.pepulai.app"
         minSdk(project.ext.minSdk)
         targetSdk(project.ext.targetSdk)
         versionCode(generateVersionCode())
@@ -88,10 +88,10 @@ android {
             dimension "default"
 
             // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
-            buildConfigField "String", "BASE_URL", '"http://43.205.53.52/api/v1/"'
+            buildConfigField "String", "BASE_URL", '"http://43.205.53.52/api/"'
             buildConfigField "String", "THUMBNAIL_BASE_URL", '"http://43.205.53.52/thumbnail/"'
             // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
-            buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
+            buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52"'
             buildConfigField "String", "ENV", '"dev"'
         }
 

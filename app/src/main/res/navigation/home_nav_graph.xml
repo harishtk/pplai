@@ -3,37 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/home_nav_graph">
 
-    <fragment android:id="@+id/stream_list"
-        android:name="com.example.app.feature.stream.presentation.streamlist.StreamListFragment"
-        android:label="Stream List">
-
-        <action
-            android:id="@+id/action_stream_list_to_watch_live"
-            app:destination="@id/watch_live"
-            app:enterAnim="@anim/fragment_open_enter"
-            app:exitAnim="@anim/fragment_open_exit"
-            app:popEnterAnim="@anim/fragment_close_enter"
-            app:popExitAnim="@anim/fragment_close_exit"
-            app:launchSingleTop="true"
-            app:popUpToInclusive="false" />
-
-        <action
-            android:id="@+id/action_stream_list_to_publish_live"
-            app:destination="@id/publish_live"
-            app:enterAnim="@anim/fragment_open_enter"
-            app:exitAnim="@anim/fragment_open_exit"
-            app:popEnterAnim="@anim/fragment_close_enter"
-            app:popExitAnim="@anim/fragment_close_exit"
-            app:launchSingleTop="true"
-            app:popUpToInclusive="false" />
+    <fragment android:id="@+id/hero"
+        android:name="com.pepulai.app.feature.hero.presentation.home.HeroFragment"
+        android:label="Hero">
     </fragment>
-
-    <fragment android:id="@+id/watch_live"
-        android:name="com.example.app.feature.stream.presentation.watch.WatchFragment"
-        android:label="Watch Live" />
-
-    <fragment android:id="@+id/publish_live"
-        android:name="com.example.app.feature.stream.presentation.publish.PublishFragment"
-        android:label="Publish Live" />
 
 </navigation>
