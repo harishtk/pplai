@@ -3,9 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/home_nav_graph">
 
-    <fragment android:id="@+id/hero"
-        android:name="com.pepulai.app.feature.hero.presentation.home.HeroFragment"
-        android:label="Hero">
+    <fragment android:id="@+id/catalog_list"
+        android:name="com.pepulai.app.feature.home.presentation.catalog.CatalogFragment"
+        android:label="AI Catalog">
     </fragment>
 
 </navigation>

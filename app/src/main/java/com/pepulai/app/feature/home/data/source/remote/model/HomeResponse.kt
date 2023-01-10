@@ -1,6 +1,8 @@
 package com.pepulai.app.feature.home.data.source.remote.model
 
 import com.google.gson.annotations.SerializedName
+import com.pepulai.app.feature.home.data.source.remote.dto.CategoryDto
+import com.pepulai.app.feature.home.data.source.remote.dto.UserModelDto
 
 data class HomeResponse(
     @SerializedName("statusCode")
@@ -16,23 +18,3 @@ data class HomeResponse(
     )
 }
 
-data class CategoryDto(
-    @SerializedName("title")
-    val title: String,
-    @SerializedName("preset")
-    val preset: List<CategoryPresetDto>
-)
-
-data class CategoryPresetDto(
-    @SerializedName("prompt")
-    val prompt: String,
-    @SerializedName("imageUrl")
-    val imageUrl: String
-)
-
-data class UserModelDto(
-    @SerializedName("userName")
-    val userName: String,
-    @SerializedName("userImage")
-    val userImage: String
-)

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <TextView android:id="@+id/catalog_title"
+        style="@style/TextStyle.Medium.Bold"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/inset_small"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/top_barrier"
+        app:layout_constraintEnd_toStartOf="@id/more_catalog"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintWidth_default="spread"
+        tools:text="Catalog Title"/>
+
+    <TextView android:id="@+id/more_catalog"
+        style="@style/TextStyle.Tiny"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_secondary"
+        android:layout_marginEnd="@dimen/inset_small"
+        android:text="See more"
+        android:padding="@dimen/default_touchable_inset"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/top_barrier"
+        app:layout_constraintStart_toEndOf="@id/catalog_title"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintWidth_default="wrap"
+        app:layout_constrainedWidth="true"/>
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/top_barrier"
+        app:barrierDirection="bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="catalog_title"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/preset_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/inset_very_small"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_barrier"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:listitem="@layout/preset_preview_item"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

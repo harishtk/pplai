@@ -3,8 +3,8 @@ package com.pepulai.app.feature.home.domain.model
 import com.google.gson.annotations.SerializedName
 
 data class UserAndCategory(
-    val users: List<UserModel>?,
-    val categories: List<Category>?
+    val users: List<UserModel>,
+    val categories: List<Category>
 )
 
 data class Category(

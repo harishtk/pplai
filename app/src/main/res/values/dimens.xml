@@ -42,10 +42,14 @@
     <dimen name="default_action_bar_size">48dp</dimen>
     <dimen name="large_action_bar_size">56dp</dimen>
 
+    <dimen name="default_card_inset">5dp</dimen>
+
     <dimen name="default_touchable_padding">4dp</dimen>
     <dimen name="touchable_padding_large">10dp</dimen>
     <dimen name="default_touchable_inset">4dp</dimen>
     <dimen name="touchable_inset_small">2dp</dimen>
     <dimen name="comments_min_width">120dp</dimen>
     <dimen name="multiline_text_max_height">80dp</dimen>
+    <dimen name="large_card_size">200dp</dimen>
+    <dimen name="medium_card_size">120dp</dimen>
 </resources>
