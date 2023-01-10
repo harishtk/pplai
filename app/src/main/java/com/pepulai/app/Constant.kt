@@ -2,6 +2,7 @@ package com.pepulai.app
 
 object Constant {
     /* Extras */
+    const val EXTRA_DATA = "com.pepulai.app.extras.DATA"
     const val EXTRA_ENGAGED_TIME = "com.pepulai.app.extras.ENGAGED_TIME"
     const val EXTRA_STREAM_URL = "com.pepulai.app.extras.STREAM_URL"
     const val EXTRA_STREAM_NAME = "com.pepulai.app.extras.STREAM_NAME"

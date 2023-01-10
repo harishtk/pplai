@@ -8,8 +8,11 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import com.pepulai.app.Constant
 import com.pepulai.app.R
 import com.pepulai.app.databinding.FragmentCatalogBinding
+import com.pepulai.app.feature.home.domain.model.Category
 import com.pepulai.app.feature.home.presentation.util.CatalogAdapter
 import com.pepulai.app.showToast
 import com.pepulnow.app.data.LoadState
@@ -112,11 +115,27 @@ class CatalogFragment : Fragment() {
             }
         }
 
-        val catalogAdapter = CatalogAdapter()
+        val catalogAdapterCallback = object : CatalogAdapter.Callback {
+            override fun onCardClicked(position: Int, cardPosition: Int) {
+                val catalogUiModel = uiState.value.catalogList?.get(position)!!
+                catalogUiModel as CatalogUiModel.Catalog
+                gotoCatalogDetail(catalogUiModel.category, cardPosition)
+            }
+
+            override fun onMoreClicked(position: Int) {
+                val catalogUiModel = uiState.value.catalogList?.get(position)!!
+                catalogUiModel as CatalogUiModel.Catalog
+                gotoCatalogDetail(catalogUiModel.category)
+            }
+        }
+
+        val catalogAdapter = CatalogAdapter(catalogAdapterCallback)
         bindList(
             adapter = catalogAdapter,
             uiState = uiState
         )
+
+        bindToolbar()
     }
 
     private fun FragmentCatalogBinding.bindList(
@@ -131,6 +150,20 @@ class CatalogFragment : Fragment() {
             catalogListFlow.collectLatest { catalogList ->
                 adapter.submitList(catalogList)
             }
+        }
+    }
+
+    private fun FragmentCatalogBinding.bindToolbar() {
+        toolbarIncluded.toolbarNavigationIcon.isVisible = false
+        toolbarIncluded.toolbarTitle.text = "Pepul AI"
+    }
+
+    private fun gotoCatalogDetail(category: Category, cardClickPosition: Int = -1) {
+        findNavController().apply {
+            val args = Bundle()
+            args.putParcelable(Constant.EXTRA_DATA, category)
+            args.putInt("click_position", cardClickPosition)
+            navigate(R.id.action_catalog_list_to_catalog_detail, args)
         }
     }
 }

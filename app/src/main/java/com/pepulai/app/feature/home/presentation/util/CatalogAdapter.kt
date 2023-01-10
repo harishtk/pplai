@@ -10,7 +10,9 @@ import com.pepulai.app.databinding.CatalogItemBinding
 import com.pepulai.app.feature.home.domain.model.Category
 import com.pepulai.app.feature.home.presentation.catalog.CatalogUiModel
 
-class CatalogAdapter : ListAdapter<CatalogUiModel, CatalogAdapter.ItemViewHolder>(DIFF_CALLBACK) {
+class CatalogAdapter(
+    private val callback: Callback
+) : ListAdapter<CatalogUiModel, CatalogAdapter.ItemViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
         return when (viewType) {
@@ -23,7 +25,7 @@ class CatalogAdapter : ListAdapter<CatalogUiModel, CatalogAdapter.ItemViewHolder
         val model = getItem(position)
         when (model) {
             is CatalogUiModel.Catalog -> {
-                holder.bind(model.category)
+                holder.bind(model.category, callback)
             }
         }
     }
@@ -39,11 +41,16 @@ class CatalogAdapter : ListAdapter<CatalogUiModel, CatalogAdapter.ItemViewHolder
         private val binding: CatalogItemBinding
     ): ViewHolder(binding.root) {
 
-        fun bind(data: Category) = with(binding) {
+        fun bind(data: Category, callback: Callback) = with(binding) {
             catalogTitle.text = data.title
-            presetList.adapter = CatalogPreviewAdapter(binding.root.context).apply {
+            presetList.adapter = CatalogPreviewAdapter(
+                binding.root.context,
+            ) { position ->
+                callback.onCardClicked(adapterPosition, position)
+            }.apply {
                 submitList(data.preset)
             }
+            moreCatalog.setOnClickListener { callback.onMoreClicked(position = adapterPosition) }
         }
 
         companion object {
@@ -57,6 +64,11 @@ class CatalogAdapter : ListAdapter<CatalogUiModel, CatalogAdapter.ItemViewHolder
                 return ItemViewHolder(binding)
             }
         }
+    }
+
+    interface Callback {
+        fun onCardClicked(position: Int, cardPosition: Int)
+        fun onMoreClicked(position: Int)
     }
 
     companion object {

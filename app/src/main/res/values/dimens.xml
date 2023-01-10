@@ -52,4 +52,5 @@
     <dimen name="multiline_text_max_height">80dp</dimen>
     <dimen name="large_card_size">200dp</dimen>
     <dimen name="medium_card_size">120dp</dimen>
+    <dimen name="tab_indicator_size">8dp</dimen>
 </resources>
