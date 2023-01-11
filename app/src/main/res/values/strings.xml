@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Pepul Liv</string>
+    <string name="app_name">Pepul AI</string>
 
     <string name="start_publishing">Start Publishing</string>
     <string name="stop_publishing">Stop Publishing</string>
@@ -31,4 +31,9 @@
     <string name="label_yes">Yes</string>
     <string name="content_description_options">Options</string>
     <string name="content_description_no_internet">No Internet</string>
+    <string name="walkthrough_des_1">Feel free to use, distribute and manipulate your image as desired.</string>
+    <string name="walkthrough_des_2">Transform your photos into numerous exceptional digital portrayals.</string>
+    <string name="walkthrough_des_3">Edit pictures with ease with AI-powered instant Touch-up.</string>
+    <string name="label_continue">Continue</string>
+    <string name="label_try_now">Try now</string>
 </resources>

@@ -50,19 +50,19 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         val graph: NavGraph
         val startDestinationArgs = Bundle()
 
-        graph = inflater.inflate(R.navigation.home_nav_graph)
-        graph.setStartDestination(R.id.catalog_list)
+        /*graph = inflater.inflate(R.navigation.home_nav_graph)
+        graph.setStartDestination(R.id.catalog_list)*/
 
-        /*when {
+        when {
             ApplicationDependencies.getPersistentStore().isLogged -> {
                 graph = inflater.inflate(R.navigation.home_nav_graph)
-                graph.setStartDestination(R.id.hero)
+                graph.setStartDestination(R.id.catalog_list)
             }
             else -> {
                 graph = inflater.inflate(R.navigation.login_nav_graph)
-                graph.setStartDestination(R.id.login_fragment)
+                graph.setStartDestination(R.id.walkthrough_fragment)
             }
-        }*/
+        }
 
         navController.setGraph(graph, startDestinationArgs)
     }

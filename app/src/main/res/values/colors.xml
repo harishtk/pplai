@@ -6,6 +6,10 @@
     <color name="red_200">#EC5545</color>
     <color name="red_700">#EA3324</color>
 
+    <color name="yellow_50">#33FAAD14</color>
+    <color name="yellow_200">#FAAD14</color>
+    <color name="yellow_700">#D68E00</color>
+
     <color name="purple_50">#336200EE</color>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
@@ -24,7 +28,7 @@
     <color name="grey_divider_color">#4D4C4C</color>
 
     <!-- Text Colors -->
-    <color name="text_secondary">#7E7E7E</color>
+    <color name="text_secondary">#5C5C5C</color>
     <color name="text_secondary_alt">#969A9E</color>
     <color name="text_color_fancy">#20A2E5</color>
     <color name="red">#FF0000</color>
@@ -38,4 +42,7 @@
     <color name="grey_divider">#383838</color>
     <color name="transparent_black">#80000000</color>
     <color name="comment_input_background">#80000000</color>
+
+    <color name="tab_indicator_unselected">#C8C8C8</color>
+    <color name="tab_indicator_selected">#000000</color>
 </resources>
