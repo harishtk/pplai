@@ -34,8 +34,11 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         AppStartup.getInstance().onCriticalRenderEventEnd()
         lifecycleScope.launch { StorageUtil.cleanUp(applicationContext) }
 
+        val restartHint = intent.extras?.getString("restart_hint", "")
         if (ApplicationDependencies.getPersistentStore().isLogged) {
-            sharedViewModel.autoLogin()
+            if (restartHint != "from_login") {
+                sharedViewModel.autoLogin()
+            }
         }
     }
 
@@ -86,6 +89,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     fun restart(args: Bundle? = null) {
         val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        intent.putExtra("restart_hint", "self")
         if (args != null) {
             intent.putExtras(args)
         }

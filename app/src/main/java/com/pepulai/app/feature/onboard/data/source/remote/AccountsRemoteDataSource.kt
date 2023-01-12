@@ -6,7 +6,9 @@ import com.pepulai.app.commons.util.NetworkResult
 import com.pepulai.app.di.IoDispatcher
 import com.pepulai.app.feature.onboard.data.source.remote.dto.AutoLoginRequestDto
 import com.pepulai.app.feature.onboard.data.source.remote.dto.LoginRequestDto
+import com.pepulai.app.feature.onboard.data.source.remote.dto.LogoutRequestDto
 import com.pepulai.app.feature.onboard.data.source.remote.model.AutoLoginResponse
+import com.pepulai.app.feature.onboard.data.source.remote.model.BaseResponse
 import com.pepulai.app.feature.onboard.data.source.remote.model.LoginResponse
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -30,4 +32,9 @@ class AccountsRemoteDataSource @Inject constructor(
         emit(NetworkResult.Loading())
         emit(safeApiCall { apiService.autoLogin(autoLoginRequestDto) })
     }.flowOn(dispatcher)
+
+    fun logout(logoutRequestDto: LogoutRequestDto): Flow<NetworkResult<BaseResponse>> = flow {
+        emit(NetworkResult.Loading())
+        emit(safeApiCall { apiService.logout(logoutRequestDto) })
+    }
 }

@@ -88,7 +88,7 @@ android {
             dimension "default"
 
             // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
-            buildConfigField "String", "BASE_URL", '"http://43.205.53.52/api/"'
+            buildConfigField "String", "BASE_URL", '"http://ai.hifrds.com/api/v1/"'
             buildConfigField "String", "THUMBNAIL_BASE_URL", '"http://43.205.53.52/thumbnail/"'
             // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52"'
@@ -183,6 +183,9 @@ dependencies {
     implementation 'com.airbnb.android:lottie:5.0.3'
 
     implementation 'com.facebook.shimmer:shimmer:0.5.0'
+
+    /* External projects */
+    implementation(project(":circular-progress-button"))
 
     /* Tab Indicator */
     /*implementation 'me.relex:circleindicator:2.1.6'*/

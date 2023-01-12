@@ -16,6 +16,9 @@ class PersistentStore private constructor(
     val username: String
         get() = getAppPreferences().getString(UserPreferenceKeys.USERNAME, "") ?: ""
 
+    val email: String
+        get() = getAppPreferences().getString(UserPreferenceKeys.EMAIL, "") ?: ""
+
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
         return this
@@ -31,9 +34,16 @@ class PersistentStore private constructor(
         return this
     }
 
+    fun setEmail(email: String): PersistentStore {
+        getAppPreferences().edit().putString(UserPreferenceKeys.EMAIL, email).apply()
+        return this
+    }
+
     fun logout() {
         setUserId("")
         setDeviceToken("")
+        setUsername("")
+        setEmail("")
     }
 
     private fun getAppPreferences(): SharedPreferences {
@@ -58,6 +68,7 @@ class PersistentStore private constructor(
             const val DEVICE_TOKEN: String = "device_token"
             const val USER_ID: String = "user_id"
             const val USERNAME: String = "username"
+            const val EMAIL: String = "email"
         }
     }
 }

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/best_seller_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/inset_large"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/card_container">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_curved_top"
+            android:backgroundTint="?attr/colorSecondary"
+            android:layout_marginEnd="30dp"
+            android:visibility="visible"
+            android:padding="@dimen/inset_very_small"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/card_view"
+            app:layout_constraintHorizontal_bias="1.0">
+
+            <TextView android:id="@+id/text_best_seller"
+                style="@style/TextStyle.Tiny"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:paddingHorizontal="@dimen/inset_large"
+                android:text="Best Seller"
+                android:textColor="@color/black"
+                android:textStyle="bold"/>
+        </FrameLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="4dp"
+            app:cardElevation="4dp"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.App.LargeComponent.Rounded"
+            app:cardPreventCornerOverlap="true"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_best_seller"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout android:orientation="horizontal"
+                    android:id="@+id/card_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent">
+
+                    <LinearLayout android:orientation="horizontal"
+                        android:layout_weight="0.3"
+                        android:id="@+id/price_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="@dimen/inset_large"
+                        android:background="@drawable/ic_fancy_bg_1"
+                        android:gravity="center">
+
+                        <TextView android:id="@+id/text_currency_symbol"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="@dimen/inset_very_small"
+                            android:text="₹"
+                            android:textSize="@dimen/text_size_very_small"
+                            android:textColor="?attr/colorOnSurfaceInverse"/>
+
+                        <TextView android:id="@+id/text_price"
+                            style="@style/Base.TextAppearance.Bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="99"
+                            android:textColor="?attr/colorOnSurfaceInverse"
+                            android:textSize="@dimen/text_size_giant"
+                            android:layout_marginEnd="20dp"/>
+
+                    </LinearLayout>
+
+                    <androidx.constraintlayout.widget.ConstraintLayout android:layout_weight="0.6"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:paddingHorizontal="@dimen/inset_small">
+
+                        <TextView android:id="@+id/text_photos"
+                            style="@style/TextStyle.Medium.Bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="10 Photos"
+                            android:textColor="?attr/colorSecondary"
+                            android:layout_centerVertical="true"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintBottom_toTopOf="@id/description"
+                            app:layout_constrainedWidth="true"
+                            app:layout_constraintVertical_chainStyle="packed"
+                            app:layout_constraintHorizontal_bias="0.0"
+                            android:textAlignment="textStart"/>
+
+                        <TextView android:id="@+id/description"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextStyle.VerySmall"
+                            android:text="4 variations in 8 styles"
+                            android:textColor="?attr/colorOnSurface"
+                            android:layout_below="@id/text_photos"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/text_photos"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constrainedWidth="true"
+                            app:layout_constraintVertical_chainStyle="packed"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintHorizontal_bias="0.0"
+                            android:textAlignment="textStart"/>
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <FrameLayout android:id="@+id/checkbox_container"
+                        android:layout_weight="0.1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent">
+
+                        <CheckBox
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="@dimen/inset_large"
+                            android:button="@drawable/checkbox_selector"
+                            android:checked="false"
+                            android:layout_gravity="center"/>
+
+                    </FrameLayout>
+                </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

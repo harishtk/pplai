@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.size
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.pepulai.app.R
 import com.pepulai.app.databinding.FragmentWalkThroughBinding
@@ -98,6 +99,10 @@ class WalkThroughFragment : Fragment() {
         btnNext.setOnClickListener {
             if (walkthroughPager.currentItem < adapter.itemCount - 1) {
                 walkthroughPager.setCurrentItem(++walkthroughPager.currentItem, true)
+            } else {
+                try {
+                    findNavController().navigate(R.id.action_walkthrough_fragment_to_login_fragment)
+                } catch (ignore: Exception) {}
             }
         }
     }

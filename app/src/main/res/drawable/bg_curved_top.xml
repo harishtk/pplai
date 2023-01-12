@@ -4,8 +4,8 @@
 
     <solid android:color="?attr/colorPrimaryVariant" />
 
-    <corners android:topRightRadius="@dimen/corner_size_large"
-        android:topLeftRadius="@dimen/corner_size_xlarge"
+    <corners android:topRightRadius="@dimen/default_corner_size"
+        android:topLeftRadius="@dimen/default_corner_size"
         android:bottomLeftRadius="0dp"
         android:bottomRightRadius="0dp" />
 

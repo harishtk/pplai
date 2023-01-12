@@ -9,6 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.ImageView
+import androidx.activity.OnBackPressedCallback
+import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -18,6 +20,8 @@ import com.pepulai.app.R
 import com.pepulai.app.commons.util.AnimationUtil.shakeNow
 import com.pepulai.app.commons.util.HapticUtil
 import com.pepulai.app.commons.util.ResolvableException
+import com.pepulai.app.commons.util.cancelSpinning
+import com.pepulai.app.commons.util.setSpinning
 import com.pepulai.app.databinding.FragmentLoginBinding
 import com.pepulai.app.hideKeyboard
 import com.pepulai.app.showToast
@@ -25,6 +29,7 @@ import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
@@ -38,7 +43,7 @@ class LoginFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.fragment_login, container, false)
     }
@@ -52,12 +57,13 @@ class LoginFragment : Fragment() {
             uiAction = viewModel.accept,
             uiEvent = viewModel.uiEvent
         )
+        handleBackPressed()
     }
 
     private fun FragmentLoginBinding.bindState(
         uiState: StateFlow<LoginState>,
         uiAction: (LoginUiAction) -> Unit,
-        uiEvent: SharedFlow<LoginUiEvent>
+        uiEvent: SharedFlow<LoginUiEvent>,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             uiEvent.collectLatest { event ->
@@ -65,8 +71,10 @@ class LoginFragment : Fragment() {
                     is LoginUiEvent.ShowToast -> {
                         context?.showToast(event.message.asString(requireContext()))
                     }
+
                     is LoginUiEvent.NextScreen -> {
-                        animateAndEnd(nextButton)
+                        // animateAndEnd(nextButton)
+                        gotoHome()
                     }
                 }
             }
@@ -95,12 +103,42 @@ class LoginFragment : Fragment() {
                         }
                         when (e) {
                             is ResolvableException -> {
-                                edUsername.shakeNow()
+                                edEmail.shakeNow()
                                 HapticUtil.createError(requireContext())
                             }
                         }
                         uiAction(LoginUiAction.ErrorShown(e))
                     }
+                }
+            }
+        }
+
+        val loadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChangedBy { it.action }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                if (loadState.action is LoadState.Loading) {
+                    nextButton.setSpinning()
+                } else {
+                    nextButton.cancelSpinning()
+                }
+            }
+        }
+
+        val loginSequenceFlow = uiState.map { it.loginSequence }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            loginSequenceFlow.collectLatest { loginSequence ->
+                when (loginSequence) {
+                    LoginSequence.TYPING_EMAIL -> {
+                        edOtp.isVisible = false
+                        edEmail.isEnabled = true
+                    }
+                    LoginSequence.OTP_SENT -> {
+                        edOtp.isVisible = true
+                        edEmail.isEnabled = false
+                    }
+                    LoginSequence.OTP_VERIFIED -> { /* Noop */ }
                 }
             }
         }
@@ -118,52 +156,76 @@ class LoginFragment : Fragment() {
 
     private fun FragmentLoginBinding.bindInput(
         uiState: StateFlow<LoginState>,
-        uiAction: (LoginUiAction) -> Unit
+        uiAction: (LoginUiAction) -> Unit,
     ) {
-        edUsername.setOnEditorActionListener { _, actionId, _ ->
+        edEmail.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_GO) {
-                updateTypedValue(uiAction)
+                updateTypedEmailValue(uiAction)
                 uiAction(LoginUiAction.NextClick)
-                edUsername.hideKeyboard()
+                edEmail.hideKeyboard()
                 true
             } else {
                 false
             }
         }
 
-        edUsername.setOnKeyListener { _, keyCode, event ->
+        edEmail.setOnKeyListener { _, keyCode, event ->
             if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
-                updateTypedValue(uiAction)
+                updateTypedEmailValue(uiAction)
                 uiAction(LoginUiAction.NextClick)
-                edUsername.hideKeyboard()
+                edEmail.hideKeyboard()
                 true
             } else {
                 false
             }
         }
 
-        edUsername.addTextChangedListener(
-            afterTextChanged = { updateTypedValue(uiAction) }
+        edEmail.addTextChangedListener(
+            afterTextChanged = { updateTypedEmailValue(uiAction) }
+        )
+
+        edOtp.addTextChangedListener(
+            afterTextChanged = { updateTypedOtpValue(uiAction)  }
         )
     }
 
-    private fun FragmentLoginBinding.updateTypedValue(
-        onTyped: (LoginUiAction.TypingUsername) -> Unit
+    private fun FragmentLoginBinding.updateTypedEmailValue(
+        onTyped: (LoginUiAction.TypingUsername) -> Unit,
     ) {
-        edUsername.text.toString().trim().let {
+        edEmail.text.toString().trim().let {
             if (it.isNotEmpty()) {
                 onTyped(LoginUiAction.TypingUsername(typed = it))
             }
         }
     }
 
+    private fun FragmentLoginBinding.updateTypedOtpValue(
+        onTyped: (LoginUiAction.TypingOtp) -> Unit
+    ) {
+        edOtp.text.toString().trim().let {
+            if (it.isNotEmpty()) {
+                onTyped(LoginUiAction.TypingOtp(typed = it))
+            }
+        }
+    }
+
     private fun FragmentLoginBinding.bindClick(
         uiState: StateFlow<LoginState>,
-        uiAction: (LoginUiAction) -> Unit
+        uiAction: (LoginUiAction) -> Unit,
     ) {
         nextButton.setOnClickListener {
             uiAction(LoginUiAction.NextClick)
         }
+    }
+
+    private fun handleBackPressed() {
+        activity?.onBackPressedDispatcher?.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    activity?.finish()
+                }
+            })
     }
 
     private fun animateAndEnd(view: View) {
@@ -196,6 +258,7 @@ class LoginFragment : Fragment() {
         activity?.apply {
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            intent.putExtra("restart_hint", "from_login")
             startActivity(intent)
         }
     }

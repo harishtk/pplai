@@ -1,6 +1,8 @@
 package com.pepulai.app
 
 object Constant {
+    const val PLATFORM = "android"
+
     /* Extras */
     const val EXTRA_DATA = "com.pepulai.app.extras.DATA"
     const val EXTRA_ENGAGED_TIME = "com.pepulai.app.extras.ENGAGED_TIME"

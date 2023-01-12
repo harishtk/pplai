@@ -91,7 +91,7 @@
     <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
         <item name="android:paddingStart">20dp</item>
@@ -101,7 +101,7 @@
     <style name="Widget.App.Button.Alt" parent="Widget.MaterialComponents.Button">
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.Alt</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
         <item name="android:paddingStart">20dp</item>
@@ -111,7 +111,7 @@
     <style name="Widget.App.TextButton" parent="Widget.MaterialComponents.Button.TextButton">
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
         <item name="android:paddingStart">20dp</item>
@@ -121,7 +121,7 @@
     <style name="Widget.App.TextButton.Alt" parent="Widget.MaterialComponents.Button.TextButton">
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton.Alt</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
         <item name="android:paddingStart">20dp</item>
@@ -132,7 +132,7 @@
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.FancyButton</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
         <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
         <item name="android:paddingStart">20dp</item>
@@ -141,7 +141,7 @@
 
     <style name="Widget.App.Button.Small" parent="Widget.App.Button">
         <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:paddingTop">5dp</item>
         <item name="android:paddingBottom">5dp</item>
         <item name="android:paddingStart">10dp</item>
@@ -150,7 +150,7 @@
 
     <style name="Widget.App.FancyButton.Small" parent="Widget.App.FancyButton">
         <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">16sp</item>
         <item name="android:paddingTop">5dp</item>
         <item name="android:paddingBottom">5dp</item>
         <item name="android:paddingStart">10dp</item>
@@ -262,7 +262,6 @@
     </style>
 
     <style name="ThemeOverlay.App.Button.Alt" parent="">
-        <item name="colorPrimary">@color/white</item>
         <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
         <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
     </style>
@@ -459,8 +458,8 @@
     </style>
 
     <style name="Base.TextAppearance.Bold" parent="TextAppearance.AppCompat">
-        <item name="fontFamily">@font/poppins_bold</item>
-        <item name="android:fontFamily">@font/poppins_bold</item>
+        <item name="fontFamily">@font/poppins_semi_bold</item>
+        <item name="android:fontFamily">@font/poppins_semi_bold</item>
     </style>
 
     <style name="Base.TextAppearance.Heavy" parent="TextAppearance.AppCompat">

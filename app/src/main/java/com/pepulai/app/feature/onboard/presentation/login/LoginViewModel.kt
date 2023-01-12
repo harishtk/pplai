@@ -1,8 +1,10 @@
 package com.pepulai.app.feature.onboard.presentation.login
 
+import androidx.core.util.PatternsCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pepulai.app.Constant
 import com.pepulai.app.commons.util.ResolvableException
 import com.pepulai.app.commons.util.Result
 import com.pepulai.app.commons.util.UiText
@@ -13,6 +15,7 @@ import com.pepulai.app.commons.util.net.NoInternetException
 import com.pepulai.app.di.ApplicationDependencies
 import com.pepulai.app.feature.onboard.domain.model.request.LoginRequest
 import com.pepulai.app.feature.onboard.domain.repository.AccountsRepository
+import com.pepulai.app.nullAsEmpty
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,11 +53,23 @@ class LoginViewModel @Inject constructor(
             .onEach { action ->
                 _uiState.update { state ->
                     state.copy(
-                        typedUsername = action.typed
+                        typedEmail = action.typed
                     )
                 }
             }
             .launchIn(viewModelScope)
+
+        continuousActions.filterIsInstance<LoginUiAction.TypingOtp>()
+            .distinctUntilChanged()
+            .onEach { action ->
+                _uiState.update { state ->
+                    state.copy(
+                        typedOtp = action.typed
+                    )
+                }
+            }
+            .launchIn(viewModelScope)
+
     }
 
     private fun onUiAction(action: LoginUiAction) {
@@ -67,21 +82,56 @@ class LoginViewModel @Inject constructor(
                     )
                 }
             }
-            is LoginUiAction.TypingUsername -> {
+            is LoginUiAction.TypingUsername,
+            is LoginUiAction.TypingOtp -> {
                 viewModelScope.launch { continuousActions.emit(action) }
             }
             is LoginUiAction.NextClick -> {
-                validateLogin()
+                when (uiState.value.loginSequence) {
+                    LoginSequence.TYPING_EMAIL -> { validateLogin() }
+                    LoginSequence.OTP_SENT -> { validateOtp() }
+                    LoginSequence.OTP_VERIFIED -> { /* Noop */ }
+                }
             }
 
         }
+    }
+
+    private fun validateOtp() {
+        val otp = uiState.value.typedOtp
+        // TODO: validate otp
+        if (otp.isBlank()) {
+            val message = "Please enter a otp"
+            val e = ResolvableException(message)
+            _uiState.update { state ->
+                state.copy(
+                    exception = e,
+                    uiErrorMessage = UiText.DynamicString(message)
+                )
+            }
+            return
+        }
+
+        if (otp.length < 6) {
+            val message = "OTP contains at least 6 digits"
+            val e = ResolvableException(message)
+            _uiState.update { state ->
+                state.copy(
+                    exception = e,
+                    uiErrorMessage = UiText.DynamicString(message)
+                )
+            }
+            return
+        }
+
+        verifyOtpInternal(otp)
     }
 
     private fun validateLogin() {
         // TODO: validate username
-        val username = uiState.value.typedUsername
-        if (username.isBlank()) {
-            val message = "Please enter a username"
+        val email = uiState.value.typedEmail
+        if (email.isBlank()) {
+            val message = "Please enter a email"
             val e = ResolvableException(message)
             _uiState.update { state ->
                 state.copy(
@@ -92,8 +142,8 @@ class LoginViewModel @Inject constructor(
             return
         }
 
-        if (username.length < 4) {
-            val message = "Username should contain at least 4 characters"
+        if (email.length < 4) {
+            val message = "Email should contain at least 4 characters"
             val e = ResolvableException(message)
             _uiState.update { state ->
                 state.copy(
@@ -104,13 +154,37 @@ class LoginViewModel @Inject constructor(
             return
         }
 
-        loginUserInternal(username)
+        if (!PatternsCompat.EMAIL_ADDRESS.toRegex().matches(email)) {
+            val message = "Enter a valid Email Address"
+            val e = ResolvableException(message)
+            _uiState.update { state ->
+                state.copy(
+                    exception = e,
+                    uiErrorMessage = UiText.DynamicString(message)
+                )
+            }
+            return
+        }
+
+        loginUserInternal(email)
     }
 
-    private fun loginUserInternal(username: String) {
+    private fun loginUserInternal(email: String) {
         val request = LoginRequest(
-            userName = username
+            email = email,
+            callFor = CALL_FOR_SEND_OTP,
+            platform = Constant.PLATFORM,
         )
+        login(request)
+    }
+
+    private fun verifyOtpInternal(otp: String) {
+        val request = LoginRequest(
+            email = uiState.value.typedEmail,
+            callFor = CALL_FOR_VERIFY_OTP,
+            platform = Constant.PLATFORM
+        )
+        request.otp = otp
         login(request)
     }
 
@@ -147,14 +221,28 @@ class LoginViewModel @Inject constructor(
                         setLoading(LoadState.Error(result.exception), LoadType.ACTION)
                     }
                     is Result.Success -> {
-                        result.data.apply {
-                            ApplicationDependencies.getPersistentStore()
-                                .setDeviceToken(deviceToken)
-                                .setUserId(userId)
-                                .setUsername(loginRequest.userName)
+                        when (loginRequest.callFor) {
+                            CALL_FOR_SEND_OTP -> {
+                                sendEvent(LoginUiEvent.ShowToast(UiText.DynamicString("Otp sent to your Email")))
+                                _uiState.update { state ->
+                                    state.copy(
+                                        loginSequence = LoginSequence.OTP_SENT
+                                    )
+                                }
+                                setLoading(LoadState.NotLoading.Complete, LoadType.ACTION)
+                            }
+                            CALL_FOR_VERIFY_OTP -> {
+                                result.data.let { loginData ->
+                                    ApplicationDependencies.getPersistentStore()
+                                        .setUserId(loginData.loginUser?.userId.nullAsEmpty())
+                                        .setDeviceToken(loginData.deviceToken.nullAsEmpty())
+                                        .setUsername(loginData.loginUser?.username.nullAsEmpty())
+                                        .setEmail(loginRequest.email)
+                                }
+                                sendEvent(LoginUiEvent.ShowToast(UiText.DynamicString("Login successful!")))
+                                sendEvent(LoginUiEvent.NextScreen)
+                            }
                         }
-                        sendEvent(LoginUiEvent.ShowToast(UiText.DynamicString("Login Successful")))
-                        sendEvent(LoginUiEvent.NextScreen)
                     }
                 }
             }
@@ -179,7 +267,9 @@ class LoginViewModel @Inject constructor(
 
 data class LoginState(
     val loadState: LoadStates = LoadStates.IDLE,
-    val typedUsername: String = DEFAULT_USERNAME,
+    val loginSequence: LoginSequence = LoginSequence.TYPING_EMAIL,
+    val typedEmail: String = DEFAULT_EMAIL,
+    val typedOtp: String = "",
     val usernameValidationResult: ValidationResult? = null,
     val exception: Exception? = null,
     val uiErrorMessage: UiText? = null
@@ -188,6 +278,7 @@ data class LoginState(
 interface LoginUiAction {
     data class ErrorShown(val e: Exception) : LoginUiAction
     data class TypingUsername(val typed: String) : LoginUiAction
+    data class TypingOtp(val typed: String) : LoginUiAction
     object NextClick : LoginUiAction
 }
 
@@ -196,4 +287,11 @@ interface LoginUiEvent {
     object NextScreen : LoginUiEvent
 }
 
-private const val DEFAULT_USERNAME = ""
+private const val DEFAULT_EMAIL = ""
+
+private const val CALL_FOR_SEND_OTP = "sendOtp"
+private const val CALL_FOR_VERIFY_OTP = "verifyOtp"
+
+enum class LoginSequence(sequence: Int) {
+    TYPING_EMAIL(-1), OTP_SENT(0), OTP_VERIFIED(1)
+}

@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import com.pepulai.app.Constant
 import com.pepulai.app.R
 import com.pepulai.app.databinding.FragmentCatalogBinding
+import com.pepulai.app.di.ApplicationDependencies
 import com.pepulai.app.feature.home.domain.model.Category
 import com.pepulai.app.feature.home.presentation.util.CatalogAdapter
 import com.pepulai.app.showToast
@@ -154,8 +155,21 @@ class CatalogFragment : Fragment() {
     }
 
     private fun FragmentCatalogBinding.bindToolbar() {
-        toolbarIncluded.toolbarNavigationIcon.isVisible = false
-        toolbarIncluded.toolbarTitle.text = "Pepul AI"
+        toolbarNavigationIcon.isVisible = false
+        toolbarTitle.text = getString(R.string.app_name)
+
+        val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
+        profileName.setText(initialLetter)
+
+        profileContainer.setOnClickListener {
+            gotoProfile()
+        }
+    }
+
+    private fun gotoProfile() {
+        findNavController().apply {
+            navigate(R.id.action_catalog_list_to_profile)
+        }
     }
 
     private fun gotoCatalogDetail(category: Category, cardClickPosition: Int = -1) {

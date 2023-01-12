@@ -16,11 +16,23 @@
             app:popEnterAnim="@anim/fast_fade_in"
             app:popExitAnim="@anim/fast_fade_out" />
 
+        <action android:id="@+id/action_catalog_list_to_profile"
+            app:destination="@id/profile"
+            app:enterAnim="@anim/fast_fade_in"
+            app:exitAnim="@anim/fast_fade_out"
+            app:popEnterAnim="@anim/fast_fade_in"
+            app:popExitAnim="@anim/fast_fade_out" />
+
     </fragment>
 
     <fragment android:id="@+id/catalog_detail"
         android:name="com.pepulai.app.feature.home.presentation.catalog.CatalogDetailFragment"
         android:label="Catalog Detail"
         tools:layout="@layout/fragment_catalog_detail"/>
+
+    <fragment android:id="@+id/profile"
+        android:name="com.pepulai.app.feature.home.presentation.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
 
 </navigation>

@@ -45,4 +45,6 @@
 
     <color name="tab_indicator_unselected">#C8C8C8</color>
     <color name="tab_indicator_selected">#000000</color>
+
+    <color name="blue_grey_700">#383D48</color>
 </resources>
