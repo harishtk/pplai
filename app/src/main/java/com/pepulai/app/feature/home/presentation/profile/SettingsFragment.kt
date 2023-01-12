@@ -7,8 +7,14 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.pepulai.app.MainActivity
 import com.pepulai.app.R
 import com.pepulai.app.databinding.FragmentSettingsBinding
+import com.pepulai.app.di.ApplicationDependencies
+import com.pepulai.app.feature.home.presentation.util.SettingsAdapter
+import com.pepulai.app.feature.home.presentation.util.SettingsItem
+import com.pepulai.app.feature.home.presentation.util.SettingsListType
+import com.pepulai.app.showToast
 
 class SettingsFragment : Fragment() {
 
@@ -37,8 +43,27 @@ class SettingsFragment : Fragment() {
 
             toolbarTitle.text = getString(R.string.label_settings)
         }
+
+        val settingsListData = listOf<SettingsItem>(
+            SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 0, title = "Logout", null, null)
+        )
+
+        val settingsCallback = object : SettingsAdapter.Callback {
+            override fun onItemClick(position: Int) {
+                when (settingsListData[position].id) {
+                    0 -> {
+                        ApplicationDependencies.getPersistentStore().logout()
+                        context?.showToast("Logged out!")
+                        (activity as? MainActivity)?.restart()
+                    }
+                }
+            }
+        }
+
+        val settingsAdapter = SettingsAdapter(callback = settingsCallback)
+
+        settingsList.adapter = settingsAdapter
+        settingsAdapter.submitList(settingsListData)
     }
-
-
 
 }
