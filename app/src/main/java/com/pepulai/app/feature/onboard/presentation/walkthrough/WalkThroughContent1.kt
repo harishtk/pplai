@@ -1,12 +1,17 @@
 package com.pepulai.app.feature.onboard.presentation.walkthrough
 
+import android.graphics.Typeface
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import com.pepulai.app.R
 import com.pepulai.app.databinding.FragmentWalthrough1Binding
@@ -36,6 +41,19 @@ class WalkThroughContent1 : Fragment() {
             repeatMode = Animation.REVERSE
             repeatCount = Animation.INFINITE
         }
+
+        /*val spString = SpannableString(getString(R.string.delete))
+        spString.setSpan(
+            ForegroundColorSpan(
+                ResourcesCompat.getColor(
+                    resources,
+                    R.color.red,
+                    null
+                )
+            ), 0, spString.length, 0
+        )
+        spString.setSpan(StyleSpan(Typeface.BOLD), 0, spString.length, 0)
+        deleteItem.setTitle(spString)*/
 
         col1.startAnimation(topDownAnimation)
         col3.startAnimation(topDownAnimation)

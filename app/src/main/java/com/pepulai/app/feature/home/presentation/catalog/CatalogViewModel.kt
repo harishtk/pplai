@@ -8,8 +8,8 @@ import com.pepulai.app.commons.util.UiText
 import com.pepulai.app.commons.util.loadstate.LoadType
 import com.pepulai.app.commons.util.net.ApiException
 import com.pepulai.app.commons.util.net.NoInternetException
+import com.pepulai.app.feature.home.domain.model.Avatar
 import com.pepulai.app.feature.home.domain.model.Category
-import com.pepulai.app.feature.home.domain.model.UserAndCategory
 import com.pepulai.app.feature.home.domain.repository.HomeRepository
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.PrimitiveIterator
 import javax.inject.Inject
 
 @HiltViewModel
@@ -80,7 +79,7 @@ class CatalogViewModel @Inject constructor(
         }
         catalogFetchJob?.cancel(CancellationException("New request")) // just in case
         catalogFetchJob = viewModelScope.launch {
-            homeRepository.getCatalog().collectLatest { result ->
+            homeRepository.getAvatars().collectLatest { result ->
                 when (result) {
                     is Result.Loading -> {
                         setLoadState(LoadType.REFRESH, LoadState.Loading())
@@ -110,8 +109,7 @@ class CatalogViewModel @Inject constructor(
                         setLoadState(LoadType.REFRESH, LoadState.NotLoading.Complete)
                         _uiState.update { state ->
                             state.copy(
-                                userAndCategory = result.data,
-                                catalogList = result.data.categories.map { CatalogUiModel.Catalog(it) }
+                                catalogList = result.data.map { AvatarUiModel.AvatarItem(it) }
                             )
                         }
                     }
@@ -139,8 +137,7 @@ class CatalogViewModel @Inject constructor(
 
 data class CatalogState(
     val loadState: LoadStates = LoadStates.IDLE,
-    val userAndCategory: UserAndCategory? = null,
-    val catalogList: List<CatalogUiModel>? = null,
+    val catalogList: List<AvatarUiModel>? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
@@ -155,4 +152,8 @@ interface CatalogUiEvent {
 
 interface CatalogUiModel {
     data class Catalog(val category: Category) : CatalogUiModel
+}
+
+interface AvatarUiModel {
+    data class AvatarItem(val avatar: Avatar) : AvatarUiModel
 }

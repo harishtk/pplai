@@ -3,6 +3,8 @@ package com.pepulai.app
 object Constant {
     const val PLATFORM = "android"
 
+    const val AVATAR_IMAGE_PREFIX = "https://d1tg9uvib8ymg6.cloudfront.net/avatar/"
+
     /* Extras */
     const val EXTRA_DATA = "com.pepulai.app.extras.DATA"
     const val EXTRA_ENGAGED_TIME = "com.pepulai.app.extras.ENGAGED_TIME"

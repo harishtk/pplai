@@ -8,7 +8,7 @@ plugins {
 
 
 ext {
-    versionMajor = 1 // Major
+    versionMajor = 0 // Major
     versionMinor = 0 // Minor
     versionPatch = 1 // Patches, updates
     versionClassifier = null

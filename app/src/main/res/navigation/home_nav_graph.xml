@@ -33,6 +33,18 @@
     <fragment android:id="@+id/profile"
         android:name="com.pepulai.app.feature.home.presentation.profile.ProfileFragment"
         android:label="Profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
 
+        <action android:id="@+id/action_profile_to_settings"
+            app:destination="@id/settings"
+            app:enterAnim="@anim/fast_fade_in"
+            app:exitAnim="@anim/fast_fade_out"
+            app:popEnterAnim="@anim/fast_fade_in"
+            app:popExitAnim="@anim/fast_fade_out" />
+    </fragment>
+
+    <fragment android:id="@+id/settings"
+        android:name="com.pepulai.app.feature.home.presentation.profile.SettingsFragment"
+        android:label="Settings"
+        tools:layout="@layout/fragment_settings" />
 </navigation>

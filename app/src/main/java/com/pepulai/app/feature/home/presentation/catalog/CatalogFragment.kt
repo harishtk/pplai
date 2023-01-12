@@ -9,12 +9,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.pepulai.app.Constant
 import com.pepulai.app.R
 import com.pepulai.app.databinding.FragmentCatalogBinding
 import com.pepulai.app.di.ApplicationDependencies
-import com.pepulai.app.feature.home.domain.model.Category
-import com.pepulai.app.feature.home.presentation.util.CatalogAdapter
+import com.pepulai.app.feature.home.presentation.util.AvatarsAdapter
 import com.pepulai.app.showToast
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,7 +23,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -102,37 +99,21 @@ class CatalogFragment : Fragment() {
             }
         }
 
-
+        swipeRefreshLayout.isEnabled = false
         swipeRefreshLayout.setOnRefreshListener {
             viewModel.refresh()
         }
 
-
-        val usersFlow = uiState.mapNotNull { it.userAndCategory }
-            .map { it.users }
-        viewLifecycleOwner.lifecycleScope.launch {
-            usersFlow.collectLatest { users ->
+        val avatarsAdapterCallback = object : AvatarsAdapter.Callback {
+            override fun onItemClick(position: Int) {
                 // Noop
             }
+
         }
 
-        val catalogAdapterCallback = object : CatalogAdapter.Callback {
-            override fun onCardClicked(position: Int, cardPosition: Int) {
-                val catalogUiModel = uiState.value.catalogList?.get(position)!!
-                catalogUiModel as CatalogUiModel.Catalog
-                gotoCatalogDetail(catalogUiModel.category, cardPosition)
-            }
-
-            override fun onMoreClicked(position: Int) {
-                val catalogUiModel = uiState.value.catalogList?.get(position)!!
-                catalogUiModel as CatalogUiModel.Catalog
-                gotoCatalogDetail(catalogUiModel.category)
-            }
-        }
-
-        val catalogAdapter = CatalogAdapter(catalogAdapterCallback)
+        val avatarsAdapter = AvatarsAdapter(avatarsAdapterCallback)
         bindList(
-            adapter = catalogAdapter,
+            adapter = avatarsAdapter,
             uiState = uiState
         )
 
@@ -140,7 +121,7 @@ class CatalogFragment : Fragment() {
     }
 
     private fun FragmentCatalogBinding.bindList(
-        adapter: CatalogAdapter,
+        adapter: AvatarsAdapter,
         uiState: StateFlow<CatalogState>
     ) {
         catalogList.adapter = adapter
@@ -172,12 +153,12 @@ class CatalogFragment : Fragment() {
         }
     }
 
-    private fun gotoCatalogDetail(category: Category, cardClickPosition: Int = -1) {
+    /*private fun gotoCatalogDetail(category: Category, cardClickPosition: Int = -1) {
         findNavController().apply {
             val args = Bundle()
             args.putParcelable(Constant.EXTRA_DATA, category)
             args.putInt("click_position", cardClickPosition)
             navigate(R.id.action_catalog_list_to_catalog_detail, args)
         }
-    }
+    }*/
 }

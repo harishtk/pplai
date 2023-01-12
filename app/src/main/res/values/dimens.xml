@@ -53,4 +53,13 @@
     <dimen name="large_card_size">200dp</dimen>
     <dimen name="medium_card_size">120dp</dimen>
     <dimen name="tab_indicator_size">8dp</dimen>
+
+    <dimen name="profile_image_size_small">40dp</dimen>
+    <dimen name="profile_image_size_small_medium">42dp</dimen>
+    <dimen name="profile_image_size_medium">50dp</dimen>
+    <dimen name="profile_image_size_large_medium">60dp</dimen>
+    <dimen name="profile_image_size_large">70dp</dimen>
+    <dimen name="profile_image_size_xlarge">90dp</dimen>
+    <dimen name="profile_image_size_xxlarge">110dp</dimen>
+    <dimen name="profile_image_size_xxxlarge">130dp</dimen>
 </resources>

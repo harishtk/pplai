@@ -5,6 +5,7 @@ import com.pepulai.app.commons.util.NetWorkHelper
 import com.pepulai.app.commons.util.NetworkResult
 import com.pepulai.app.di.IoDispatcher
 import com.pepulai.app.feature.home.data.source.remote.model.HomeResponse
+import com.pepulai.app.feature.home.data.source.remote.model.HomeResponseOld
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -17,6 +18,11 @@ class HomeRemoteDataSource @Inject constructor(
     @IoDispatcher
     private val dispatcher: CoroutineDispatcher
 ) : BaseRemoteDataSource(netWorkHelper) {
+
+    fun getHomeOld(): Flow<NetworkResult<HomeResponseOld>> = flow {
+        emit(NetworkResult.Loading())
+        emit(safeApiCall { apiService.homeOld() })
+    }.flowOn(dispatcher)
 
     fun getHome(): Flow<NetworkResult<HomeResponse>> = flow {
         emit(NetworkResult.Loading())

@@ -9,6 +9,8 @@ import com.pepulai.app.commons.util.net.EmptyResponseException
 import com.pepulai.app.feature.home.data.source.remote.HomeRemoteDataSource
 import com.pepulai.app.feature.home.data.source.remote.dto.toCategory
 import com.pepulai.app.feature.home.data.source.remote.dto.toUserModel
+import com.pepulai.app.feature.home.data.source.remote.model.toAvatar
+import com.pepulai.app.feature.home.domain.model.Avatar
 import com.pepulai.app.feature.home.domain.model.UserAndCategory
 import com.pepulai.app.feature.home.domain.repository.HomeRepository
 import kotlinx.coroutines.flow.Flow
@@ -20,8 +22,34 @@ class HomeRepositoryImpl @Inject constructor(
     private val remoteDataSource: HomeRemoteDataSource,
 ) : HomeRepository, NetworkResultParser {
 
-    override fun getCatalog(): Flow<Result<UserAndCategory>> {
+    override fun getAvatars(): Flow<Result<List<Avatar>>> {
         return remoteDataSource.getHome().map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val data = networkResult.data
+                        if (data != null) {
+                            val avatars: List<Avatar> = data?.data?.avatars?.map { it.toAvatar() }
+                                ?: listOf<Avatar>()
+                            Result.Success(avatars)
+                        } else {
+                            val cause = EmptyResponseException("No data")
+                            Result.Error(ApiException(cause))
+                        }
+                    } else {
+                        val cause =
+                            BadResponseException("Unexpected response code: ${networkResult.code}")
+                        Result.Error(ApiException(cause))
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
+    }
+
+    override fun getCatalog(): Flow<Result<UserAndCategory>> {
+        return remoteDataSource.getHomeOld().map { networkResult ->
             when (networkResult) {
                 is NetworkResult.Loading -> Result.Loading
                 is NetworkResult.Success -> {
