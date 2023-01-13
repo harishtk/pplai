@@ -11,10 +11,14 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
+import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import com.pepulai.app.R
 import com.pepulai.app.databinding.FragmentWalthrough1Binding
+import com.pepulai.app.makeColoredSubstring
+import org.w3c.dom.Text
+import java.util.Collections
 
 class WalkThroughContent1 : Fragment() {
 
@@ -42,18 +46,12 @@ class WalkThroughContent1 : Fragment() {
             repeatCount = Animation.INFINITE
         }
 
-        /*val spString = SpannableString(getString(R.string.delete))
-        spString.setSpan(
-            ForegroundColorSpan(
-                ResourcesCompat.getColor(
-                    resources,
-                    R.color.red,
-                    null
-                )
-            ), 0, spString.length, 0
+        val span = makeColoredSubstring(
+            requireContext(),
+            getString(R.string.walkthrough_big_des_1),
+            Collections.singletonList(getString(R.string.walkthrough_big_des_1_multicolor))
         )
-        spString.setSpan(StyleSpan(Typeface.BOLD), 0, spString.length, 0)
-        deleteItem.setTitle(spString)*/
+        bigDescription1.setText(span, TextView.BufferType.SPANNABLE)
 
         col1.startAnimation(topDownAnimation)
         col3.startAnimation(topDownAnimation)

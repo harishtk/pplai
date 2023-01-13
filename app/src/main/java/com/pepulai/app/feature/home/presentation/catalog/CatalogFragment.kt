@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.pepulai.app.R
+import com.pepulai.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.pepulai.app.databinding.FragmentCatalogBinding
 import com.pepulai.app.di.ApplicationDependencies
 import com.pepulai.app.feature.home.presentation.util.AvatarsAdapter
@@ -112,10 +113,13 @@ class CatalogFragment : Fragment() {
         }
 
         val avatarsAdapter = AvatarsAdapter(avatarsAdapterCallback)
+
         bindList(
             adapter = avatarsAdapter,
             uiState = uiState
         )
+
+        bindClick()
 
         bindToolbar()
     }
@@ -132,6 +136,25 @@ class CatalogFragment : Fragment() {
             catalogListFlow.collectLatest { catalogList ->
                 adapter.submitList(catalogList)
             }
+        }
+    }
+
+    private fun FragmentCatalogBinding.bindClick() {
+        btnCreateMasterPiece.setOnClickListener {
+            try {
+                findNavController().apply {
+                    navigate(R.id.action_catalog_list_to_upload_step_1)
+                }
+            } catch (ignore: Exception) {}
+        }
+
+        toolbarTitle.setOnClickListener {
+            toolbarTitle.touchInteractFeedback()
+            try {
+                findNavController().apply {
+                    navigate(R.id.action_catalog_list_to_subscription_plans)
+                }
+            } catch (ignore: Exception) {}
         }
     }
 

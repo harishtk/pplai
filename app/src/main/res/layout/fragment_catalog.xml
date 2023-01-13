@@ -139,7 +139,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
                 tools:listitem="@layout/item_big_avatar" />
 
             <ProgressBar android:id="@+id/progress_bar"
@@ -149,6 +149,32 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/bottom_barrier"
+                app:barrierDirection="top"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:constraint_referenced_ids="btn_create_master_piece"/>
+
+            <com.google.android.material.button.MaterialButton
+                style="@style/Widget.App.Button"
+                android:id="@+id/btn_create_master_piece"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:insetBottom="@dimen/inset_large"
+                android:insetLeft="@dimen/inset_large"
+                android:insetTop="@dimen/inset_large"
+                android:insetRight="@dimen/inset_large"
+                android:text="@string/create_your_masterpiece"
+                app:icon="@drawable/baseline_add_24"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:visibility="visible"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

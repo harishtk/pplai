@@ -28,6 +28,7 @@
     <color name="grey_divider_color">#4D4C4C</color>
 
     <!-- Text Colors -->
+    <color name="text_primary">#5C5C5C</color>
     <color name="text_secondary">#5C5C5C</color>
     <color name="text_secondary_alt">#969A9E</color>
     <color name="text_color_fancy">#20A2E5</color>
@@ -47,4 +48,5 @@
     <color name="tab_indicator_selected">#000000</color>
 
     <color name="blue_grey_700">#383D48</color>
+    <color name="white_grey">#EFEFEF</color>
 </resources>

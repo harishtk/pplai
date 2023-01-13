@@ -23,6 +23,20 @@
             app:popEnterAnim="@anim/fast_fade_in"
             app:popExitAnim="@anim/fast_fade_out" />
 
+        <action android:id="@+id/action_catalog_list_to_upload_step_1"
+            app:destination="@id/upload_step_1"
+            app:enterAnim="@anim/fast_fade_in"
+            app:exitAnim="@anim/fast_fade_out"
+            app:popEnterAnim="@anim/fast_fade_in"
+            app:popExitAnim="@anim/fast_fade_out" />
+
+        <action android:id="@+id/action_catalog_list_to_subscription_plans"
+            app:destination="@id/subscription_plans"
+            app:enterAnim="@anim/fast_fade_in"
+            app:exitAnim="@anim/fast_fade_out"
+            app:popEnterAnim="@anim/fast_fade_in"
+            app:popExitAnim="@anim/fast_fade_out" />
+
     </fragment>
 
     <fragment android:id="@+id/catalog_detail"
@@ -47,4 +61,40 @@
         android:name="com.pepulai.app.feature.home.presentation.profile.SettingsFragment"
         android:label="Settings"
         tools:layout="@layout/fragment_settings" />
+
+    <fragment android:id="@+id/upload_step_1"
+        android:name="com.pepulai.app.feature.home.presentation.create.UploadStep1Fragment"
+        android:label="Upload Step 1"
+        tools:layout="@layout/fragment_upload_step1">
+
+        <action android:id="@+id/action_upload_step_1_to_upload_step_2"
+            app:destination="@id/upload_step_2"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/fast_fade_in"
+            app:popExitAnim="@anim/fast_fade_out" />
+    </fragment>
+
+    <fragment android:id="@+id/upload_step_2"
+        android:name="com.pepulai.app.feature.home.presentation.create.UploadStep2Fragment"
+        android:label="Upload Step 2"
+        tools:layout="@layout/fragment_upload_step2">
+
+        <action android:id="@+id/action_upload_step_2_to_upload_step_3"
+            app:destination="@id/upload_step_3"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/fast_fade_in"
+            app:popExitAnim="@anim/fast_fade_out" />
+    </fragment>
+
+    <fragment android:id="@+id/upload_step_3"
+        android:name="com.pepulai.app.feature.home.presentation.create.UploadStep3Fragment"
+        android:label="Upload Step 3"
+        tools:layout="@layout/fragment_upload_step3" />
+
+    <fragment android:id="@+id/subscription_plans"
+        android:name="com.pepulai.app.feature.home.presentation.subscription.SubscriptionFragment"
+        android:label="Subscription"
+        tools:layout="@layout/fragment_subscription" />
 </navigation>
