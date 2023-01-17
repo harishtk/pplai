@@ -5,7 +5,7 @@
     android:id="@+id/home_nav_graph">
 
     <fragment android:id="@+id/catalog_list"
-        android:name="com.pepulai.app.feature.home.presentation.catalog.CatalogFragment"
+        android:name="com.aiavatar.app.feature.home.presentation.catalog.CatalogFragment"
         android:label="AI Catalog"
         tools:layout="@layout/fragment_catalog">
 
@@ -40,12 +40,12 @@
     </fragment>
 
     <fragment android:id="@+id/catalog_detail"
-        android:name="com.pepulai.app.feature.home.presentation.catalog.CatalogDetailFragment"
+        android:name="com.aiavatar.app.feature.home.presentation.catalog.CatalogDetailFragment"
         android:label="Catalog Detail"
         tools:layout="@layout/fragment_catalog_detail"/>
 
     <fragment android:id="@+id/profile"
-        android:name="com.pepulai.app.feature.home.presentation.profile.ProfileFragment"
+        android:name="com.aiavatar.app.feature.home.presentation.profile.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile">
 
@@ -58,12 +58,12 @@
     </fragment>
 
     <fragment android:id="@+id/settings"
-        android:name="com.pepulai.app.feature.home.presentation.profile.SettingsFragment"
+        android:name="com.aiavatar.app.feature.home.presentation.profile.SettingsFragment"
         android:label="Settings"
         tools:layout="@layout/fragment_settings" />
 
     <fragment android:id="@+id/upload_step_1"
-        android:name="com.pepulai.app.feature.home.presentation.create.UploadStep1Fragment"
+        android:name="com.aiavatar.app.feature.home.presentation.create.UploadStep1Fragment"
         android:label="Upload Step 1"
         tools:layout="@layout/fragment_upload_step1">
 
@@ -76,7 +76,7 @@
     </fragment>
 
     <fragment android:id="@+id/upload_step_2"
-        android:name="com.pepulai.app.feature.home.presentation.create.UploadStep2Fragment"
+        android:name="com.aiavatar.app.feature.home.presentation.create.UploadStep2Fragment"
         android:label="Upload Step 2"
         tools:layout="@layout/fragment_upload_step2">
 
@@ -89,12 +89,12 @@
     </fragment>
 
     <fragment android:id="@+id/upload_step_3"
-        android:name="com.pepulai.app.feature.home.presentation.create.UploadStep3Fragment"
+        android:name="com.aiavatar.app.feature.home.presentation.create.UploadStep3Fragment"
         android:label="Upload Step 3"
         tools:layout="@layout/fragment_upload_step3" />
 
     <fragment android:id="@+id/subscription_plans"
-        android:name="com.pepulai.app.feature.home.presentation.subscription.SubscriptionFragment"
+        android:name="com.aiavatar.app.feature.home.presentation.subscription.SubscriptionFragment"
         android:label="Subscription"
         tools:layout="@layout/fragment_subscription" />
 </navigation>

@@ -78,7 +78,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <com.pepulai.app.feature.onboard.presentation.utils.AutoScrollRecyclerView
+            <com.aiavatar.app.feature.onboard.presentation.utils.AutoScrollRecyclerView
                 android:id="@+id/list1"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
@@ -87,7 +87,7 @@
                 android:layout_weight="1"
                 tools:listitem="@layout/item_circle_image" />
 
-            <com.pepulai.app.feature.onboard.presentation.utils.AutoScrollRecyclerView
+            <com.aiavatar.app.feature.onboard.presentation.utils.AutoScrollRecyclerView
                 android:id="@+id/list2"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
@@ -96,7 +96,7 @@
                 android:layout_weight="1"
                 tools:listitem="@layout/item_circle_image" />
 
-            <com.pepulai.app.feature.onboard.presentation.utils.AutoScrollRecyclerView
+            <com.aiavatar.app.feature.onboard.presentation.utils.AutoScrollRecyclerView
                 android:id="@+id/list3"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
