@@ -57,4 +57,9 @@
     <string name="content_description_download">Download</string>
     <string name="num_photos">%1$d Photos</string>
     <string name="subscription_description">%1$d variations in %2$d styles</string>
+    <string name="content_description_selected_photo">Selected Photo Indicator</string>
+
+    <string name="general_notifications_channel_id">ai_avatar_general_alerts</string>
+    <string name="title_general_notifications">General Alerts</string>
+    <string name="desc_general_notifications">All alerts from AI Avatar</string>
 </resources>

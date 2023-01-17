@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentUploadStep1Binding
+import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageAdapter
 
 class UploadStep1Fragment : Fragment() {
 
@@ -27,6 +28,26 @@ class UploadStep1Fragment : Fragment() {
     }
 
     private fun FragmentUploadStep1Binding.bindState() {
+
+        val adapter = SquareImageAdapter()
+        goodExamplesList.adapter = adapter
+
+        val resList = listOf<Int>(
+            R.drawable.wt_small_grid_1,
+            R.drawable.wt_small_grid_2,
+            R.drawable.wt_small_grid_3,
+            R.drawable.wt_small_grid_4,
+            R.drawable.wt_small_grid_5,
+            R.drawable.wt_small_grid_6,
+            R.drawable.wt_small_grid_7,
+            R.drawable.wt_small_grid_8,
+            R.drawable.wt_small_grid_9,
+            R.drawable.wt_small_grid_10,
+            R.drawable.wt_small_grid_11,
+            R.drawable.wt_small_grid_12,
+        )
+        adapter.submitList(resList)
+
         btnNext.setOnClickListener {
             try {
                 findNavController().apply {

@@ -32,7 +32,7 @@ class WalkThroughContent1 : Fragment() {
     }
 
     private fun FragmentWalthrough1Binding.bindState() {
-        val spacingPx = resources.getDimensionPixelSize(R.dimen.spacer_size_small)
+        val spacingPx = resources.getDimensionPixelSize(R.dimen.default_spacer_height)
         val topDownAnimation = TranslateAnimation(0f, 0f, 0f,  spacingPx.toFloat()).apply {
             duration = 2000L
             interpolator = AccelerateDecelerateInterpolator()
@@ -56,7 +56,8 @@ class WalkThroughContent1 : Fragment() {
             repeatMode = Animation.REVERSE
             repeatCount = Animation.INFINITE
         }
-        col2.postDelayed({col2.startAnimation(bottomUpAnimation)}, 500L)
+        // col2.postDelayed({col2.startAnimation(bottomUpAnimation)}, 0L)
+        col2.startAnimation(bottomUpAnimation)
 
     }
 }

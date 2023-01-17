@@ -70,6 +70,15 @@ class CatalogFragment : Fragment() {
             }
         }
 
+        val avatarsAdapterCallback = object : AvatarsAdapter.Callback {
+            override fun onItemClick(position: Int) {
+                // Noop
+            }
+
+        }
+
+        val avatarsAdapter = AvatarsAdapter(avatarsAdapterCallback)
+
         val notLoadingFlow = uiState.map { it.loadState }
             .map { it.refresh !is LoadState.Loading }
         val hasErrorsFlow = uiState.map { it.exception != null }
@@ -80,6 +89,7 @@ class CatalogFragment : Fragment() {
                 Boolean::and
             ).collectLatest { hasError ->
                 if (hasError) {
+                    retryButton.isVisible = avatarsAdapter.itemCount <= 0
                     val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorText
                     if (e != null) {
                         if (uiErr != null) {
@@ -97,6 +107,9 @@ class CatalogFragment : Fragment() {
             loadStateFlow.collectLatest { loadStateFlow ->
                 progressBar.isVisible = loadStateFlow.refresh is LoadState.Loading
                 swipeRefreshLayout.isRefreshing = loadStateFlow.refresh is LoadState.Loading
+                if (loadStateFlow.refresh is LoadState.Loading) {
+                    retryButton.isVisible = false
+                }
             }
         }
 
@@ -104,15 +117,6 @@ class CatalogFragment : Fragment() {
         swipeRefreshLayout.setOnRefreshListener {
             viewModel.refresh()
         }
-
-        val avatarsAdapterCallback = object : AvatarsAdapter.Callback {
-            override fun onItemClick(position: Int) {
-                // Noop
-            }
-
-        }
-
-        val avatarsAdapter = AvatarsAdapter(avatarsAdapterCallback)
 
         bindList(
             adapter = avatarsAdapter,
@@ -156,6 +160,8 @@ class CatalogFragment : Fragment() {
                 }
             } catch (ignore: Exception) {}
         }
+
+        retryButton.setOnClickListener { viewModel.refresh() }
     }
 
     private fun FragmentCatalogBinding.bindToolbar() {

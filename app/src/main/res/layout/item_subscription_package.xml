@@ -84,14 +84,14 @@
                             android:textColor="@color/selector_indicator_inverse" />
 
                         <TextView android:id="@+id/text_price"
-                            style="@style/Base.TextAppearance.Bold"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="99"
                             android:textColor="@color/selector_indicator_inverse"
                             android:textSize="@dimen/text_size_huge"
                             android:singleLine="true"
-                            android:layout_marginEnd="10dp"/>
+                            android:layout_marginEnd="10dp"
+                            android:fontFamily="@font/avenirnext_bold"/>
 
                     </LinearLayout>
 

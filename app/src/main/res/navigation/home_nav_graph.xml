@@ -25,10 +25,10 @@
 
         <action android:id="@+id/action_catalog_list_to_upload_step_1"
             app:destination="@id/upload_step_1"
-            app:enterAnim="@anim/fast_fade_in"
-            app:exitAnim="@anim/fast_fade_out"
-            app:popEnterAnim="@anim/fast_fade_in"
-            app:popExitAnim="@anim/fast_fade_out" />
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
 
         <action android:id="@+id/action_catalog_list_to_subscription_plans"
             app:destination="@id/subscription_plans"
@@ -69,7 +69,7 @@
 
         <action android:id="@+id/action_upload_step_1_to_upload_step_2"
             app:destination="@id/upload_step_2"
-            app:enterAnim="@anim/slide_in_left"
+            app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_right"
             app:popEnterAnim="@anim/fast_fade_in"
             app:popExitAnim="@anim/fast_fade_out" />
@@ -82,10 +82,10 @@
 
         <action android:id="@+id/action_upload_step_2_to_upload_step_3"
             app:destination="@id/upload_step_3"
-            app:enterAnim="@anim/slide_in_left"
+            app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_right"
-            app:popEnterAnim="@anim/fast_fade_in"
-            app:popExitAnim="@anim/fast_fade_out" />
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment android:id="@+id/upload_step_3"

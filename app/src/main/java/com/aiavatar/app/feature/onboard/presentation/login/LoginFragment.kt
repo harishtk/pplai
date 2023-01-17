@@ -7,6 +7,12 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.Animation.AnimationListener
+import android.view.animation.AnimationSet
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.RotateAnimation
 import android.view.inputmethod.EditorInfo
 import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
@@ -25,11 +31,13 @@ import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentLoginBinding
 import com.aiavatar.app.hideKeyboard
+import com.aiavatar.app.showSoftInputMode
 import com.aiavatar.app.showToast
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
@@ -53,9 +61,7 @@ class LoginFragment : Fragment() {
         val binding = FragmentLoginBinding.bind(view)
 
         binding.bindState(
-            uiState = viewModel.uiState,
-            uiAction = viewModel.accept,
-            uiEvent = viewModel.uiEvent
+            uiState = viewModel.uiState, uiAction = viewModel.accept, uiEvent = viewModel.uiEvent
         )
         handleBackPressed()
     }
@@ -80,20 +86,15 @@ class LoginFragment : Fragment() {
             }
         }
 
-        val notLoadingFlow = uiState.map { it.loadState }
-            .distinctUntilChanged { old, new ->
+        val notLoadingFlow = uiState.map { it.loadState }.distinctUntilChanged { old, new ->
                 old.refresh == new.refresh && old.action == new.action
-            }
-            .map { it.action !is LoadState.Loading && it.refresh !is LoadState.Loading }
+            }.map { it.action !is LoadState.Loading && it.refresh !is LoadState.Loading }
 
 
-        val hasErrorFlow = uiState.map { it.exception != null }
-            .distinctUntilChanged()
+        val hasErrorFlow = uiState.map { it.exception != null }.distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             combine(
-                notLoadingFlow,
-                hasErrorFlow,
-                Boolean::and
+                notLoadingFlow, hasErrorFlow, Boolean::and
             ).collectLatest { hasError ->
                 if (hasError) {
                     val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorMessage
@@ -103,9 +104,14 @@ class LoginFragment : Fragment() {
                         }
                         when (e) {
                             is ResolvableException -> {
-                                edEmail.shakeNow()
+                                if (uiState.value.loginSequence == LoginSequence.OTP_SENT) {
+                                    edOtp.shakeNow()
+                                } else {
+                                    edEmail.shakeNow()
+                                }
                                 HapticUtil.createError(requireContext())
                             }
+
                             else -> {
                                 when (e.cause) {
                                     is InvalidOtpException -> {
@@ -121,8 +127,7 @@ class LoginFragment : Fragment() {
             }
         }
 
-        val loadStateFlow = uiState.map { it.loadState }
-            .distinctUntilChangedBy { it.action }
+        val loadStateFlow = uiState.map { it.loadState }.distinctUntilChangedBy { it.action }
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
                 if (loadState.action is LoadState.Loading) {
@@ -133,33 +138,44 @@ class LoginFragment : Fragment() {
             }
         }
 
-        val loginSequenceFlow = uiState.map { it.loginSequence }
-            .distinctUntilChanged()
+        val loginSequenceFlow = uiState.map { it.loginSequence }.distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
             loginSequenceFlow.collectLatest { loginSequence ->
                 when (loginSequence) {
                     LoginSequence.TYPING_EMAIL -> {
                         edOtp.isVisible = false
                         edEmail.isEnabled = true
+                        textOr.isVisible = true
+                        socialLoginContainer.isVisible = true
+                        hideBackButton()
                     }
+
                     LoginSequence.OTP_SENT -> {
                         edOtp.isVisible = true
                         edEmail.isEnabled = false
+                        textOr.isVisible = false
+                        socialLoginContainer.isVisible = false
+
+                        /*edOtp.requestFocus()
+                        edOtp.requestFocusFromTouch()
+                        edOtp.showSoftInputMode()*/
+                        showBackButton()
                     }
-                    LoginSequence.OTP_VERIFIED -> { /* Noop */ }
+
+                    LoginSequence.OTP_VERIFIED -> { /* Noop */
+                    }
                 }
             }
         }
 
         bindInput(
-            uiState,
-            uiAction
+            uiState, uiAction
         )
 
         bindClick(
-            uiState = uiState,
-            uiAction = uiAction
+            uiState = uiState, uiAction = uiAction
         )
+
     }
 
     private fun FragmentLoginBinding.bindInput(
@@ -188,13 +204,9 @@ class LoginFragment : Fragment() {
             }
         }
 
-        edEmail.addTextChangedListener(
-            afterTextChanged = { updateTypedEmailValue(uiAction) }
-        )
+        edEmail.addTextChangedListener(afterTextChanged = { updateTypedEmailValue(uiAction) })
 
-        edOtp.addTextChangedListener(
-            afterTextChanged = { updateTypedOtpValue(uiAction)  }
-        )
+        edOtp.addTextChangedListener(afterTextChanged = { updateTypedOtpValue(uiAction) })
     }
 
     private fun FragmentLoginBinding.updateTypedEmailValue(
@@ -208,7 +220,7 @@ class LoginFragment : Fragment() {
     }
 
     private fun FragmentLoginBinding.updateTypedOtpValue(
-        onTyped: (LoginUiAction.TypingOtp) -> Unit
+        onTyped: (LoginUiAction.TypingOtp) -> Unit,
     ) {
         edOtp.text.toString().trim().let {
             if (it.isNotEmpty()) {
@@ -224,24 +236,118 @@ class LoginFragment : Fragment() {
         nextButton.setOnClickListener {
             uiAction(LoginUiAction.NextClick)
         }
+
+        cardBackButton.setOnClickListener {
+            Timber.d("Back pressed!")
+            viewModel.handleBackPressed()
+        }
+
+        edOtp.setOnClickListener {
+            edOtp.requestFocus()
+            edOtp.requestFocusFromTouch()
+            edOtp.showSoftInputMode()
+        }
+    }
+
+    private fun FragmentLoginBinding.showBackButton() {
+        val rotationAnim = RotateAnimation(
+            180f, 0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f
+        ).apply {
+            interpolator = DecelerateInterpolator()
+            duration = 200L
+            setAnimationListener(object : AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {
+                    cardBackButton.isVisible = true
+                }
+
+                override fun onAnimationEnd(animation: Animation?) {
+                    cardBackButton.animation = null
+                }
+
+                override fun onAnimationRepeat(animation: Animation?) {
+                    // Noop
+                }
+            })
+        }
+        val fadeInAnim = AlphaAnimation(0F, 1F).apply {
+            duration = 200L
+            setAnimationListener(object : AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {
+                    cardBackButton.alpha = 0F
+                }
+
+                override fun onAnimationEnd(animation: Animation?) {
+                    cardBackButton.alpha = 1.0F
+                }
+
+                override fun onAnimationRepeat(animation: Animation?) {
+                    // Noop
+                }
+            })
+        }
+        val animSet = AnimationSet(true)
+        animSet.addAnimation(rotationAnim)
+        animSet.addAnimation(fadeInAnim)
+        cardBackButton.startAnimation(animSet)
+    }
+
+    private fun FragmentLoginBinding.hideBackButton() {
+        val rotationAnim = RotateAnimation(
+            0F, -90F, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f
+        ).apply {
+            interpolator = DecelerateInterpolator()
+            duration = 200L
+            setAnimationListener(object : AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {
+                    // Noop
+                }
+
+                override fun onAnimationEnd(animation: Animation?) {
+                    cardBackButton.isVisible = false
+                    cardBackButton.animation = null
+                }
+
+                override fun onAnimationRepeat(animation: Animation?) {
+                    // Noop
+                }
+            })
+        }
+        val fadeOutAnim = AlphaAnimation(1F, 0F).apply {
+            duration = 200L
+            setAnimationListener(object : AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {
+                    // Noop
+                }
+
+                override fun onAnimationEnd(animation: Animation?) {
+                    cardBackButton.alpha = 1.0F
+                }
+
+                override fun onAnimationRepeat(animation: Animation?) {
+                    // Noop
+                }
+            })
+        }
+        val animSet = AnimationSet(true)
+        animSet.addAnimation(rotationAnim)
+        animSet.addAnimation(fadeOutAnim)
+        cardBackButton.startAnimation(animSet)
     }
 
     private fun handleBackPressed() {
-        activity?.onBackPressedDispatcher?.addCallback(
-            viewLifecycleOwner,
+        activity?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    activity?.finish()
+                    if (!viewModel.handleBackPressed()) {
+                        activity?.finish()
+                    }
                 }
             })
     }
 
     private fun animateAndEnd(view: View) {
         (view as ImageView).setImageDrawable(null)
-        view.animate()
-            .scaleX(50f)
-            .scaleY(50f)
-            .setDuration(500)
+        view.animate().scaleX(50f).scaleY(50f).setDuration(500)
             .setListener(object : Animator.AnimatorListener {
                 override fun onAnimationStart(p0: Animator) {
                     // Noop
@@ -258,8 +364,7 @@ class LoginFragment : Fragment() {
                 override fun onAnimationRepeat(p0: Animator) {
                     // Noop
                 }
-            })
-            .start()
+            }).start()
     }
 
     private fun gotoHome() {

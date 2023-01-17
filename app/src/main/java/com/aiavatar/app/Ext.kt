@@ -2,6 +2,7 @@ package com.aiavatar.app
 
 import android.content.Context
 import android.text.InputFilter
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.annotation.IdRes
@@ -72,6 +73,11 @@ fun EditText.allowOnlyCapitalNumericCharacters() {
 fun EditText.hideKeyboard(): Boolean {
     return ServiceUtil.getInputMethodManager(context)
         .hideSoftInputFromWindow(windowToken, 0)
+}
+
+fun EditText.showSoftInputMode(): Boolean {
+    return ServiceUtil.getInputMethodManager(context)
+        .showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
 }
 
 fun Context.showToast(message: String, isShort: Boolean = true) {

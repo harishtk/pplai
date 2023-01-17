@@ -25,15 +25,14 @@
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintVertical_bias="0.0"/>
 
-    <ScrollView android:id="@+id/scroll_container"
+    <androidx.core.widget.NestedScrollView android:id="@+id/scroll_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/title"
         app:layout_constraintBottom_toTopOf="@id/privacy_disclosure_container"
-        app:layout_constraintVertical_bias="0.0">
-
+        app:layout_constraintVertical_chainStyle="spread">
 
         <LinearLayout android:orientation="vertical"
             android:id="@+id/top_description_container"
@@ -128,6 +127,7 @@
                             android:padding="@dimen/inset_small"
                             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                             app:spanCount="4"
+                            android:overScrollMode="never"
                             tools:listitem="@layout/item_example_photo"
                             tools:itemCount="4"
                             tools:visibility="gone" />
@@ -175,6 +175,7 @@
                             android:padding="@dimen/inset_small"
                             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                             app:spanCount="4"
+                            android:overScrollMode="never"
                             tools:listitem="@layout/item_example_photo"
                             tools:itemCount="4"
                             tools:visibility="gone"/>
@@ -182,22 +183,69 @@
                     </LinearLayout>
 
                 </LinearLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/list_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    tools:visibility="gone">
+
+                    <TextView style="@style/TextStyle.VerySmall"
+                        android:id="@+id/preview_list_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="List comes \n here"
+                        android:textAlignment="center"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/preview_list"
+                        app:layout_constraintVertical_chainStyle="packed"
+                        app:layout_constraintVertical_bias="0.0"/>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/preview_list"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="true"
+                        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                        app:spanCount="3"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/preview_list_title"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/bottom_spacer"
+                        app:layout_constraintVertical_chainStyle="packed"
+                        app:layout_constraintVertical_bias="0.0"
+                        app:layout_constrainedHeight="true"
+                        tools:itemCount="10"
+                        tools:listitem="@layout/item_upload_preview" />
+
+                    <Space android:id="@+id/bottom_spacer"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/spacer_height_large"
+                        app:layout_constraintTop_toBottomOf="@id/preview_list"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
             </FrameLayout>
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <LinearLayout android:id="@+id/privacy_disclosure_container"
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/inset_medium"
+        android:padding="@dimen/inset_small"
         android:background="?attr/colorSurface"
         android:gravity="center"
         app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
-        app:layout_constraintTop_toBottomOf="@id/privacy_disclosure_container"
+        app:layout_constraintTop_toBottomOf="@id/scroll_container"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintVertical_bias="1.0">
+        app:layout_constraintVertical_chainStyle="spread">
 
         <ImageView
             android:layout_width="@dimen/small_icon_size"
@@ -219,7 +267,9 @@
         app:barrierDirection="top"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="btn_next"/>
+        app:constraint_referenced_ids="btn_next"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.button.MaterialButton
         style="@style/Widget.App.Button"
@@ -235,6 +285,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/bottom_spacer"
         android:visibility="visible"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

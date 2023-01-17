@@ -94,18 +94,22 @@
                 app:layout_constraintEnd_toStartOf="@id/col2"
                 app:layout_constraintHorizontal_chainStyle="spread">
 
-                <View
+                <com.google.android.material.imageview.ShapeableImageView
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_margin="4dp"
-                    android:background="@color/black"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.App.MediumComponent.Rounded"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/walkthrough_rectangle_4"
                     android:layout_weight="0.8" />
 
-                <View
+                <com.google.android.material.imageview.ShapeableImageView
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_margin="4dp"
-                    android:background="@color/black"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.App.MediumComponent.Rounded"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/walkthrough_rectangle_1"
                     android:layout_weight="0.8" />
 
                 <View
@@ -137,18 +141,22 @@
                     android:background="@android:color/transparent"
                     android:layout_weight="0.3" />
 
-                <View
+                <com.google.android.material.imageview.ShapeableImageView
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_margin="4dp"
-                    android:background="@color/black"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.App.MediumComponent.Rounded"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/walkthrough_rectangle_2"
                     android:layout_weight="0.8" />
 
-                <View
+                <com.google.android.material.imageview.ShapeableImageView
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_margin="4dp"
-                    android:background="@color/black"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.App.MediumComponent.Rounded"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/walkthrough_rectangle_3"
                     android:layout_weight="0.8" />
 
             </LinearLayout>
@@ -166,18 +174,22 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_chainStyle="spread">
 
-                <View
+                <com.google.android.material.imageview.ShapeableImageView
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_margin="4dp"
-                    android:background="@color/black"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.App.MediumComponent.Rounded"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/walkthrough_rectangle_5"
                     android:layout_weight="0.8" />
 
-                <View
+                <com.google.android.material.imageview.ShapeableImageView
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_margin="4dp"
-                    android:background="@color/black"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/walkthrough_rectangle_6"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.App.MediumComponent.Rounded"
                     android:layout_weight="0.8" />
 
                 <View

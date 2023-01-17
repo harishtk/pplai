@@ -1,10 +1,15 @@
 package com.aiavatar.app
 
 import android.content.Intent
+import android.os.Build
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.WindowInsets
+import android.view.WindowManager
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentContainer
+import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
@@ -27,6 +32,28 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         super.onCreate(savedInstanceState)
         installSplashScreen()
         setContentView(R.layout.activity_main)
+
+        val token = ApplicationDependencies.getPersistentStore().fcmToken
+        Timber.d("FCM Token: $token")
+
+        val fragmentContainer = findViewById<FragmentContainerView>(R.id.fragment_container)
+
+        fragmentContainer.setOnApplyWindowInsetsListener { _, windowInsets ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val imeHeight = windowInsets.getInsets(WindowInsets.Type.ime()).bottom
+                val navHeight = windowInsets.getInsets(WindowInsets.Type.navigationBars()).bottom
+                val statusBarHeight = windowInsets.getInsets(WindowInsets.Type.statusBars()).top
+                Timber.d("Insets: imeHeight=$imeHeight navHeight=$navHeight statusBarHeight=$statusBarHeight")
+                fragmentContainer.setPadding(0, statusBarHeight, 0, imeHeight.coerceAtLeast(navHeight))
+            }
+            windowInsets
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+        } else {
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN)
+        }
 
         setNavGraph()
 

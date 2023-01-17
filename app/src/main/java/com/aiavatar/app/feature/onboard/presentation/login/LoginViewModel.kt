@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.onboard.presentation.login
 
+import android.util.Log
 import androidx.core.util.PatternsCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -95,8 +96,26 @@ class LoginViewModel @Inject constructor(
                     LoginSequence.OTP_VERIFIED -> { /* Noop */ }
                 }
             }
-
         }
+    }
+
+    fun handleBackPressed(): Boolean {
+        return handleBackPressedInternal()
+    }
+
+    private fun handleBackPressedInternal(): Boolean {
+        Log.d("LoginViewModel", "handleBackPressedInternal() called")
+        val currentSequence = uiState.value.loginSequence
+        if (currentSequence == LoginSequence.OTP_SENT) {
+            _uiState.update { state ->
+                state.copy(
+                    loginSequence = LoginSequence.TYPING_EMAIL,
+                    typedOtp = ""
+                )
+            }
+            return true
+        }
+        return false
     }
 
     private fun validateOtp() {

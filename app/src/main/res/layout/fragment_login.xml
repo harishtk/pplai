@@ -30,7 +30,33 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true">
+
+                <FrameLayout android:id="@+id/card_back_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/inset_large_medium"
+                    android:padding="@dimen/inset_small"
+                    android:background="@drawable/ic_add_placeholder_bg"
+                    android:elevation="1dp"
+                    android:visibility="gone"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintVertical_bias="0.0"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    tools:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="@dimen/default_icon_size"
+                        android:layout_height="@dimen/default_icon_size"
+                        android:src="@drawable/arrow_right"
+                        app:tint="@color/white"
+                        android:rotation="180" />
+
+                </FrameLayout>
 
                 <TextView style="@style/Base.TextAppearance.Bold"
                     android:id="@+id/title_sign_in"
@@ -112,8 +138,31 @@
                         <Space android:layout_width="match_parent"
                             android:layout_height="@dimen/spacer_size_very_small" />
 
-                        <com.google.android.material.textfield.TextInputEditText style="@style/Widget.App.EditText.OutlinedBox.Alt"
+                        <com.mukesh.mukeshotpview.mukeshOtpView.MukeshOtpView
                             android:id="@+id/ed_otp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textColor="@color/white"
+                            android:textAppearance="@style/TextStyle.Medium"
+                            android:layout_gravity="center"
+                            app:hideLineWhenFilled="false"
+                            app:itemCount="6"
+                            app:itemWidth="@dimen/_40sdp"
+                            app:itemHeight="@dimen/_40sdp"
+                            android:cursorVisible="true"
+                            android:clickable="true"
+                            android:focusable="true"
+                            app:state_filled="true"
+                            app:viewType="rectangle"
+                            app:itemSpacing="10dp"
+                            app:lineWidth="2dp"
+                            app:itemRadius="@dimen/corner_size_small"
+                            android:enabled="true"
+                            tools:text="123456"/>
+
+                        <com.google.android.material.textfield.TextInputEditText style="@style/Widget.App.EditText.OutlinedBox.Alt"
+                            android:id="@+id/ed_otp_old"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="@dimen/spacer_size_very_small"
@@ -123,7 +172,8 @@
                             android:imeOptions="actionGo"
                             android:singleLine="true"
                             android:textAlignment="center"
-                            android:textSize="@dimen/text_size_very_small" />
+                            android:textSize="@dimen/text_size_very_small"
+                            android:visibility="gone"/>
 
                     </LinearLayout>
 
@@ -182,7 +232,8 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/next_button"
-                    app:layout_constraintBottom_toTopOf="@id/social_login_container" />
+                    app:layout_constraintBottom_toTopOf="@id/social_login_container"
+                    tools:visibility="gone"/>
 
                 <LinearLayout android:orientation="vertical"
                     android:id="@+id/social_login_container"
@@ -191,7 +242,8 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/text_or"
-                    app:layout_constraintBottom_toBottomOf="parent">
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    tools:visibility="gone">
 
                     <com.google.android.material.button.MaterialButton
                         style="@style/Widget.App.Button.Alt"

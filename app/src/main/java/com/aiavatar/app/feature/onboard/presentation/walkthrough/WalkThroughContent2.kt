@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.DrawableRes
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.clearFragmentResultListener
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -33,12 +35,24 @@ class WalkThroughContent2 : Fragment() {
     }
 
     private fun FragmentWalthrough2Binding.bindState() {
-        val colors = (0..15).map { Color.parseColor(getRandomHexCode()) }.toList()
-
         val adapter = SquareImageAdapter()
         list1.adapter = adapter
 
-        adapter.submitList(colors)
+        val resList = listOf<Int>(
+            R.drawable.wt_small_grid_1,
+            R.drawable.wt_small_grid_2,
+            R.drawable.wt_small_grid_3,
+            R.drawable.wt_small_grid_4,
+            R.drawable.wt_small_grid_5,
+            R.drawable.wt_small_grid_6,
+            R.drawable.wt_small_grid_7,
+            R.drawable.wt_small_grid_8,
+            R.drawable.wt_small_grid_9,
+            R.drawable.wt_small_grid_10,
+            R.drawable.wt_small_grid_11,
+            R.drawable.wt_small_grid_12,
+        )
+        adapter.submitList(resList)
     }
 }
 
@@ -58,8 +72,8 @@ class SquareImageAdapter : ListAdapter<Int, RecyclerView.ViewHolder>(DIFF_CALLBA
         private val binding: ItemCircleImageBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(color: Int) = with(binding) {
-            view1.setImageDrawable(ColorDrawable(color))
+        fun bind(@DrawableRes resImage: Int) = with(binding) {
+            view1.setImageResource(resImage)
         }
 
         companion object {
@@ -77,6 +91,7 @@ class SquareImageAdapter : ListAdapter<Int, RecyclerView.ViewHolder>(DIFF_CALLBA
     }
 
     companion object {
+
         val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Int>() {
             override fun areItemsTheSame(oldItem: Int, newItem: Int): Boolean {
                 return oldItem == newItem

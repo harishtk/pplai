@@ -27,4 +27,8 @@ object Constant {
     const val ENV_STAGE = "staging"
     const val ENV_PROD = "prod"
     const val ENV_SPECIAL = "sp"
+
+    /** Permission **/
+    const val PERMISSION_DENIED = "PERMISSION_DENIED"
+    const val PERMISSION_PERMANENTLY_DENIED = "PERMISSION_PERMANENTLY_DENIED"
 }

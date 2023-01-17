@@ -64,4 +64,6 @@
     <dimen name="profile_image_size_xlarge">90dp</dimen>
     <dimen name="profile_image_size_xxlarge">110dp</dimen>
     <dimen name="profile_image_size_xxxlarge">130dp</dimen>
+
+    <dimen name="default_stroke_width">1dp</dimen>
 </resources>
