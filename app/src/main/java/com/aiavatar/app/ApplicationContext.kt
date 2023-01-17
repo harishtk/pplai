@@ -48,7 +48,12 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener {
             .addBlocking("lifecycle-observer") {
                 ApplicationDependencies.getAppForegroundObserver().addListener(this)
             }
+            .addBlocking("after-create", this::setupApp)
             .execute()
+    }
+
+    private fun setupApp() {
+        ApplicationDependencies.getPersistentStore().getOrCreateDeviceId()
     }
 
     private fun initApplicationDependencies() {

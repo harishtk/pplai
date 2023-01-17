@@ -6,11 +6,11 @@ object Constant {
     const val AVATAR_IMAGE_PREFIX = "https://d1tg9uvib8ymg6.cloudfront.net/avatar/"
 
     /* Extras */
-    const val EXTRA_DATA = "com.pepulai.app.extras.DATA"
-    const val EXTRA_ENGAGED_TIME = "com.pepulai.app.extras.ENGAGED_TIME"
-    const val EXTRA_STREAM_URL = "com.pepulai.app.extras.STREAM_URL"
-    const val EXTRA_STREAM_NAME = "com.pepulai.app.extras.STREAM_NAME"
-    const val EXTRA_STREAM_ID   = "com.pepulai.app.extras.STREAM_ID"
+    const val EXTRA_DATA = "com.aiavatar.app.extras.DATA"
+    const val EXTRA_ENGAGED_TIME = "com.aiavatar.app.extras.ENGAGED_TIME"
+    const val EXTRA_STREAM_URL = "com.aiavatar.app.extras.STREAM_URL"
+    const val EXTRA_STREAM_NAME = "com.aiavatar.app.extras.STREAM_NAME"
+    const val EXTRA_STREAM_ID   = "com.aiavatar.app.extras.STREAM_ID"
 
     const val MIME_TYPE_JPEG = "image/jpeg"
     const val MIME_TYPE_PLAIN_TEXT = "text/plain"

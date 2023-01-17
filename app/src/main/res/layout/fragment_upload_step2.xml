@@ -21,157 +21,198 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/spacer1"
-        app:layout_constraintBottom_toTopOf="@id/top_description_container" />
+        app:layout_constraintBottom_toTopOf="@id/scroll_container"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintVertical_bias="0.0"/>
 
-    <LinearLayout android:orientation="vertical"
-        android:id="@+id/top_description_container"
-        android:layout_width="wrap_content"
+    <ScrollView android:id="@+id/scroll_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/title"
-        android:gravity="center">
+        app:layout_constraintBottom_toTopOf="@id/privacy_disclosure_container"
+        app:layout_constraintVertical_bias="0.0">
 
-        <TextView android:id="@+id/big_description_1"
-            style="@style/Base.TextAppearance.Bold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Upload Photos"
-            android:textSize="@dimen/text_size_huge"
-            android:lineSpacingMultiplier="0.9"
-            android:textAlignment="center"/>
-
-        <TextView android:id="@+id/small_description1"
-            style="@style/TextStyle.VerySmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/inset_large"
-            android:text="@string/upload_step_des1"
-            android:textColor="@color/text_secondary"
-            android:textAlignment="center"
-            app:layout_constraintTop_toBottomOf="@id/content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:visibility="gone"/>
-
-        <TextView android:id="@+id/big_description_2"
-            style="@style/Base.TextAppearance.Bold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Good Examples"
-            android:textSize="@dimen/text_size_huge"
-            android:lineSpacingMultiplier="0.9"
-            android:textAlignment="center"
-            android:visibility="gone"/>
-
-    </LinearLayout>
-
-    <FrameLayout android:id="@+id/content"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="@dimen/inset_small"
-        app:layout_constraintTop_toBottomOf="@id/top_description_container"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
-        android:background="@android:color/transparent">
 
         <LinearLayout android:orientation="vertical"
-            android:id="@+id/examples_container"
+            android:id="@+id/top_description_container"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title"
+            android:gravity="center">
 
-            <LinearLayout android:orientation="vertical"
-                android:id="@+id/good_examples_container"
+            <TextView android:id="@+id/big_description_1"
+                style="@style/Base.TextAppearance.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Upload Photos"
+                android:textSize="@dimen/text_size_huge"
+                android:lineSpacingMultiplier="0.9"
+                android:textAlignment="center"/>
+
+            <TextView android:id="@+id/small_description1"
+                style="@style/TextStyle.VerySmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/inset_large"
+                android:text="@string/upload_step_des1"
+                android:textColor="@color/text_secondary"
+                android:textAlignment="center"
+                app:layout_constraintTop_toBottomOf="@id/content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:visibility="gone"/>
+
+            <TextView android:id="@+id/big_description_2"
+                style="@style/Base.TextAppearance.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Good Examples"
+                android:textSize="@dimen/text_size_huge"
+                android:lineSpacingMultiplier="0.9"
+                android:textAlignment="center"
+                android:visibility="gone"/>
+
+            <FrameLayout android:id="@+id/content"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/inset_small"
+                app:layout_constraintTop_toBottomOf="@id/top_description_container"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
+                android:background="@android:color/transparent">
 
-                <TextView android:id="@+id/good_examples_title"
-                    style="@style/TextStyle.Large.Bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="@dimen/inset_large"
-                    android:text="Good Photo Examples"
-                    android:lineSpacingMultiplier="0.9"
-                    android:textAlignment="gravity"
-                    android:gravity="bottom"
-                    android:includeFontPadding="false"
-                    app:drawableStartCompat="@drawable/ic_thumbs_up"
-                    android:drawablePadding="@dimen/inset_small"/>
-
-                <TextView android:id="@+id/good_examples_description"
-                    style="@style/TextStyle.VerySmall"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="@dimen/inset_large"
-                    android:text="@string/good_examples_des_1"
-                    android:textColor="@color/text_primary"
-                    android:textAlignment="viewStart"
-                    app:layout_constraintTop_toBottomOf="@id/content"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/good_examples_list"
+                <LinearLayout android:orientation="vertical"
+                    android:id="@+id/examples_container"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="@dimen/inset_small"
-                    app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                    app:spanCount="4"
-                    tools:listitem="@layout/item_example_photo"
-                    tools:itemCount="4"/>
+                    android:layout_height="wrap_content">
 
-            </LinearLayout>
+                    <LinearLayout android:orientation="vertical"
+                        android:id="@+id/good_examples_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
 
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/spacer_size_small" />
+                        <TextView android:id="@+id/good_examples_title"
+                            style="@style/TextStyle.Large.Bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="@dimen/inset_large"
+                            android:text="Good Photo Examples"
+                            android:lineSpacingMultiplier="0.9"
+                            android:textAlignment="gravity"
+                            android:gravity="bottom"
+                            android:includeFontPadding="false"
+                            app:drawableStartCompat="@drawable/ic_thumbs_up"
+                            android:drawablePadding="@dimen/inset_small"/>
 
-            <LinearLayout android:orientation="vertical"
-                android:id="@+id/bad_examples_container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                        <TextView android:id="@+id/good_examples_description"
+                            style="@style/TextStyle.VerySmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="@dimen/inset_large"
+                            android:text="@string/good_examples_des_1"
+                            android:textColor="@color/text_primary"
+                            android:textAlignment="viewStart"
+                            app:layout_constraintTop_toBottomOf="@id/content"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent" />
 
-                <TextView android:id="@+id/bad_examples_title"
-                    style="@style/TextStyle.Large.Bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="@dimen/inset_large"
-                    android:text="Bad Photo Examples"
-                    android:lineSpacingMultiplier="0.9"
-                    android:textAlignment="gravity"
-                    android:gravity="bottom"
-                    android:includeFontPadding="false"
-                    app:drawableStartCompat="@drawable/ic_thumbs_down"
-                    android:drawablePadding="@dimen/inset_small"/>
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/good_examples_list"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="@dimen/inset_small"
+                            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                            app:spanCount="4"
+                            tools:listitem="@layout/item_example_photo"
+                            tools:itemCount="4"
+                            tools:visibility="gone" />
 
-                <TextView android:id="@+id/bad_examples_description"
-                    style="@style/TextStyle.VerySmall"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="@dimen/inset_large"
-                    android:text="@string/bad_examples_des_1"
-                    android:textColor="@color/text_primary"
-                    android:textAlignment="viewStart"
-                    app:layout_constraintTop_toBottomOf="@id/content"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                    </LinearLayout>
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/bad_examples_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="@dimen/inset_small"
-                    app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-                    app:spanCount="4"
-                    tools:listitem="@layout/item_example_photo"
-                    tools:itemCount="4"/>
+                    <Space
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/spacer_size_small" />
 
-            </LinearLayout>
+                    <LinearLayout android:orientation="vertical"
+                        android:id="@+id/bad_examples_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
 
+                        <TextView android:id="@+id/bad_examples_title"
+                            style="@style/TextStyle.Large.Bold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="@dimen/inset_large"
+                            android:text="Bad Photo Examples"
+                            android:lineSpacingMultiplier="0.9"
+                            android:textAlignment="gravity"
+                            android:gravity="bottom"
+                            android:includeFontPadding="false"
+                            app:drawableStartCompat="@drawable/ic_thumbs_down"
+                            android:drawablePadding="@dimen/inset_small"/>
+
+                        <TextView android:id="@+id/bad_examples_description"
+                            style="@style/TextStyle.VerySmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="@dimen/inset_large"
+                            android:text="@string/bad_examples_des_1"
+                            android:textColor="@color/text_primary"
+                            android:textAlignment="viewStart"
+                            app:layout_constraintTop_toBottomOf="@id/content"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/bad_examples_list"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="@dimen/inset_small"
+                            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                            app:spanCount="4"
+                            tools:listitem="@layout/item_example_photo"
+                            tools:itemCount="4"
+                            tools:visibility="gone"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </FrameLayout>
         </LinearLayout>
+    </ScrollView>
 
-    </FrameLayout>
+    <LinearLayout android:id="@+id/privacy_disclosure_container"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/inset_medium"
+        android:background="?attr/colorSurface"
+        android:gravity="center"
+        app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
+        app:layout_constraintTop_toBottomOf="@id/privacy_disclosure_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="1.0">
+
+        <ImageView
+            android:layout_width="@dimen/small_icon_size"
+            android:layout_height="@dimen/small_icon_size"
+            android:layout_margin="@dimen/inset_small"
+            android:src="@drawable/ic_secure_filled" />
+
+        <TextView android:id="@+id/privacy_disclosure"
+            style="@style/TextStyle.Tiny"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textAlignment="center"
+            android:text="Your data is safe with us. We respect your privacy." />
+    </LinearLayout>
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/bottom_barrier"

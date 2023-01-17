@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.Constant
+import com.aiavatar.app.commons.util.InvalidOtpException
 import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
@@ -12,6 +13,7 @@ import com.aiavatar.app.commons.util.ValidationResult
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.commons.util.succeeded
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.domain.model.request.LoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
@@ -202,11 +204,23 @@ class LoginViewModel @Inject constructor(
                     is Result.Error -> {
                         when (result.exception) {
                             is ApiException -> {
-                                _uiState.update { state ->
-                                    state.copy(
-                                        exception = result.exception,
-                                        uiErrorMessage = UiText.somethingWentWrong
-                                    )
+                                when (result.exception.cause) {
+                                    is InvalidOtpException -> {
+                                        _uiState.update { state ->
+                                            state.copy(
+                                                exception = ResolvableException(result.exception.cause),
+                                                uiErrorMessage = UiText.DynamicString("Please enter a valid OTP!")
+                                            )
+                                        }
+                                    }
+                                    else -> {
+                                        _uiState.update { state ->
+                                            state.copy(
+                                                exception = result.exception,
+                                                uiErrorMessage = UiText.somethingWentWrong
+                                            )
+                                        }
+                                    }
                                 }
                             }
                             is NoInternetException -> {

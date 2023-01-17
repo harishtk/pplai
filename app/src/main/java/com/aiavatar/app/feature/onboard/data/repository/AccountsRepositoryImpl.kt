@@ -65,7 +65,6 @@ class AccountsRepositoryImpl constructor(
                             parseErrorNetworkResult(networkResult)
                         }
                     }
-                    parseErrorNetworkResult(networkResult)
                 }
             }
         }

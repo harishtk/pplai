@@ -19,6 +19,7 @@ import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.InvalidOtpException
 import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
@@ -104,6 +105,14 @@ class LoginFragment : Fragment() {
                             is ResolvableException -> {
                                 edEmail.shakeNow()
                                 HapticUtil.createError(requireContext())
+                            }
+                            else -> {
+                                when (e.cause) {
+                                    is InvalidOtpException -> {
+                                        edOtp.shakeNow()
+                                        HapticUtil.createError(requireContext())
+                                    }
+                                }
                             }
                         }
                         uiAction(LoginUiAction.ErrorShown(e))

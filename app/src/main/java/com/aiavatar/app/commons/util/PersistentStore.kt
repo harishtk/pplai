@@ -2,6 +2,7 @@ package com.aiavatar.app.commons.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import java.util.UUID
 
 class PersistentStore private constructor(
     private val appPreferences: SharedPreferences,
@@ -18,6 +19,12 @@ class PersistentStore private constructor(
 
     val email: String
         get() = getAppPreferences().getString(UserPreferenceKeys.EMAIL, "") ?: ""
+
+    val deviceId: String
+        get() = getAppPreferences().getString(AppEssentialKeys.DEVICE_INSTANCE_ID, "") ?: ""
+
+    val fcmToken: String
+        get() = getAppPreferences().getString(AppEssentialKeys.FCM_TOKEN, "") ?: ""
 
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
@@ -39,11 +46,45 @@ class PersistentStore private constructor(
         return this
     }
 
+    fun setDeviceId(newDeviceId: String): PersistentStore {
+        getAppPreferences().edit().putString(AppEssentialKeys.DEVICE_INSTANCE_ID, newDeviceId).apply()
+        return this
+    }
+
+    fun setFcmToken(newToken: String): PersistentStore {
+        getAppPreferences().edit().putString(AppEssentialKeys.FCM_TOKEN, newToken).apply()
+        return this
+    }
+
+    fun setOnboardPresented(isPresented: Boolean = true): PersistentStore {
+        getAppPreferences().edit().putBoolean(AppEssentialKeys.ONBOARD_PRESENTED, isPresented).apply()
+        return this
+    }
+
+    fun setLastTokenSyncTime(timestamp: Long = System.currentTimeMillis()): PersistentStore {
+        getAppPreferences().edit().putLong(AppEssentialKeys.LAST_FCM_TOKEN_SYNC_TIME, timestamp).apply()
+        return this
+    }
+
+    fun setFcmTokenSynced(isSynced: Boolean = false): PersistentStore {
+        getAppPreferences().edit().putBoolean(AppEssentialKeys.FCM_TOKEN_SYNCED, isSynced).apply()
+        return this
+    }
+
     fun logout() {
         setUserId("")
         setDeviceToken("")
         setUsername("")
         setEmail("")
+    }
+
+    fun getOrCreateDeviceId(): String {
+        val id = deviceId.ifBlank {
+            UUID.randomUUID().toString().also { newId ->
+                appPreferences.edit().putString(AppEssentialKeys.DEVICE_INSTANCE_ID, newId).apply()
+            }
+        }
+        return id
     }
 
     private fun getAppPreferences(): SharedPreferences {
@@ -72,8 +113,11 @@ class PersistentStore private constructor(
         }
 
         object AppEssentialKeys {
+            const val ONBOARD_PRESENTED: String = "onboard_presented"
+            const val DEVICE_INSTANCE_ID: String = "device_instance_id"
             const val FCM_TOKEN: String = "fcm_token"
             const val LAST_FCM_TOKEN_SYNC_TIME: String = "last_fcm_token_sync_time"
+            const val FCM_TOKEN_SYNCED: String = "fcm_token_synced"
         }
     }
 }
