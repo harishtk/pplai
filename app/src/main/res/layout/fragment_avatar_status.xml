@@ -20,7 +20,7 @@
         app:layout_constraintTop_toTopOf="@id/half_screen_guideline"
         app:layout_constraintBottom_toBottomOf="@id/half_screen_guideline"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.33"
+        app:layout_constraintWidth_percent="0.5"
         app:layout_constraintDimensionRatio="H,1:1" />
 
     <TextView android:id="@+id/description"
@@ -41,7 +41,7 @@
         app:barrierDirection="top"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="progress_indicator,text_progress_hint,cb_notify_me" />
+        app:constraint_referenced_ids="progress_indicator,text_progress_hint,cb_notify_me,btn_create_avatar" />
 
     <com.google.android.material.progressindicator.LinearProgressIndicator
         style="@style/Widget.App.LinearProgressIndicator"
@@ -83,5 +83,30 @@
         app:layout_constraintVertical_chainStyle="packed"
         tools:checked="true"/>
 
+    <com.google.android.material.button.MaterialButton
+        style="@style/Widget.App.Button"
+        android:id="@+id/btn_create_avatar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Create Avatar"
+        android:insetBottom="@dimen/inset_large"
+        android:insetLeft="@dimen/inset_large"
+        android:insetTop="@dimen/inset_large"
+        android:insetRight="@dimen/inset_large"
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
+        android:visibility="gone"/>
+
+    <ProgressBar android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

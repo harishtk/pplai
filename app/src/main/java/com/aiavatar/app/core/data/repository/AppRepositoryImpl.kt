@@ -8,6 +8,12 @@ import com.aiavatar.app.commons.util.net.BadResponseException
 import com.aiavatar.app.commons.util.net.EmptyResponseException
 import com.aiavatar.app.core.data.source.remote.AppRemoteDataSource
 import com.aiavatar.app.core.data.source.remote.dto.asDto
+import com.aiavatar.app.core.data.source.remote.model.toAvatarStatus
+import com.aiavatar.app.core.data.source.remote.model.toCreateModelData
+import com.aiavatar.app.core.domain.model.AvatarStatus
+import com.aiavatar.app.core.domain.model.CreateModelData
+import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
+import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.aiavatar.app.core.domain.model.request.SendFcmTokenRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.asUploadImageData
@@ -17,7 +23,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import okhttp3.MultipartBody
-import retrofit2.http.Part
 import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
@@ -69,6 +74,52 @@ class AppRepositoryImpl @Inject constructor(
             is NetworkResult.Loading -> Result.Loading
             is NetworkResult.Success -> parseUploadResponse(networkResult)
             else -> parseErrorNetworkResult(networkResult)
+        }
+    }
+
+    override fun createModel(createModelRequest: CreateModelRequest): Flow<Result<CreateModelData>> {
+        return remoteDataSource.createModel(createModelRequest.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val data = networkResult.data.data
+                        if (data != null) {
+                            Result.Success(data.toCreateModelData())
+                        } else {
+                            val cause = EmptyResponseException("No data")
+                            Result.Error(ApiException(cause))
+                        }
+                    } else {
+                        val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
+                        Result.Error(ApiException(cause))
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
+    }
+
+    override fun avatarStatus(avatarStatusRequest: AvatarStatusRequest): Flow<Result<AvatarStatus>> {
+        return remoteDataSource.avatarStatus(avatarStatusRequest.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val data = networkResult.data.data
+                        if (data != null) {
+                            Result.Success(data.toAvatarStatus())
+                        } else {
+                            val cause = EmptyResponseException("No data")
+                            Result.Error(ApiException(cause))
+                        }
+                    } else {
+                        val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
+                        Result.Error(ApiException(cause))
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
         }
     }
 

@@ -195,6 +195,7 @@ class LoginViewModel @Inject constructor(
             email = email,
             callFor = CALL_FOR_SEND_OTP,
             platform = Constant.PLATFORM,
+            fcm = ApplicationDependencies.getPersistentStore().fcmToken
         )
         login(request)
     }
@@ -203,7 +204,8 @@ class LoginViewModel @Inject constructor(
         val request = LoginRequest(
             email = uiState.value.typedEmail,
             callFor = CALL_FOR_VERIFY_OTP,
-            platform = Constant.PLATFORM
+            platform = Constant.PLATFORM,
+            fcm = ApplicationDependencies.getPersistentStore().fcmToken
         )
         request.otp = otp
         login(request)

@@ -22,6 +22,11 @@ interface UploadSessionDao {
     suspend fun updateUploadSessionStatus(id: Long, status: Int)
 
     @Query("UPDATE ${UploadSessionTable.name} " +
+            "SET ${UploadSessionTable.Columns.MODEL_ID} = :modelId " +
+            "WHERE ${UploadSessionTable.Columns.ID} = :id")
+    suspend fun updateUploadSessionModelId(id: Long, modelId: Int)
+
+    @Query("UPDATE ${UploadSessionTable.name} " +
             "SET ${UploadSessionTable.Columns.TRAINING_TYPE} = :type " +
             "WHERE ${UploadSessionTable.Columns.ID} = :id")
     suspend fun updateUploadSessionTrainingType(id: Long, type: String)

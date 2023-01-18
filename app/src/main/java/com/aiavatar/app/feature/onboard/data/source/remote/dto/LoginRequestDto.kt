@@ -12,7 +12,9 @@ data class LoginRequestDto(
     @SerializedName("otp")
     val otp: String,
     @SerializedName("device")
-    val platform: String
+    val platform: String,
+    @SerializedName("fcm")
+    val fcm: String
 )
 
 fun LoginRequest.asDto(): LoginRequestDto {
@@ -21,5 +23,6 @@ fun LoginRequest.asDto(): LoginRequestDto {
         callFor = callFor,
         otp = otp.nullAsEmpty(),
         platform = platform,
+        fcm = fcm
     )
 }

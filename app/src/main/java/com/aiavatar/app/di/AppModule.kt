@@ -6,7 +6,9 @@ import com.google.gson.GsonBuilder
 import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.NetWorkHelper
 import com.aiavatar.app.commons.util.net.AndroidHeaderInterceptor
+import com.aiavatar.app.commons.util.net.GuestUserInterceptor
 import com.aiavatar.app.commons.util.net.JwtInterceptor
+import com.aiavatar.app.commons.util.net.PlatformInterceptor
 import com.aiavatar.app.commons.util.net.UserAgentInterceptor
 import com.aiavatar.app.core.Env
 import com.aiavatar.app.core.envForConfig
@@ -44,6 +46,8 @@ object AppModule {
         okHttpClientBuilder.addInterceptor(UserAgentInterceptor())
         okHttpClientBuilder.addInterceptor(AndroidHeaderInterceptor())
         okHttpClientBuilder.addInterceptor(JwtInterceptor())
+        okHttpClientBuilder.addInterceptor(PlatformInterceptor())
+        okHttpClientBuilder.addInterceptor(GuestUserInterceptor())
 
         if (envForConfig(BuildConfig.ENV) == Env.DEV || BuildConfig.DEBUG) {
             val httpLoggingInterceptor = HttpLoggingInterceptor()

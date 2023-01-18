@@ -1,6 +1,10 @@
 package com.aiavatar.app.core.data.source.remote
 
+import com.aiavatar.app.core.data.source.remote.dto.AvatarStatusRequestDto
+import com.aiavatar.app.core.data.source.remote.dto.CreateModelRequestDto
 import com.aiavatar.app.core.data.source.remote.dto.SendFcmTokenRequestDto
+import com.aiavatar.app.core.data.source.remote.model.AvatarStatusResponse
+import com.aiavatar.app.core.data.source.remote.model.CreateModelResponse
 import com.aiavatar.app.core.domain.model.request.SendFcmTokenRequest
 import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
 import com.aiavatar.app.feature.onboard.data.source.remote.model.UploaderResponse
@@ -15,6 +19,7 @@ import retrofit2.http.Part
 interface AppApi {
 
     suspend fun sendFcmToken(@Body requestDto: SendFcmTokenRequestDto): Response<BaseResponse>
+
     @POST("customLog")
     suspend fun customLog(@Body jsonObject: JsonObject): BaseResponse
 
@@ -26,4 +31,9 @@ interface AppApi {
         @Part file: MultipartBody.Part,
     ): Response<UploaderResponse>
 
+    @POST("ai/createModel")
+    suspend fun createModel(@Body createModelRequestDto: CreateModelRequestDto): Response<CreateModelResponse>
+
+    @POST("ai/status")
+    suspend fun avatarStatus(@Body avatarStatusRequestDto: AvatarStatusRequestDto): Response<AvatarStatusResponse>
 }

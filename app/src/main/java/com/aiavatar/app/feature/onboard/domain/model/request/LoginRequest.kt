@@ -4,6 +4,7 @@ data class LoginRequest(
     val email: String,
     val callFor: String,
     val platform: String,
+    val fcm: String,
 ) {
     var otp: String? = null
 }

@@ -12,20 +12,24 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.SharedViewModel
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.databinding.FragmentUploadStep3Binding
 import com.aiavatar.app.databinding.ItemGenderSelectableBinding
+import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.presentation.util.GenderModel
 import com.aiavatar.app.showToast
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AndroidEntryPoint
 class UploadStep3Fragment : Fragment() {
@@ -63,8 +67,12 @@ class UploadStep3Fragment : Fragment() {
             uiEvent.collectLatest { event ->
                 when (event) {
                     is Step3UiEvent.NextScreen -> {
-                        findNavController().apply {
-                            navigate(R.id.avatar_status)
+                        if (event.restart) {
+                            (activity as? MainActivity)?.restart()
+                        } else {
+                            findNavController().apply {
+                                navigate(R.id.avatar_status)
+                            }
                         }
                     }
                 }
@@ -84,6 +92,14 @@ class UploadStep3Fragment : Fragment() {
             }
         }
 
+        val sessionStatusFlow = uiState.map { it.sessionStatus }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            sessionStatusFlow.collectLatest { sessionStatus ->
+                Timber.d("Session status: $sessionStatus")
+            }
+        }
+
         btnNext.setOnClickListener {
             if (sessionIdCache != null) {
                 btnNext.setOnClickListener(null)
@@ -95,9 +111,13 @@ class UploadStep3Fragment : Fragment() {
     }
 
     private fun setupObservers() {
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+        viewLifecycleOwner.lifecycleScope.launch {
             sharedViewModel.currentUploadSessionId.collectLatest { sessionId ->
-                this@UploadStep3Fragment.sessionIdCache = sessionId
+                Timber.d("Session id: $sessionId")
+                if (sessionId != null) {
+                    sessionIdCache = sessionId
+                    viewModel.setSessionId(sessionId)
+                }
             }
         }
     }

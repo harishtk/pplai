@@ -194,6 +194,6 @@ object StorageUtil {
     private const val DIR_THUMBNAILS = "thumbnails"
     private const val DIR_UPLOADS    = "uploads"
 
-    private const val UPLOAD_DIR_PREFIX = "AI Avatar_"
+    private const val UPLOAD_DIR_PREFIX = "Avatar_"
     private const val PHOTO_FILE_PREFIX = "photo_"
 }

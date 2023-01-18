@@ -168,8 +168,8 @@ class CatalogFragment : Fragment() {
         toolbarNavigationIcon.isVisible = false
         toolbarTitle.text = "Avatar"
 
-        val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
-        profileName.setText(initialLetter)
+        /*val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
+        profileName.setText(initialLetter)*/
 
         profileContainer.setOnClickListener {
             gotoProfile()

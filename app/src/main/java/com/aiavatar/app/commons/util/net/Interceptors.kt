@@ -9,6 +9,7 @@ import org.greenrobot.eventbus.EventBus
 import java.net.HttpURLConnection
 
 const val DEFAULT_USER_AGENT = "Android"
+const val DEFAULT_PLATFORM = "android"
 
 class AndroidHeaderInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response = chain.run {
@@ -17,6 +18,32 @@ class AndroidHeaderInterceptor : Interceptor {
                 .newBuilder()
                 .addHeader("App-Version-Code", BuildConfig.VERSION_CODE.toString())
                 .addHeader("App-Version-Name", BuildConfig.VERSION_NAME)
+                .build()
+        )
+    }
+}
+
+class PlatformInterceptor(
+    private val value: String = DEFAULT_PLATFORM
+) : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response = chain.run {
+        proceed(
+            request()
+                .newBuilder()
+                .addHeader("Platform", value)
+                .build()
+        )
+    }
+}
+
+class GuestUserInterceptor : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response = chain.run {
+        val isGuestUser = ApplicationDependencies.getPersistentStore()
+            .guestUserId.isBlank()
+        proceed(
+            request()
+                .newBuilder()
+                .addHeader("isGuestUser", isGuestUser.toString())
                 .build()
         )
     }

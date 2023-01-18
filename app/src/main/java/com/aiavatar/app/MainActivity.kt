@@ -2,31 +2,23 @@ package com.aiavatar.app
 
 import android.content.Intent
 import android.os.Build
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.WindowInsets
 import android.view.WindowManager
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.fragment.app.FragmentContainer
 import androidx.fragment.app.FragmentContainerView
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
-import androidx.navigation.NavOptions
-import androidx.navigation.NavOptionsBuilder
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.di.ApplicationDependencies
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -92,8 +84,13 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         /*graph = inflater.inflate(R.navigation.home_nav_graph)
         graph.setStartDestination(R.id.catalog_list)*/
 
+        val persistentStore = ApplicationDependencies.getPersistentStore()
         when {
-            ApplicationDependencies.getPersistentStore().isLogged -> {
+            persistentStore.isProcessingModel -> {
+                graph = inflater.inflate(R.navigation.home_nav_graph)
+                graph.setStartDestination(R.id.avatar_status)
+            }
+            persistentStore.isLogged || true -> {
                 graph = inflater.inflate(R.navigation.home_nav_graph)
                 graph.setStartDestination(R.id.catalog_list)
             }
@@ -123,7 +120,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     }
 
     private fun setupObservers() {
-        lifecycleScope.launch {
+        /*lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 sharedViewModel.shouldShowStatus.collectLatest {
                     if (it) {
@@ -134,7 +131,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                     }
                 }
             }
-        }
+        }*/
     }
 
     fun restart(args: Bundle? = null) {

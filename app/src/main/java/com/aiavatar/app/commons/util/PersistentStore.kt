@@ -29,6 +29,12 @@ class PersistentStore private constructor(
     val notifyMe: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.NOTIFY_UPON_COMPLETION, true)
 
+    val guestUserId: String
+        get() = getAppPreferences().getString(UserPreferenceKeys.GUEST_USER_ID, "") ?: ""
+
+    val isProcessingModel: Boolean
+        get() = getAppPreferences().getBoolean(UserPreferenceKeys.PROCESSING_MODEL, false)
+
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
         return this
@@ -74,11 +80,23 @@ class PersistentStore private constructor(
         return this
     }
 
+    fun setGuestUserId(userId: String): PersistentStore {
+        getAppPreferences().edit().putString(UserPreferenceKeys.GUEST_USER_ID, userId).apply()
+        return this
+    }
+
+    fun setProcessingModel(isProcessing: Boolean = true): PersistentStore {
+        getAppPreferences().edit().putBoolean(UserPreferenceKeys.PROCESSING_MODEL, isProcessing).apply()
+        return this
+    }
+
     fun logout() {
         setUserId("")
         setDeviceToken("")
         setUsername("")
         setEmail("")
+        setGuestUserId("")
+        setProcessingModel(false)
     }
 
     fun getOrCreateDeviceId(): String {
@@ -119,6 +137,8 @@ class PersistentStore private constructor(
             const val USERNAME: String = "username"
             const val EMAIL: String = "email"
             const val NOTIFY_UPON_COMPLETION = "notify_upon_completion"
+            const val GUEST_USER_ID = "guest_user_id"
+            const val PROCESSING_MODEL = "processing_model"
         }
 
         object AppEssentialKeys {
