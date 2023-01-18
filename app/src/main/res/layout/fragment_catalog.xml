@@ -44,13 +44,26 @@
                     app:barrierDirection="right"
                     app:constraint_referenced_ids="toolbar_navigation_icon" />
 
+                <ImageView android:id="@+id/brand"
+                    android:layout_width="@dimen/xlarge_icon_size"
+                    android:layout_height="@dimen/xlarge_icon_size"
+                    android:src="@mipmap/ic_splash_1"
+                    app:layout_constraintStart_toEndOf="@id/left_barrier"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/right_barrier"
+                    app:layout_constrainedWidth="true"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
                 <TextView
                     android:id="@+id/toolbar_title"
                     style="@style/TextStyle.Small.Bold"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    tools:text="@string/app_name"
-                    app:layout_constraintStart_toEndOf="@id/left_barrier"
+                    android:layout_marginStart="@dimen/inset_very_small"
+                    android:includeFontPadding="false"
+                    tools:text="Avatar"
+                    app:layout_constraintStart_toEndOf="@id/brand"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/right_barrier"
                     app:layout_constrainedWidth="true"

@@ -5,16 +5,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.R
+import com.aiavatar.app.SharedViewModel
+import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.databinding.FragmentUploadStep3Binding
 import com.aiavatar.app.databinding.ItemGenderSelectableBinding
 import com.aiavatar.app.feature.home.presentation.util.GenderModel
+import com.aiavatar.app.showToast
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -25,6 +31,9 @@ import kotlinx.coroutines.launch
 class UploadStep3Fragment : Fragment() {
 
     private val viewModel: UploadStep3ViewModel by viewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+
+    private var sessionIdCache: Long? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,13 +48,28 @@ class UploadStep3Fragment : Fragment() {
         val binding = FragmentUploadStep3Binding.bind(view)
 
         binding.bindState(
-            uiState = viewModel.uiState
+            uiState = viewModel.uiState,
+            uiEvent = viewModel.uiEvent
         )
+
+        setupObservers()
     }
 
     private fun FragmentUploadStep3Binding.bindState(
-        uiState: StateFlow<Step3State>
+        uiState: StateFlow<Step3State>,
+        uiEvent: SharedFlow<Step3UiEvent>
     ) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            uiEvent.collectLatest { event ->
+                when (event) {
+                    is Step3UiEvent.NextScreen -> {
+                        findNavController().apply {
+                            navigate(R.id.avatar_status)
+                        }
+                    }
+                }
+            }
+        }
         val adapter = GenderAdapter { position ->
             viewModel.toggleSelection(position)
         }
@@ -60,6 +84,22 @@ class UploadStep3Fragment : Fragment() {
             }
         }
 
+        btnNext.setOnClickListener {
+            if (sessionIdCache != null) {
+                btnNext.setOnClickListener(null)
+                viewModel.updateTrainingType(sessionIdCache!!)
+            } else {
+                context?.showToast(UiText.somethingWentWrong.asString(requireContext()))
+            }
+        }
+    }
+
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            sharedViewModel.currentUploadSessionId.collectLatest { sessionId ->
+                this@UploadStep3Fragment.sessionIdCache = sessionId
+            }
+        }
     }
 }
 

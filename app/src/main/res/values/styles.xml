@@ -4,6 +4,7 @@
     <style name="Widget.App.LinearProgressIndicator" parent="Widget.MaterialComponents.LinearProgressIndicator">
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.LinearProgressIndicator</item>
         <item name="trackHeight">6dp</item>
+        <item name="trackColor">@color/progress_indicator_background</item>
     </style>
 
     <style name="AnimationStyle.Popup" parent="">

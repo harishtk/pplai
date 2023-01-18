@@ -166,7 +166,7 @@ class CatalogFragment : Fragment() {
 
     private fun FragmentCatalogBinding.bindToolbar() {
         toolbarNavigationIcon.isVisible = false
-        toolbarTitle.text = getString(R.string.app_name)
+        toolbarTitle.text = "Avatar"
 
         val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
         profileName.setText(initialLetter)

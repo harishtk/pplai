@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -31,13 +32,17 @@ import com.aiavatar.app.Constant
 import com.aiavatar.app.Constant.MIME_TYPE_JPEG
 import com.aiavatar.app.Continuation
 import com.aiavatar.app.R
+import com.aiavatar.app.SharedViewModel
 import com.aiavatar.app.databinding.FragmentUploadStep2Binding
 import com.aiavatar.app.databinding.ItemExamplePhotoBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewPlaceholderBinding
+import com.aiavatar.app.service.UploadService
 import com.aiavatar.app.showToast
+import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -49,19 +54,24 @@ import timber.log.Timber
 class UploadStep2Fragment : Fragment() {
 
     private val viewModel: UploadStep2ViewModel by viewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     private val photoPickerLauncher = registerForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(MAX_IMAGES)
     ) { pickedUris ->
         Timber.d("Picked Uris: $pickedUris")
-        viewModel.setPickedUris(pickedUris)
+        if (pickedUris.isNotEmpty()) {
+            viewModel.setPickedUris(pickedUris)
+        }
     }
 
     private val photoPickerGenericLauncher = registerForActivityResult(
         ActivityResultContracts.GetMultipleContents()
     ) { pickedUris ->
         Timber.d("Picked Uris Generic: $pickedUris")
-        viewModel.setPickedUris(pickedUris)
+        if (pickedUris.isNotEmpty()) {
+            viewModel.setPickedUris(pickedUris)
+        }
     }
 
     private val storagePermissions: Array<String> = arrayOf(
@@ -119,13 +129,26 @@ class UploadStep2Fragment : Fragment() {
         val binding = FragmentUploadStep2Binding.bind(view)
 
         binding.bindState(
-            uiState = viewModel.uiState
+            uiState = viewModel.uiState,
+            uiEvent = viewModel.uiEvent
         )
     }
 
     private fun FragmentUploadStep2Binding.bindState(
         uiState: StateFlow<UploadStep2State>,
+        uiEvent: SharedFlow<UploadStep2UiEvent>,
     ) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            uiEvent.collectLatest { event ->
+                when (event) {
+                    is UploadStep2UiEvent.PrepareUpload -> {
+                        WorkUtil.scheduleUploadWorker(requireActivity(), event.sessionId)
+                        sharedViewModel.setCurrentUploadSessionId(event.sessionId)
+                        gotoNextScreen()
+                    }
+                }
+            }
+        }
 
         val shouldShowExamplesFlow = uiState.map { it.pickedUris.isEmpty() }
             .distinctUntilChanged()
@@ -201,7 +224,17 @@ class UploadStep2Fragment : Fragment() {
         badExamplesList.adapter = badExamplesAdapter
 
         btnNext.setOnClickListener {
-            launchPhotoPicker()
+            if (uiState.value.pickedUris.isNotEmpty()) {
+                viewModel.startUpload(requireContext())
+            } else {
+                launchPhotoPicker()
+            }
+        }
+
+        btnStartUpload.setOnClickListener {
+            // TODO: 1. create an upload session.
+            // TODO: 2. submit the session id to upload service
+            viewModel.startUpload(requireContext())
         }
     }
 

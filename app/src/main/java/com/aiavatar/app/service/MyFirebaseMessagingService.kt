@@ -45,12 +45,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 WAKE_LOCK_TAG)
 
             remoteMessage.data.apply {
+                Timber.tag(TAG).d("Remote Message: $this")
                 val jsonObject: JSONObject = JSONObject(remoteMessage.data.get("message"))
                 val dataArr: JSONArray = jsonObject.getJSONArray("data")
 
                 if (dataArr.length() > 0) {
                     val dataJson = dataArr.getJSONObject(0)
-                    Timber.tag("FCM.Msg").d("onMessageReceived: notification $dataJson")
+                    Timber.tag(TAG).d("onMessageReceived: notification $dataJson")
                 }
             }
             // TODO: process the message

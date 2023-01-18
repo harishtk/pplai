@@ -10,16 +10,23 @@ import android.view.WindowManager
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentContainer
 import androidx.fragment.app.FragmentContainerView
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
+import androidx.navigation.NavOptions
+import androidx.navigation.NavOptionsBuilder
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.di.ApplicationDependencies
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -66,6 +73,9 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 sharedViewModel.autoLogin()
             }
         }
+
+        setupObservers()
+        StorageUtil.cleanUp(this)
     }
 
     private fun setNavGraph() {
@@ -109,6 +119,21 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     ) {
         when (destination.id) {
             // TODO: parse destination
+        }
+    }
+
+    private fun setupObservers() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                sharedViewModel.shouldShowStatus.collectLatest {
+                    if (it) {
+                        findNavController(R.id.fragment_container).apply {
+                            clearBackStack(R.id.avatar_status)
+                            navigate(R.id.avatar_status)
+                        }
+                    }
+                }
+            }
         }
     }
 

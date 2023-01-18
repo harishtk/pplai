@@ -26,6 +26,9 @@ class PersistentStore private constructor(
     val fcmToken: String
         get() = getAppPreferences().getString(AppEssentialKeys.FCM_TOKEN, "") ?: ""
 
+    val notifyMe: Boolean
+        get() = getAppPreferences().getBoolean(UserPreferenceKeys.NOTIFY_UPON_COMPLETION, true)
+
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
         return this
@@ -87,6 +90,11 @@ class PersistentStore private constructor(
         return id
     }
 
+    fun setNotifyUponCompletion(notify: Boolean = true): PersistentStore {
+        appPreferences.edit().putBoolean(UserPreferenceKeys.NOTIFY_UPON_COMPLETION, notify).apply()
+        return this
+    }
+
     private fun getAppPreferences(): SharedPreferences {
         return appPreferences
     }
@@ -110,6 +118,7 @@ class PersistentStore private constructor(
             const val USER_ID: String = "user_id"
             const val USERNAME: String = "username"
             const val EMAIL: String = "email"
+            const val NOTIFY_UPON_COMPLETION = "notify_upon_completion"
         }
 
         object AppEssentialKeys {

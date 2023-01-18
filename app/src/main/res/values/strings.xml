@@ -62,4 +62,9 @@
     <string name="general_notifications_channel_id">ai_avatar_general_alerts</string>
     <string name="title_general_notifications">General Alerts</string>
     <string name="desc_general_notifications">All alerts from AI Avatar</string>
+
+    <string name="upload_notification_channel_id">ai_avatar_upload_alerts</string>
+    <string name="title_upload_notifications">Photos Upload</string>
+    <string name="desc_upload_notifications">Current status of the photos upload</string>
+    <string name="cancel_upload">Cancel Upload</string>
 </resources>

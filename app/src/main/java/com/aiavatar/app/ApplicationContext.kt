@@ -4,6 +4,8 @@ import android.app.Application
 import android.os.StrictMode
 import android.util.Log
 import androidx.core.os.bundleOf
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import com.jakewharton.threetenabp.AndroidThreeTen
 import com.aiavatar.app.commons.util.AppForegroundObserver
 import com.aiavatar.app.commons.util.AppStartup
@@ -20,9 +22,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 @HiltAndroidApp
-class ApplicationContext : Application(), AppForegroundObserver.Listener {
+class ApplicationContext : Application(), AppForegroundObserver.Listener, Configuration.Provider {
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
 
     private val applicationScope = Util.getCustomCoroutineScope()
 
@@ -97,6 +103,13 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener {
             ApplicationDependencies.getAppWebSocket().disconnect()
             Log.d(TAG, "Socket is destroyed. Reason: App is in background for so long.")
         }
+    }
+
+    override fun getWorkManagerConfiguration(): Configuration {
+        return Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .setMinimumLoggingLevel(Log.DEBUG)
+            .build()
     }
 
     companion object {

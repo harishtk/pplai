@@ -23,5 +23,5 @@ dependencyResolutionManagement {
         // maven { url 'https://google.bintray.com/exoplayer/' }
     }
 }
-rootProject.name = "Pepul AI"
+rootProject.name = "AI Avatar"
 include ':app', ":circular-progress-button"

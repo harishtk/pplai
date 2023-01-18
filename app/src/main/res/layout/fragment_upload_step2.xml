@@ -88,7 +88,8 @@
                 <LinearLayout android:orientation="vertical"
                     android:id="@+id/examples_container"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    tools:visibility="gone">
 
                     <LinearLayout android:orientation="vertical"
                         android:id="@+id/good_examples_container"
@@ -188,7 +189,20 @@
                     android:id="@+id/list_container"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    tools:visibility="gone">
+                    tools:visibility="visible">
+
+                    <com.google.android.material.button.MaterialButton style="@style/Widget.App.Button.Alt"
+                        android:id="@+id/btn_start_upload"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Start upload"
+                        android:visibility="gone"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/preview_list_title"
+                        app:layout_constraintVertical_chainStyle="packed"
+                        app:layout_constraintVertical_bias="0.0"/>
 
                     <TextView style="@style/TextStyle.VerySmall"
                         android:id="@+id/preview_list_title"

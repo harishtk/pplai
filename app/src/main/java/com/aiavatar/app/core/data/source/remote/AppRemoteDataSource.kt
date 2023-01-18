@@ -6,10 +6,13 @@ import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.core.data.source.remote.dto.SendFcmTokenRequestDto
 import com.aiavatar.app.di.IoDispatcher
 import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
+import com.aiavatar.app.feature.onboard.data.source.remote.model.UploaderResponse
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import okhttp3.MultipartBody
+import retrofit2.http.Part
 import javax.inject.Inject
 
 class AppRemoteDataSource @Inject constructor(
@@ -23,5 +26,11 @@ class AppRemoteDataSource @Inject constructor(
         emit(NetworkResult.Loading())
         emit(safeApiCall { apiService.sendFcmToken(requestDto) })
     }.flowOn(dispatcher)
+
+    suspend fun uploadFileSync(
+        @Part folderName: MultipartBody.Part,
+        @Part type: MultipartBody.Part,
+        @Part files: MultipartBody.Part,
+    ): NetworkResult<UploaderResponse> = safeApiCall { apiService.uploadFile(folderName, type, files) }
 
 }
