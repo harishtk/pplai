@@ -25,6 +25,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -59,6 +60,7 @@ class AvatarStatusViewModel @Inject constructor(
 
     private var createModelJob: Job? = null
     private var avatarStatusJob: Job? = null
+    private var scheduledAvatarStatusJob: Job? = null
 
     init {
         restoreFromSavedStateInternal(savedStateHandle)
@@ -83,8 +85,10 @@ class AvatarStatusViewModel @Inject constructor(
 
         uiState.mapNotNull { it.avatarStatusId }
             .flatMapLatest { statusId ->
+                Timber.d("flatMapLatest: $statusId")
                 appDatabase.avatarStatusDao().getAvatarStatus(id = statusId.toLong())
             }.onEach { avatarStatusWithFilesEntity ->
+                Timber.d("flatMapLatest: 2 $avatarStatusWithFilesEntity")
                 if (avatarStatusWithFilesEntity != null) {
                     _uiState.update { state ->
                         state.copy(
@@ -132,6 +136,16 @@ class AvatarStatusViewModel @Inject constructor(
             )
         }
         getAvatarStatusInternal()
+    }
+
+    private fun scheduleAvatarStatusJob(forceNew: Boolean = true) {
+        if (scheduledAvatarStatusJob?.isActive == true && forceNew) {
+            scheduledAvatarStatusJob?.cancel(CancellationException("New request"))
+        }
+        scheduledAvatarStatusJob = viewModelScope.launch {
+            delay(15000)
+            getAvatarStatusInternal()
+        }
     }
 
     private fun createModelInternal(sessionId: Long) = viewModelScope.launch {
@@ -194,6 +208,7 @@ class AvatarStatusViewModel @Inject constructor(
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
                         ApplicationDependencies.getPersistentStore().apply {
                             setProcessingModel(true)
+                            setUploadingPhotos(false)
                             setGuestUserId(result.data.guestUserId)
                             setCurrentAvatarStatusId(result.data.statusId.toString())
                         }
@@ -202,10 +217,10 @@ class AvatarStatusViewModel @Inject constructor(
                                 val newAvatarStatus = AvatarStatus.emptyStatus(result.data.statusId)
                                 insert(newAvatarStatus.toEntity())
                             }
-                            // TODO: get avatar status
-                            getAvatarStatusInternal()
                         }
-                        // sendEvent(Step3UiEvent.NextScreen)
+                        // TODO: get avatar status
+                        setAvatarStatusId(result.data.statusId.toString())
+                        getAvatarStatusInternal()
                     }
                 }
             }
@@ -225,7 +240,8 @@ class AvatarStatusViewModel @Inject constructor(
 
     private fun getAvatarStatusInternal() = viewModelScope.launch {
         try {
-            val currentStatusId: String? = uiState.value.avatarStatusId
+            val currentStatusId: String? = ApplicationDependencies.getPersistentStore()
+                .currentAvatarStatusId
             if (currentStatusId != null) {
                 val request = AvatarStatusRequest(currentStatusId)
                 getStatus(request)
@@ -275,6 +291,9 @@ class AvatarStatusViewModel @Inject constructor(
                     is Result.Success -> {
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
 
+                        if (result.data.avatarStatus.modelStatus != "completed") {
+                            scheduleAvatarStatusJob(forceNew = true)
+                        }
                         /*val avatarStatus = result.data.avatarStatus
                         when (avatarStatus.modelStatus) {
                             "training_processing" -> {
@@ -335,6 +354,14 @@ class AvatarStatusViewModel @Inject constructor(
 
     private fun sendEvent(newEvent: AvatarStatusUiEvent) = viewModelScope.launch {
         _uiEvent.emit(newEvent)
+    }
+
+    override fun onCleared() {
+        val t = CancellationException("View model is dead")
+        scheduledAvatarStatusJob?.cancel(t)
+        avatarStatusJob?.cancel(t)
+        createModelJob?.cancel(t)
+        super.onCleared()
     }
 
 }

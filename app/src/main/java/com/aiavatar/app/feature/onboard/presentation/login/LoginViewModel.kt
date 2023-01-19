@@ -16,7 +16,9 @@ import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.commons.util.succeeded
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.feature.onboard.domain.model.LoginData
 import com.aiavatar.app.feature.onboard.domain.model.request.LoginRequest
+import com.aiavatar.app.feature.onboard.domain.model.request.SocialLoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import com.aiavatar.app.nullAsEmpty
 import com.pepulnow.app.data.LoadState
@@ -101,6 +103,19 @@ class LoginViewModel @Inject constructor(
 
     fun handleBackPressed(): Boolean {
         return handleBackPressedInternal()
+    }
+
+    fun socialLogin(type: String, accountId: String, email: String) {
+        val request = SocialLoginRequest(
+            accountType = type,
+            accountId = accountId,
+            email = email,
+            guestUserId = ApplicationDependencies.getPersistentStore().guestUserId,
+            platform = Constant.PLATFORM,
+            fcm = ApplicationDependencies.getPersistentStore().fcmToken
+        )
+
+        socialLoginInternal(request)
     }
 
     private fun handleBackPressedInternal(): Boolean {
@@ -193,6 +208,7 @@ class LoginViewModel @Inject constructor(
     private fun loginUserInternal(email: String) {
         val request = LoginRequest(
             email = email,
+            guestUserId = ApplicationDependencies.getPersistentStore().guestUserId,
             callFor = CALL_FOR_SEND_OTP,
             platform = Constant.PLATFORM,
             fcm = ApplicationDependencies.getPersistentStore().fcmToken
@@ -203,6 +219,7 @@ class LoginViewModel @Inject constructor(
     private fun verifyOtpInternal(otp: String) {
         val request = LoginRequest(
             email = uiState.value.typedEmail,
+            guestUserId = ApplicationDependencies.getPersistentStore().guestUserId,
             callFor = CALL_FOR_VERIFY_OTP,
             platform = Constant.PLATFORM,
             fcm = ApplicationDependencies.getPersistentStore().fcmToken
@@ -282,7 +299,67 @@ class LoginViewModel @Inject constructor(
                 }
             }
         }
+    }
 
+    private fun socialLoginInternal(socialLoginRequest: SocialLoginRequest) {
+        if (loginJob?.isActive == true) {
+            val t = IllegalStateException("A login request is already in progress. Ignoring request")
+            Timber.d(t)
+            return
+        }
+        loginJob?.cancel(CancellationException("New request")) // just in case
+        loginJob = viewModelScope.launch {
+            repository.socialLogin(socialLoginRequest).collectLatest { result ->
+                when (result) {
+                    is Result.Loading -> setLoading(LoadState.Loading(), LoadType.ACTION)
+                    is Result.Error -> {
+                        when (result.exception) {
+                            is ApiException -> {
+                                when (result.exception.cause) {
+                                    is InvalidOtpException -> {
+                                        _uiState.update { state ->
+                                            state.copy(
+                                                exception = ResolvableException(result.exception.cause),
+                                                uiErrorMessage = UiText.DynamicString("Please enter a valid OTP!")
+                                            )
+                                        }
+                                    }
+                                    else -> {
+                                        _uiState.update { state ->
+                                            state.copy(
+                                                exception = result.exception,
+                                                uiErrorMessage = UiText.somethingWentWrong
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            is NoInternetException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorMessage = UiText.noInternet
+                                    )
+                                }
+                            }
+                        }
+                        setLoading(LoadState.Error(result.exception), LoadType.ACTION)
+                    }
+                    is Result.Success -> {
+                        setLoading(LoadState.NotLoading.Complete, LoadType.ACTION)
+                        result.data.let { loginData ->
+                            ApplicationDependencies.getPersistentStore()
+                                .setUserId(loginData.loginUser?.userId.nullAsEmpty())
+                                .setDeviceToken(loginData.deviceToken.nullAsEmpty())
+                                .setUsername(loginData.loginUser?.username.nullAsEmpty())
+                                .setEmail(socialLoginRequest.email)
+                        }
+                        sendEvent(LoginUiEvent.ShowToast(UiText.DynamicString("Login successful!")))
+                        sendEvent(LoginUiEvent.NextScreen)
+                    }
+                }
+            }
+        }
     }
 
     @Suppress("SameParameterValue")

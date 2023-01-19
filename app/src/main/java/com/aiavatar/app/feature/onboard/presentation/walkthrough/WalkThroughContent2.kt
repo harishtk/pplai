@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentWalthrough2Binding
 import com.aiavatar.app.databinding.ItemCircleImageBinding
+import com.aiavatar.app.databinding.ItemSquareImageBinding
 import com.aiavatar.app.getRandomHexCode
 
 class WalkThroughContent2 : Fragment() {
@@ -69,7 +70,7 @@ class SquareImageAdapter : ListAdapter<Int, RecyclerView.ViewHolder>(DIFF_CALLBA
     }
 
     class ItemViewHolder(
-        private val binding: ItemCircleImageBinding
+        private val binding: ItemSquareImageBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(@DrawableRes resImage: Int) = with(binding) {
@@ -83,7 +84,7 @@ class SquareImageAdapter : ListAdapter<Int, RecyclerView.ViewHolder>(DIFF_CALLBA
                     parent,
                     false
                 )
-                val binding = ItemCircleImageBinding.bind(itemView)
+                val binding = ItemSquareImageBinding.bind(itemView)
                 return ItemViewHolder(binding)
             }
         }

@@ -1,5 +1,6 @@
 package com.aiavatar.app
 
+import androidx.annotation.IdRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.core.data.source.local.AppDatabase
@@ -7,6 +8,7 @@ import com.aiavatar.app.feature.onboard.domain.model.request.AutoLoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -75,5 +77,17 @@ class SharedViewModel @Inject constructor(
             replay = 1,
             started = SharingStarted.WhileSubscribed(5000)
         )
+
+    private val _jumpToDestination = MutableSharedFlow<Int>()
+    val jumpToDestination = _jumpToDestination
+        .shareIn(
+            scope = viewModelScope,
+            replay = 0,
+            started = SharingStarted.WhileSubscribed(5000)
+        )
+
+    fun setJumpToDestination(@IdRes destinationId: Int) = viewModelScope.launch {
+        _jumpToDestination.emit(destinationId)
+    }
 
 }

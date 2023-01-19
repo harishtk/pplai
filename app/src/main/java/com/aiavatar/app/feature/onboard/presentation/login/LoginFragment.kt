@@ -16,13 +16,20 @@ import android.view.animation.RotateAnimation
 import android.view.inputmethod.EditorInfo
 import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
+import androidx.navigation.fragment.findNavController
+import com.aiavatar.app.Constant
 import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.InvalidOtpException
@@ -33,19 +40,54 @@ import com.aiavatar.app.databinding.FragmentLoginBinding
 import com.aiavatar.app.hideKeyboard
 import com.aiavatar.app.showSoftInputMode
 import com.aiavatar.app.showToast
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.math.sign
+
 
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
 
     private val viewModel: LoginViewModel by viewModels()
 
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private val googleSignInResultLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            val task: Task<GoogleSignInAccount> = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            handleSignInResult(task)
+        }
+
+    private var from: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Configure sign-in to request the user's ID, email address, and basic
+        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+        googleSignInClient = GoogleSignIn.getClient(requireActivity(), gso)
+
+        from = arguments?.getString(Constant.EXTRA_FROM)
+        Timber.d("From: $from")
     }
 
     override fun onCreateView(
@@ -64,6 +106,7 @@ class LoginFragment : Fragment() {
             uiState = viewModel.uiState, uiAction = viewModel.accept, uiEvent = viewModel.uiEvent
         )
         handleBackPressed()
+        checkLastSignedInAccount()
     }
 
     private fun FragmentLoginBinding.bindState(
@@ -80,7 +123,21 @@ class LoginFragment : Fragment() {
 
                     is LoginUiEvent.NextScreen -> {
                         // animateAndEnd(nextButton)
-                        gotoHome()
+                        when (from) {
+                            "avatar_result" -> {
+                                findNavController().apply {
+                                    val args = bundleOf(
+                                        Constant.EXTRA_FROM to "login"
+                                    )
+                                    val navOpts = NavOptions.Builder()
+                                        .setEnterAnim(R.anim.fade_scale_in)
+                                        .setExitAnim(R.anim.fade_scale_out)
+                                        .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
+                                        .build()
+                                    navigate(R.id.subscription_plans, args, navOpts)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -247,6 +304,10 @@ class LoginFragment : Fragment() {
             edOtp.requestFocusFromTouch()
             edOtp.showSoftInputMode()
         }
+
+        btnSignInGoogle.setOnClickListener {
+            googleSignIn()
+        }
     }
 
     private fun FragmentLoginBinding.showBackButton() {
@@ -339,10 +400,65 @@ class LoginFragment : Fragment() {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     if (!viewModel.handleBackPressed()) {
-                        activity?.finish()
+                        if (!findNavController().navigateUp()) {
+                            activity?.finish()
+                        }
                     }
                 }
             })
+    }
+
+    private fun checkLastSignedInAccount() {
+        // TODO: Check last singed in account and confirm user
+        val account = GoogleSignIn.getLastSignedInAccount(requireContext())
+        if (account != null) {
+            SimpleDialog(
+                context = requireContext(),
+                titleText = "Google Sign In",
+                message = "You have already signed in with your Google account in this app. Continue as ${account.email}?",
+                positiveButtonText = "Sign In",
+                positiveButtonAction = {
+                    updateUI(account)
+                },
+                negativeButtonText = "Cancel",
+                negativeButtonAction = {
+                    googleSignInClient.signOut()
+                },
+                cancellable = false,
+                showCancelButton = false
+            ).show()
+        }
+    }
+
+    private fun googleSignIn() {
+        val signInIntent: Intent = googleSignInClient.signInIntent
+        googleSignInResultLauncher.launch(signInIntent)
+    }
+
+    private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
+        try {
+            val account = completedTask.getResult(ApiException::class.java)
+
+            // Signed in successfully, show authenticated UI.
+            updateUI(account)
+        } catch (e: ApiException) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            android.util.Log.w(TAG, "signInResult:failed code=" + e.getStatusCode())
+            updateUI(null)
+        }
+    }
+
+    private fun updateUI(account: GoogleSignInAccount?) {
+        Timber.d("Sign in: Google id = ${account?.id} email = ${account?.email}")
+        if (account != null) {
+            if (account.id != null && account.email != null) {
+                viewModel.socialLogin("google", account.id!!, email = account.email!!)
+            } else {
+                context?.showToast("Cannot sign in with Google right now. Try other methods.")
+                googleSignInClient.signOut()
+            }
+        }
     }
 
     private fun animateAndEnd(view: View) {
@@ -374,6 +490,11 @@ class LoginFragment : Fragment() {
             intent.putExtra("restart_hint", "from_login")
             startActivity(intent)
         }
+    }
+
+    companion object {
+        private val TAG = LoginFragment::class.java.simpleName
+        const val RC_SIGN_IN = 100
     }
 
 }

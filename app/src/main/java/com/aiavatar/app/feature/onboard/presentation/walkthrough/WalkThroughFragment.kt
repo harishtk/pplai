@@ -5,10 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.aiavatar.app.ApplicationContext
+import com.aiavatar.app.Constant
 import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentWalkThroughBinding
@@ -105,6 +108,17 @@ class WalkThroughFragment : Fragment() {
                     ApplicationDependencies.getPersistentStore()
                         .setOnboardPresented(true)
                     gotoHome()
+                    /*findNavController().apply {
+                        val args = bundleOf(
+                            Constant.EXTRA_FROM to "walk_through"
+                        )
+                        val navOpts = NavOptions.Builder()
+                            .setEnterAnim(R.anim.fade_scale_in)
+                            .setExitAnim(R.anim.fade_scale_out)
+                            .setPopUpTo(R.id.walkthrough_fragment, inclusive = true, saveState = true)
+                            .build()
+                        navigate(R.id.login_fragment, args, navOpts)
+                    }*/
                 } catch (ignore: Exception) {}
             }
         }

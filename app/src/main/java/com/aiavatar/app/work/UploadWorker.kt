@@ -179,7 +179,7 @@ class UploadWorker @AssistedInject constructor(
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
         val notification = notificationBuilder.setOngoing(true)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationManager.IMPORTANCE_DEFAULT)
+            .setPriority(NotificationManager.IMPORTANCE_HIGH)
             .setCategory(Notification.CATEGORY_STATUS)
             .setOngoing(false)
             .setAutoCancel(true)
@@ -187,7 +187,7 @@ class UploadWorker @AssistedInject constructor(
             .setContentText("$photosCount Photos uploaded. Tap here to create your avatar!")
             .build()
         ServiceUtil.getNotificationManager(context)
-            .notify(generateNewNotificationId(), notification)
+            .notify(STATUS_NOTIFICATION_ID, notification)
     }
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {
@@ -210,7 +210,7 @@ class UploadWorker @AssistedInject constructor(
             .setProgress(100, progress, true)
             .setOngoing(true)
             .build()
-        return ForegroundInfo(NOTIFICATION_ID, notification)
+        return ForegroundInfo(ONGOING_NOTIFICATION_ID, notification)
     }
 
     private fun createUploadNotificationChannel(context: Context) {
@@ -229,7 +229,8 @@ class UploadWorker @AssistedInject constructor(
 
     companion object {
         const val WORKER_NAME = "upload_worker"
-        private const val NOTIFICATION_ID = 100
+        const val STATUS_NOTIFICATION_ID = 101
+        private const val ONGOING_NOTIFICATION_ID = 100
 
         const val EXTRA_ERROR_MESSAGE = "com.aiavatar.app.extras.ERROR_MESSAGE"
         const val KEY_SESSION_ID = "com.aiavatar.app.keys.SESSION_ID"

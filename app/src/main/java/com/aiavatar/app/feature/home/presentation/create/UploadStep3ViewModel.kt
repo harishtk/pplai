@@ -121,12 +121,13 @@ class UploadStep3ViewModel @Inject constructor(
                 sessionId,
                 selectedGender.title
             )
-            if (uiState.value.sessionStatus == UploadSessionStatus.UPLOAD_COMPLETE) {
+            ApplicationDependencies.getPersistentStore().setUploadingPhotos(true)
+            sendEvent(Step3UiEvent.NextScreen(false))
+            /*if (uiState.value.sessionStatus == UploadSessionStatus.UPLOAD_COMPLETE) {
                 createModelInternal(sessionId)
             } else {
-                ApplicationDependencies.getPersistentStore().setUploadingPhotos(true)
-                sendEvent(Step3UiEvent.NextScreen(false))
-            }
+
+            }*/
         }
     }
 

@@ -95,6 +95,7 @@ android {
             // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52"'
             buildConfigField "String", "ENV", '"dev"'
+            buildConfigField "boolean", "IS_SECURED", "false"
         }
 
         prod {
@@ -106,6 +107,7 @@ android {
             // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
             buildConfigField "String", "ENV", '"prod"'
+            buildConfigField "boolean", "IS_SECURED", "true"
         }
     }
 }
@@ -127,6 +129,7 @@ dependencies {
 
     /* Google Services */
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
+    implementation("com.google.android.gms:play-services-auth:20.4.0")
 
     /* Firebase */
     implementation 'com.google.firebase:firebase-analytics'

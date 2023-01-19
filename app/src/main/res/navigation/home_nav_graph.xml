@@ -4,6 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/home_nav_graph">
 
+    <action android:id="@+id/action_home_nav_graph_to_self"
+        app:destination="@id/home_nav_graph" />
+
     <fragment android:id="@+id/catalog_list"
         android:name="com.aiavatar.app.feature.home.presentation.catalog.CatalogFragment"
         android:label="AI Catalog"
@@ -113,4 +116,19 @@
         android:name="com.aiavatar.app.feature.home.presentation.create.AvatarStatusFragment"
         android:label="Avatar Status"
         tools:layout="@layout/fragment_avatar_status" />
+
+    <fragment android:id="@+id/avatar_result"
+        android:name="com.aiavatar.app.feature.home.presentation.create.AvatarResultFragment"
+        android:label="Avatar Result"
+        tools:layout="@layout/fragment_avatar_result" />
+
+    <fragment android:id="@+id/walkthrough_fragment"
+        android:name="com.aiavatar.app.feature.onboard.presentation.walkthrough.WalkThroughFragment"
+        android:label="Walk Through"
+        tools:layout="@layout/fragment_walthrough_1" />
+
+    <fragment android:id="@+id/login_fragment"
+        android:name="com.aiavatar.app.feature.onboard.presentation.login.LoginFragment"
+        android:label="Login"
+        tools:layout="@layout/fragment_login" />
 </navigation>

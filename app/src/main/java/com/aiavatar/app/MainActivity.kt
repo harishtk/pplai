@@ -6,10 +6,13 @@ import android.os.Bundle
 import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.activity.viewModels
+import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentContainerView
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
@@ -18,6 +21,7 @@ import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.di.ApplicationDependencies
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.lastOrNull
@@ -36,6 +40,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         AppStartup.getInstance().onCriticalRenderEventStart()
         super.onCreate(savedInstanceState)
         installSplashScreen()
+        checkSecureMode()
         setContentView(R.layout.activity_main)
 
         val token = ApplicationDependencies.getPersistentStore().fcmToken
@@ -75,7 +80,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         setupObservers()
     }
 
-    private fun setNavGraph() {
+    private fun setNavGraph(@IdRes jumpToDestination: Int? = null) {
         val navHostFragment: NavHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container)
                     as NavHostFragment
@@ -91,24 +96,29 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         /*graph = inflater.inflate(R.navigation.home_nav_graph)
         graph.setStartDestination(R.id.catalog_list)*/
 
-        val persistentStore = ApplicationDependencies.getPersistentStore()
-        when {
-            persistentStore.isProcessingModel ||
-            persistentStore.isUploadingPhotos -> {
-                graph = inflater.inflate(R.navigation.home_nav_graph)
-                graph.setStartDestination(R.id.avatar_status)
-            }
-            persistentStore.isLogged -> {
-                graph = inflater.inflate(R.navigation.home_nav_graph)
-                graph.setStartDestination(R.id.catalog_list)
-            }
-            persistentStore.isOnboardPresented -> {
-                graph = inflater.inflate(R.navigation.home_nav_graph)
-                graph.setStartDestination(R.id.upload_step_1)
-            }
-            else -> {
-                graph = inflater.inflate(R.navigation.login_nav_graph)
-                graph.setStartDestination(R.id.walkthrough_fragment)
+        if (jumpToDestination != null) {
+            graph = inflater.inflate(R.navigation.home_nav_graph)
+            graph.setStartDestination(jumpToDestination)
+        } else {
+            val persistentStore = ApplicationDependencies.getPersistentStore()
+            when {
+                persistentStore.isProcessingModel ||
+                        persistentStore.isUploadingPhotos -> {
+                    graph = inflater.inflate(R.navigation.home_nav_graph)
+                    graph.setStartDestination(R.id.avatar_status)
+                }
+                persistentStore.isLogged -> {
+                    graph = inflater.inflate(R.navigation.home_nav_graph)
+                    graph.setStartDestination(R.id.catalog_list)
+                }
+                persistentStore.isOnboardPresented -> {
+                    graph = inflater.inflate(R.navigation.home_nav_graph)
+                    graph.setStartDestination(R.id.upload_step_1)
+                }
+                else -> {
+                    graph = inflater.inflate(R.navigation.home_nav_graph)
+                    graph.setStartDestination(R.id.walkthrough_fragment)
+                }
             }
         }
 
@@ -148,6 +158,13 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 }
             }
         }*/
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                sharedViewModel.jumpToDestination.collectLatest { destinationId ->
+                    setNavGraph(destinationId)
+                }
+            }
+        }
     }
 
     fun restart(args: Bundle? = null) {
@@ -158,6 +175,15 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
             intent.putExtras(args)
         }
         startActivity(intent)
+    }
+
+    private fun checkSecureMode() {
+        if (BuildConfig.IS_SECURED) {
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE
+            )
+        }
     }
 
     companion object {

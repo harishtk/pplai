@@ -5,8 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
+import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.toAvatarFile
+import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.AvatarFile
+import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.feature.home.domain.model.Avatar
 import com.aiavatar.app.feature.home.presentation.catalog.AvatarUiModel
+import com.google.gson.annotations.SerializedName
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,12 +21,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class AvatarResultViewModel @Inject constructor(
+    @Deprecated("move to repo")
+    private val appDatabase: AppDatabase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -35,6 +48,26 @@ class AvatarResultViewModel @Inject constructor(
     init {
         accept = { uiAction -> onUiAction(uiAction) }
 
+        uiState.mapNotNull { it.avatarStatusId }
+            .flatMapLatest { statusId ->
+                Timber.d("flatMapLatest: $statusId")
+                appDatabase.avatarStatusDao().getAvatarStatus(id = statusId.toLong())
+            }.onEach { avatarStatusWithFilesEntity ->
+                Timber.d("flatMapLatest: 2 $avatarStatusWithFilesEntity")
+                if (avatarStatusWithFilesEntity != null) {
+                    val avatarResultList = avatarStatusWithFilesEntity.avatarFilesEntity.map {
+                        AvatarResultUiModel.AvatarItem(it.toAvatarFile())
+                    }
+                    _uiState.update { state ->
+                        state.copy(
+                            avatarStatusWithFiles = avatarStatusWithFilesEntity.toAvatarStatusWithFiles(),
+                            avatarResultList = avatarResultList
+                        )
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+
         refreshInternal()
     }
 
@@ -43,6 +76,14 @@ class AvatarResultViewModel @Inject constructor(
             is AvatarResultUiAction.ErrorShown -> {
 
             }
+        }
+    }
+
+    fun setAvatarStatusId(statusId: String) {
+        _uiState.update { state ->
+            state.copy(
+                avatarStatusId = statusId
+            )
         }
     }
 
@@ -69,7 +110,9 @@ class AvatarResultViewModel @Inject constructor(
 
 data class AvatarResultState(
     val loadState: LoadStates = LoadStates.IDLE,
-    val avatarResultList: List<AvatarUiModel> = emptyList(),
+    val avatarStatusId: String? = null,
+    val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
+    val avatarResultList: List<AvatarResultUiModel> = emptyList(),
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
@@ -83,5 +126,5 @@ interface AvatarResultUiEvent {
 }
 
 interface AvatarResultUiModel {
-    data class AvatarItem(val avatar: Avatar) : AvatarUiModel
+    data class AvatarItem(val avatar: AvatarFile) : AvatarResultUiModel
 }

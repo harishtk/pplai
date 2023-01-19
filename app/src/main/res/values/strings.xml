@@ -67,4 +67,5 @@
     <string name="title_upload_notifications">Photos Upload</string>
     <string name="desc_upload_notifications">Current status of the photos upload</string>
     <string name="cancel_upload">Cancel Upload</string>
+    <string name="label_download">Download</string>
 </resources>
