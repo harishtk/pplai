@@ -8,9 +8,11 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
+import com.aiavatar.app.ApplicationContext
 import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentWalkThroughBinding
+import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.utils.FragmentPagerAdapter
 import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
@@ -100,7 +102,8 @@ class WalkThroughFragment : Fragment() {
                 walkthroughPager.setCurrentItem(++walkthroughPager.currentItem, true)
             } else {
                 try {
-                    // findNavController().navigate(R.id.action_walkthrough_fragment_to_login_fragment)
+                    ApplicationDependencies.getPersistentStore()
+                        .setOnboardPresented(true)
                     gotoHome()
                 } catch (ignore: Exception) {}
             }
@@ -111,7 +114,7 @@ class WalkThroughFragment : Fragment() {
         activity?.apply {
             val intent = Intent(this, MainActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            intent.putExtra("restart_hint", "from_login")
+            intent.putExtra("restart_hint", "from_onboard")
             startActivity(intent)
         }
     }

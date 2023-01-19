@@ -1,6 +1,8 @@
 package com.aiavatar.app.core.data.source.remote.model
 
+import com.aiavatar.app.core.domain.model.AvatarFile
 import com.aiavatar.app.core.domain.model.AvatarStatus
+import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.google.gson.annotations.SerializedName
 
 data class AvatarStatusResponse(
@@ -13,6 +15,8 @@ data class AvatarStatusResponse(
 )
 
 data class AvatarStatusDto(
+    @SerializedName("id")
+    val id: Long,
     @SerializedName("modelStatus")
     val modelStatus: String,
     @SerializedName("totalAiCount")
@@ -21,12 +25,14 @@ data class AvatarStatusDto(
     val generatedAiCount: Int,
     @SerializedName("generatedImages")
     val generatedImages: List<String>,
-    @SerializedName("modelPay")
-    val modelPay: Boolean,
-    @SerializedName("modelname")
-    val modelName: Boolean,
+    @SerializedName("modelPaidOnce")
+    val modelPaidOnce: Boolean,
+    @SerializedName("userModelname")
+    val userModelName: Boolean,
     @SerializedName("modelId")
-    val modelId: String
+    val modelId: String,
+    @SerializedName("eta")
+    val eta: Int,
 )
 
 fun AvatarStatusDto.toAvatarStatus(): AvatarStatus {
@@ -34,9 +40,28 @@ fun AvatarStatusDto.toAvatarStatus(): AvatarStatus {
         modelStatus = modelStatus,
         totalAiCount = totalAiCount,
         generatedAiCount = generatedAiCount,
-        generatedImages = generatedImages,
-        modelPay = modelPay,
-        modelName = modelName,
-        modelId = modelId
+        modelPaidOnce = modelPaidOnce,
+        userModelName = userModelName,
+        modelId = modelId,
+        eta = eta
+    ).also {
+        it.id = id
+    }
+}
+
+fun AvatarStatusDto.toAvatarFiles(): List<AvatarFile> {
+    return generatedImages.map { remoteImage ->
+        AvatarFile(
+            avatarStatusId = id,
+            remoteFile = remoteImage,
+            localUri = "",
+        )
+    }
+}
+
+fun AvatarStatusDto.toAvatarStatusWithFiles(): AvatarStatusWithFiles {
+    return AvatarStatusWithFiles(
+        avatarStatus = toAvatarStatus(),
+        avatarFiles = toAvatarFiles()
     )
 }

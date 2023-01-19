@@ -2,6 +2,7 @@ package com.aiavatar.app.core.domain.repository
 
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.core.domain.model.AvatarStatus
+import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.CreateModelData
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.CreateModelRequest
@@ -25,5 +26,5 @@ interface AppRepository {
 
     fun createModel(createModelRequest: CreateModelRequest): Flow<Result<CreateModelData>>
 
-    fun avatarStatus(avatarStatusRequest: AvatarStatusRequest): Flow<Result<AvatarStatus>>
+    fun avatarStatus(avatarStatusRequest: AvatarStatusRequest): Flow<Result<AvatarStatusWithFiles>>
 }

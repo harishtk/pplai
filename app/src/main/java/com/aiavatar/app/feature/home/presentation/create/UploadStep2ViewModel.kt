@@ -13,7 +13,6 @@ import com.aiavatar.app.core.data.source.local.entity.UploadFileStatus
 import com.aiavatar.app.core.data.source.local.entity.UploadFilesEntity
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionEntity
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
-import com.aiavatar.app.core.domain.model.request.UploadFile
 import com.aiavatar.app.feature.home.domain.model.SelectedMediaItem
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.toggle
@@ -97,6 +96,12 @@ class UploadStep2ViewModel @Inject constructor(
         setLoadState(LoadType.ACTION, LoadState.Loading())
         viewModelScope.launch(Dispatchers.IO) {
             // TODO: -done- create session id.
+
+            appDatabase.withTransaction {
+                appDatabase.uploadSessionDao().deleteAllUploadSessions()
+            }
+            StorageUtil.cleanUp(context)
+
             val folderName = StorageUtil.getTempFolderName()
             val uploadSessionEntity = UploadSessionEntity(
                 createdAt = System.currentTimeMillis(),

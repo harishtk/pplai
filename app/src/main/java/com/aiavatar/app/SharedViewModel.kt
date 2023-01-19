@@ -28,12 +28,12 @@ class SharedViewModel @Inject constructor(
 ) : ViewModel() {
 
     init {
-        /*viewModelScope.launch {
-            val currentSession = appDatabase.uploadSessionDao().getCurrentUploadSession()
+        viewModelScope.launch {
+            val currentSession = appDatabase.uploadSessionDao().getCurrentUploadSessionSync()
             if (currentSession.isNotEmpty()) {
                 setCurrentUploadSessionId(currentSession[0].uploadSessionEntity._id!!)
             }
-        }*/
+        }
     }
 
     private var autoLoginJob: Job? = null

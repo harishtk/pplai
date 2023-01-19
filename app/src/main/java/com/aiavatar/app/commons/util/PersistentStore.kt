@@ -35,6 +35,15 @@ class PersistentStore private constructor(
     val isProcessingModel: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.PROCESSING_MODEL, false)
 
+    val isOnboardPresented: Boolean
+        get() = getAppPreferences().getBoolean(AppEssentialKeys.ONBOARD_PRESENTED, false)
+
+    val isUploadingPhotos: Boolean
+        get() = getAppPreferences().getBoolean(UserPreferenceKeys.UPLOADING_PHOTOS, false)
+
+    val currentAvatarStatusId: String?
+        get() = getAppPreferences().getString(UserPreferenceKeys.CURRENT_AVATAR_STATUS_ID, null)
+
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
         return this
@@ -90,6 +99,16 @@ class PersistentStore private constructor(
         return this
     }
 
+    fun setUploadingPhotos(isUploading: Boolean = true): PersistentStore {
+        getAppPreferences().edit().putBoolean(UserPreferenceKeys.UPLOADING_PHOTOS, isUploading).apply()
+        return this
+    }
+
+    fun setCurrentAvatarStatusId(statusId: String? = null): PersistentStore {
+        getAppPreferences().edit().putString(UserPreferenceKeys.CURRENT_AVATAR_STATUS_ID, statusId).apply()
+        return this
+    }
+
     fun logout() {
         setUserId("")
         setDeviceToken("")
@@ -139,6 +158,8 @@ class PersistentStore private constructor(
             const val NOTIFY_UPON_COMPLETION = "notify_upon_completion"
             const val GUEST_USER_ID = "guest_user_id"
             const val PROCESSING_MODEL = "processing_model"
+            const val UPLOADING_PHOTOS = "uploading_photos"
+            const val CURRENT_AVATAR_STATUS_ID = "current_avatar_status_id"
         }
 
         object AppEssentialKeys {

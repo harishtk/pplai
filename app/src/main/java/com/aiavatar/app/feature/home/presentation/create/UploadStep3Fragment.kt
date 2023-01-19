@@ -8,6 +8,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
+import androidx.navigation.NavOptionsBuilder
+import androidx.navigation.PopUpToBuilder
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
@@ -67,13 +70,7 @@ class UploadStep3Fragment : Fragment() {
             uiEvent.collectLatest { event ->
                 when (event) {
                     is Step3UiEvent.NextScreen -> {
-                        if (event.restart) {
-                            (activity as? MainActivity)?.restart()
-                        } else {
-                            findNavController().apply {
-                                navigate(R.id.avatar_status)
-                            }
-                        }
+                        (activity as? MainActivity)?.restart()
                     }
                 }
             }

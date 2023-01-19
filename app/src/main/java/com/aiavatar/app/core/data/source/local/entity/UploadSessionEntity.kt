@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
-import com.aiavatar.app.core.domain.model.request.UploadSession
+import com.aiavatar.app.core.domain.model.UploadSession
 
 @Entity(tableName = UploadSessionTable.name)
 data class UploadSessionEntity(
@@ -20,38 +20,33 @@ data class UploadSessionEntity(
     @ColumnInfo("id")
     @PrimaryKey(autoGenerate = true)
     var _id: Long? = null
-
-    @ColumnInfo("model_id")
-    var modelId: String? = null
 }
 
 object UploadSessionTable {
     const val name: String = AppDatabase.TABLE_UPLOAD_SESSION
 
     object Columns {
-        const val CREATED_AT    = "created_at"
-        const val STATUS        = "status"
-        const val ID            = "id"
-        const val MODEL_ID      = "model_id"
-        const val FOLDER_NAME   = "folder_name"
-        const val TRAINING_TYPE = "training_type"
+        const val CREATED_AT            = "created_at"
+        const val STATUS                = "status"
+        const val ID                    = "id"
+        const val FOLDER_NAME           = "folder_name"
+        const val TRAINING_TYPE         = "training_type"
     }
 }
 
 fun UploadSessionEntity.toUploadSession(): UploadSession {
     return UploadSession(
         id = _id,
-        modelId = modelId,
         createdAt = createdAt,
         status = UploadSessionStatus.fromRawValue(status),
         folderName = folderName,
-        trainingType = trainingType
+        trainingType = trainingType,
     )
 }
 
 enum class UploadSessionStatus(val status: Int) {
     NOT_STARTED(0), PARTIALLY_DONE(1), UPLOAD_COMPLETE(2),
-    CREATING_MODEL(3), MODEL_READY(4), FAILED(5), UNKNOWN(-1);
+    FAILED(5), UNKNOWN(-1);
 
     companion object {
         fun fromRawValue(rawValue: Int): UploadSessionStatus {
@@ -59,8 +54,6 @@ enum class UploadSessionStatus(val status: Int) {
                 0 -> NOT_STARTED
                 1 -> PARTIALLY_DONE
                 2 -> UPLOAD_COMPLETE
-                3 -> CREATING_MODEL
-                4 -> MODEL_READY
                 5 -> FAILED
                 else -> UNKNOWN
             }

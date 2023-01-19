@@ -3,6 +3,7 @@ package com.aiavatar.app.feature.home.presentation.create
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
@@ -10,6 +11,10 @@ import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
+import com.aiavatar.app.core.data.source.local.entity.toEntity
+import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.AvatarStatus
+import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
@@ -20,8 +25,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
@@ -45,6 +52,9 @@ class AvatarStatusViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AvatarStatusState>(AvatarStatusState())
     val uiState: StateFlow<AvatarStatusState> = _uiState.asStateFlow()
 
+    private val _uiEvent = MutableSharedFlow<AvatarStatusUiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
+
     val accept: (AvatarStatusUiAction) -> Unit
 
     private var createModelJob: Job? = null
@@ -65,6 +75,20 @@ class AvatarStatusViewModel @Inject constructor(
                                 uploadSessionWithFilesEntity
                                     .uploadSessionEntity.status
                             )
+                        )
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+
+        uiState.mapNotNull { it.avatarStatusId }
+            .flatMapLatest { statusId ->
+                appDatabase.avatarStatusDao().getAvatarStatus(id = statusId.toLong())
+            }.onEach { avatarStatusWithFilesEntity ->
+                if (avatarStatusWithFilesEntity != null) {
+                    _uiState.update { state ->
+                        state.copy(
+                            avatarStatusWithFiles = avatarStatusWithFilesEntity.toAvatarStatusWithFiles()
                         )
                     }
                 }
@@ -97,6 +121,14 @@ class AvatarStatusViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 sessionId = sessionId
+            )
+        }
+    }
+
+    fun setAvatarStatusId(statusId: String) {
+        _uiState.update { state ->
+            state.copy(
+                avatarStatusId = statusId
             )
         }
         getAvatarStatusInternal()
@@ -163,16 +195,15 @@ class AvatarStatusViewModel @Inject constructor(
                         ApplicationDependencies.getPersistentStore().apply {
                             setProcessingModel(true)
                             setGuestUserId(result.data.guestUserId)
+                            setCurrentAvatarStatusId(result.data.statusId.toString())
                         }
                         appDatabase.uploadSessionDao().apply {
-                            updateUploadSessionStatus(
-                                uiState.value.sessionId!!,
-                                UploadSessionStatus.CREATING_MODEL.status
-                            )
-                            updateUploadSessionModelId(
-                                uiState.value.sessionId!!,
-                                result.data.statusId
-                            )
+                            appDatabase.avatarStatusDao().apply {
+                                val newAvatarStatus = AvatarStatus.emptyStatus(result.data.statusId)
+                                insert(newAvatarStatus.toEntity())
+                            }
+                            // TODO: get avatar status
+                            getAvatarStatusInternal()
                         }
                         // sendEvent(Step3UiEvent.NextScreen)
                     }
@@ -189,16 +220,23 @@ class AvatarStatusViewModel @Inject constructor(
             )
         }
         savedStateHandle[TOGGLE_STATE_NOTIFY_ME] = checked
+        ApplicationDependencies.getPersistentStore().setNotifyUponCompletion(checked)
     }
 
     private fun getAvatarStatusInternal() = viewModelScope.launch {
-        val uploadSessionWithFilesEntity = appDatabase.uploadSessionDao().getUploadSessionSync(
-            uiState.value.sessionId!!
-        )
-        if (uploadSessionWithFilesEntity != null &&
-            uploadSessionWithFilesEntity.uploadSessionEntity.modelId?.isNotBlank() == true) {
-            val request = AvatarStatusRequest(uploadSessionWithFilesEntity.uploadSessionEntity.modelId!!)
-            getStatus(request)
+        try {
+            val currentStatusId: String? = uiState.value.avatarStatusId
+            if (currentStatusId != null) {
+                val request = AvatarStatusRequest(currentStatusId)
+                getStatus(request)
+            } else {
+                val t = IllegalStateException("Failed to parse status id")
+                Timber.e(t)
+            }
+        } catch (e: Exception) {
+            if (BuildConfig.DEBUG) {
+                Timber.e(e)
+            }
         }
     }
 
@@ -236,12 +274,23 @@ class AvatarStatusViewModel @Inject constructor(
                     }
                     is Result.Success -> {
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
-                        when (result.data.modelStatus) {
-                            "processing" -> {
 
+                        /*val avatarStatus = result.data.avatarStatus
+                        when (avatarStatus.modelStatus) {
+                            "training_processing" -> {
+                                // TODO: update UI
+                            }
+                            "avatar_processing" -> {
+                                val progress = (avatarStatus.generatedAiCount.toFloat() / avatarStatus.totalAiCount)
+                                    .coerceIn(0.0F, 1.0F)
+                                *//*_uiState.update { state ->
+                                    state.copy(
+                                        progressHint = "${avatarStatus.generatedAiCount}/${avatarStatus.totalAiCount}"
+                                    )
+                                }*//*
                             }
                             "completed" -> {
-                                /*ApplicationDependencies.getPersistentStore().apply {
+                                *//*ApplicationDependencies.getPersistentStore().apply {
                                     setProcessingModel(false)
                                     setGuestUserId("")
                                 }
@@ -254,9 +303,9 @@ class AvatarStatusViewModel @Inject constructor(
                                         uiState.value.sessionId!!,
                                         result.data.statusId
                                     )
-                                }*/
+                                }*//*
                             }
-                        }
+                        }*/
                         // sendEvent(Step3UiEvent.NextScreen)
                     }
                 }
@@ -284,13 +333,20 @@ class AvatarStatusViewModel @Inject constructor(
         }
     }
 
+    private fun sendEvent(newEvent: AvatarStatusUiEvent) = viewModelScope.launch {
+        _uiEvent.emit(newEvent)
+    }
+
 }
 
 data class AvatarStatusState(
     val loadState: LoadStates = LoadStates.IDLE,
     val sessionId: Long? = null,
     val sessionStatus: UploadSessionStatus = UploadSessionStatus.UNKNOWN,
+    val avatarStatusId: String? = null,
+    val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val toggleStateNotifyMe: Boolean = DEFAULT_TOGGLE_STATE,
+    val progressHint: String? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
@@ -299,6 +355,10 @@ interface AvatarStatusUiAction {
     data class ErrorShown(val e: Exception) : AvatarStatusUiAction
     data class ToggleNotifyMe(val checked: Boolean) : AvatarStatusUiAction
     object CreateModel : AvatarStatusUiAction
+}
+
+interface AvatarStatusUiEvent {
+    data class ShowToast(val message: UiText) : AvatarStatusUiEvent
 }
 
 private const val TOGGLE_STATE_NOTIFY_ME = "toggle_state_notify_me"

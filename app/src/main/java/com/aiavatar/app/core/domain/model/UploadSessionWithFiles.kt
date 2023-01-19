@@ -1,4 +1,4 @@
-package com.aiavatar.app.core.domain.model.request
+package com.aiavatar.app.core.domain.model
 
 import android.net.Uri
 import com.aiavatar.app.core.data.source.local.entity.UploadFileStatus
@@ -11,7 +11,6 @@ data class UploadSessionWithFiles(
 
 data class UploadSession(
     val id: Long?,
-    val modelId: String?,
     val createdAt: Long,
     val status: UploadSessionStatus = UploadSessionStatus.UNKNOWN,
     val folderName: String,

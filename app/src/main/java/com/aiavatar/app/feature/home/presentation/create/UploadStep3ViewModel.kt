@@ -4,12 +4,15 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.commons.util.Result
+import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
+import com.aiavatar.app.core.data.source.local.entity.toEntity
+import com.aiavatar.app.core.domain.model.AvatarStatus
 import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.di.ApplicationDependencies
@@ -121,6 +124,7 @@ class UploadStep3ViewModel @Inject constructor(
             if (uiState.value.sessionStatus == UploadSessionStatus.UPLOAD_COMPLETE) {
                 createModelInternal(sessionId)
             } else {
+                ApplicationDependencies.getPersistentStore().setUploadingPhotos(true)
                 sendEvent(Step3UiEvent.NextScreen(false))
             }
         }
@@ -195,16 +199,11 @@ class UploadStep3ViewModel @Inject constructor(
                         ApplicationDependencies.getPersistentStore().apply {
                             setProcessingModel(true)
                             setGuestUserId(result.data.guestUserId)
+                            setCurrentAvatarStatusId(result.data.statusId.toString())
                         }
-                        appDatabase.uploadSessionDao().apply {
-                            updateUploadSessionStatus(
-                                uiState.value.sessionId!!,
-                                UploadSessionStatus.CREATING_MODEL.status
-                            )
-                            updateUploadSessionModelId(
-                                uiState.value.sessionId!!,
-                                result.data.statusId
-                            )
+                        appDatabase.avatarStatusDao().apply {
+                            val newAvatarStatus = AvatarStatus.emptyStatus(result.data.statusId)
+                            insert(newAvatarStatus.toEntity())
                         }
                         sendEvent(Step3UiEvent.NextScreen(true))
                     }

@@ -7,7 +7,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
-import com.aiavatar.app.core.domain.model.request.UploadFile
+import com.aiavatar.app.core.domain.model.UploadFile
 
 @Entity(
     tableName = UploadFilesTable.name,

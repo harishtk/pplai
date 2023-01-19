@@ -1,16 +1,21 @@
 package com.aiavatar.app.core.data.repository
 
+import androidx.room.withTransaction
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.commons.util.NetworkResultParser
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.BadResponseException
 import com.aiavatar.app.commons.util.net.EmptyResponseException
+import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.toEntity
 import com.aiavatar.app.core.data.source.remote.AppRemoteDataSource
 import com.aiavatar.app.core.data.source.remote.dto.asDto
 import com.aiavatar.app.core.data.source.remote.model.toAvatarStatus
+import com.aiavatar.app.core.data.source.remote.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.data.source.remote.model.toCreateModelData
 import com.aiavatar.app.core.domain.model.AvatarStatus
+import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.CreateModelData
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.CreateModelRequest
@@ -27,7 +32,9 @@ import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
 class AppRepositoryImpl @Inject constructor(
-    private val remoteDataSource: AppRemoteDataSource
+    private val remoteDataSource: AppRemoteDataSource,
+    @Deprecated("move to local data source")
+    private val appDatabase: AppDatabase
 ) : AppRepository, NetworkResultParser {
 
     override fun sendFcmToken(request: SendFcmTokenRequest): Flow<Result<String>> {
@@ -100,7 +107,7 @@ class AppRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun avatarStatus(avatarStatusRequest: AvatarStatusRequest): Flow<Result<AvatarStatus>> {
+    override fun avatarStatus(avatarStatusRequest: AvatarStatusRequest): Flow<Result<AvatarStatusWithFiles>> {
         return remoteDataSource.avatarStatus(avatarStatusRequest.asDto()).map { networkResult ->
             when (networkResult) {
                 is NetworkResult.Loading -> Result.Loading
@@ -108,7 +115,13 @@ class AppRepositoryImpl @Inject constructor(
                     if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
                         val data = networkResult.data.data
                         if (data != null) {
-                            Result.Success(data.toAvatarStatus())
+                            val avatarStatusWithFiles = networkResult.data.data.toAvatarStatusWithFiles()
+                            appDatabase.withTransaction {
+                                appDatabase.avatarStatusDao().insert(avatarStatusWithFiles.avatarStatus.toEntity())
+                                val files = avatarStatusWithFiles.avatarFiles.map { it.toEntity() }
+                                appDatabase.avatarFilesDao().insertAll(files)
+                            }
+                            Result.Success(avatarStatusWithFiles)
                         } else {
                             val cause = EmptyResponseException("No data")
                             Result.Error(ApiException(cause))

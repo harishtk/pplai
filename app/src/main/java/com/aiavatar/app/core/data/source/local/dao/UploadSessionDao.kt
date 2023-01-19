@@ -1,14 +1,11 @@
 package com.aiavatar.app.core.data.source.local.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.aiavatar.app.core.data.source.local.entity.UploadFilesTable
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionEntity
-import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionTable
 import com.aiavatar.app.core.data.source.local.model.UploadSessionWithFilesEntity
 import kotlinx.coroutines.flow.Flow
@@ -20,11 +17,6 @@ interface UploadSessionDao {
             "SET ${UploadSessionTable.Columns.STATUS} = :status " +
             "WHERE ${UploadSessionTable.Columns.ID} = :id")
     suspend fun updateUploadSessionStatus(id: Long, status: Int)
-
-    @Query("UPDATE ${UploadSessionTable.name} " +
-            "SET ${UploadSessionTable.Columns.MODEL_ID} = :modelId " +
-            "WHERE ${UploadSessionTable.Columns.ID} = :id")
-    suspend fun updateUploadSessionModelId(id: Long, modelId: Int)
 
     @Query("UPDATE ${UploadSessionTable.name} " +
             "SET ${UploadSessionTable.Columns.TRAINING_TYPE} = :type " +

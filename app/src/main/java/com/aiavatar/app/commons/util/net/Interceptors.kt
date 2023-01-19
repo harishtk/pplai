@@ -39,7 +39,7 @@ class PlatformInterceptor(
 class GuestUserInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response = chain.run {
         val isGuestUser = ApplicationDependencies.getPersistentStore()
-            .guestUserId.isBlank()
+            .deviceToken.isBlank()
         proceed(
             request()
                 .newBuilder()

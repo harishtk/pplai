@@ -8,7 +8,7 @@ import com.aiavatar.app.core.data.source.local.entity.UploadSessionEntity
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionTable
 import com.aiavatar.app.core.data.source.local.entity.toUploadFile
 import com.aiavatar.app.core.data.source.local.entity.toUploadSession
-import com.aiavatar.app.core.domain.model.request.UploadSessionWithFiles
+import com.aiavatar.app.core.domain.model.UploadSessionWithFiles
 
 data class UploadSessionWithFilesEntity(
     @Embedded val uploadSessionEntity: UploadSessionEntity,

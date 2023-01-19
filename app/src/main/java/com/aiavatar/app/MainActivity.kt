@@ -18,13 +18,19 @@ import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.di.ApplicationDependencies
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedListener {
 
     private val sharedViewModel: SharedViewModel by viewModels()
+
+    private lateinit var mainNavController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AppStartup.getInstance().onCriticalRenderEventStart()
@@ -67,15 +73,16 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         }
 
         setupObservers()
-        StorageUtil.cleanUp(this)
     }
 
     private fun setNavGraph() {
         val navHostFragment: NavHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment_container)
                     as NavHostFragment
-        val navController: NavController = navHostFragment.navController
-        navController.addOnDestinationChangedListener(this)
+        if (!this::mainNavController.isInitialized) {
+            mainNavController = navHostFragment.navController
+            mainNavController.addOnDestinationChangedListener(this)
+        }
 
         val inflater = navHostFragment.navController.navInflater
         val graph: NavGraph
@@ -86,13 +93,18 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
         val persistentStore = ApplicationDependencies.getPersistentStore()
         when {
-            persistentStore.isProcessingModel -> {
+            persistentStore.isProcessingModel ||
+            persistentStore.isUploadingPhotos -> {
                 graph = inflater.inflate(R.navigation.home_nav_graph)
                 graph.setStartDestination(R.id.avatar_status)
             }
-            persistentStore.isLogged || true -> {
+            persistentStore.isLogged -> {
                 graph = inflater.inflate(R.navigation.home_nav_graph)
                 graph.setStartDestination(R.id.catalog_list)
+            }
+            persistentStore.isOnboardPresented -> {
+                graph = inflater.inflate(R.navigation.home_nav_graph)
+                graph.setStartDestination(R.id.upload_step_1)
             }
             else -> {
                 graph = inflater.inflate(R.navigation.login_nav_graph)
@@ -100,7 +112,11 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
             }
         }
 
-        navController.setGraph(graph, startDestinationArgs)
+        mainNavController.setGraph(graph, startDestinationArgs)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return mainNavController.navigateUp() || super.onSupportNavigateUp()
     }
 
     override fun onNewIntent(intent: Intent?) {

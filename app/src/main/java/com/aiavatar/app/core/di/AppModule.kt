@@ -25,9 +25,10 @@ object AppModule {
 
     @Provides
     fun provideAppRepository(
-        appRemoteDataSource: AppRemoteDataSource
+        appRemoteDataSource: AppRemoteDataSource,
+        appDatabase: AppDatabase
     ): AppRepository {
-        return AppRepositoryImpl(remoteDataSource = appRemoteDataSource)
+        return AppRepositoryImpl(remoteDataSource = appRemoteDataSource, appDatabase)
     }
 
     @Provides
