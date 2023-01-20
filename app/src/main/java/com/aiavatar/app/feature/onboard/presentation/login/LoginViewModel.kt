@@ -14,9 +14,7 @@ import com.aiavatar.app.commons.util.ValidationResult
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
-import com.aiavatar.app.commons.util.succeeded
 import com.aiavatar.app.di.ApplicationDependencies
-import com.aiavatar.app.feature.onboard.domain.model.LoginData
 import com.aiavatar.app.feature.onboard.domain.model.request.LoginRequest
 import com.aiavatar.app.feature.onboard.domain.model.request.SocialLoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
@@ -105,7 +103,7 @@ class LoginViewModel @Inject constructor(
         return handleBackPressedInternal()
     }
 
-    fun socialLogin(type: String, accountId: String, email: String) {
+    fun socialLogin(type: String, accountId: String, email: String, photoUrl: String?) {
         val request = SocialLoginRequest(
             accountType = type,
             accountId = accountId,
@@ -115,7 +113,7 @@ class LoginViewModel @Inject constructor(
             fcm = ApplicationDependencies.getPersistentStore().fcmToken
         )
 
-        socialLoginInternal(request)
+        socialLoginInternal(request, photoUrl)
     }
 
     private fun handleBackPressedInternal(): Boolean {
@@ -301,7 +299,7 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private fun socialLoginInternal(socialLoginRequest: SocialLoginRequest) {
+    private fun socialLoginInternal(socialLoginRequest: SocialLoginRequest, photoUrl: String?) {
         if (loginJob?.isActive == true) {
             val t = IllegalStateException("A login request is already in progress. Ignoring request")
             Timber.d(t)
@@ -353,6 +351,7 @@ class LoginViewModel @Inject constructor(
                                 .setDeviceToken(loginData.deviceToken.nullAsEmpty())
                                 .setUsername(loginData.loginUser?.username.nullAsEmpty())
                                 .setEmail(socialLoginRequest.email)
+                                .setSocialImage(photoUrl)
                         }
                         sendEvent(LoginUiEvent.ShowToast(UiText.DynamicString("Login successful!")))
                         sendEvent(LoginUiEvent.NextScreen)

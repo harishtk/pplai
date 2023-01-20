@@ -44,6 +44,9 @@ class PersistentStore private constructor(
     val currentAvatarStatusId: String?
         get() = getAppPreferences().getString(UserPreferenceKeys.CURRENT_AVATAR_STATUS_ID, null)
 
+    val socialImage: String?
+        get() = getAppPreferences().getString(UserPreferenceKeys.SOCIAL_IMAGE, null)
+
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
         return this
@@ -109,12 +112,19 @@ class PersistentStore private constructor(
         return this
     }
 
+    fun setSocialImage(image: String? = null): PersistentStore {
+        getAppPreferences().edit().putString(UserPreferenceKeys.SOCIAL_IMAGE, image).apply()
+        return this
+    }
+
     fun logout() {
         setUserId("")
         setDeviceToken("")
         setUsername("")
         setEmail("")
         setGuestUserId("")
+        setSocialImage(null)
+        setCurrentAvatarStatusId(null)
         setProcessingModel(false)
     }
 
@@ -155,6 +165,7 @@ class PersistentStore private constructor(
             const val USER_ID: String = "user_id"
             const val USERNAME: String = "username"
             const val EMAIL: String = "email"
+            const val SOCIAL_IMAGE: String = "social_image"
             const val NOTIFY_UPON_COMPLETION = "notify_upon_completion"
             const val GUEST_USER_ID = "guest_user_id"
             const val PROCESSING_MODEL = "processing_model"

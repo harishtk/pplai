@@ -6,5 +6,8 @@ data class SubscriptionPlan(
     val price: String,
     val variation: Int,
     val style: Int,
-    val photo: Int
+    val photo: Int,
+    val currencySymbol: String,
+    val currencyCode: String,
+    val bestSeller: Boolean
 )

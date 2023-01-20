@@ -2,10 +2,10 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/home_nav_graph">
+    android:id="@+id/main_nav_graph">
 
     <action android:id="@+id/action_home_nav_graph_to_self"
-        app:destination="@id/home_nav_graph" />
+        app:destination="@id/main_nav_graph" />
 
     <fragment android:id="@+id/catalog_list"
         android:name="com.aiavatar.app.feature.home.presentation.catalog.CatalogFragment"
@@ -102,7 +102,7 @@
             app:exitAnim="@anim/slide_out_right"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right"
-            app:popUpTo="@id/home_nav_graph"
+            app:popUpTo="@id/main_nav_graph"
             app:popUpToInclusive="true"
             app:launchSingleTop="true"/>
     </fragment>
@@ -111,6 +111,11 @@
         android:name="com.aiavatar.app.feature.home.presentation.subscription.SubscriptionFragment"
         android:label="Subscription"
         tools:layout="@layout/fragment_subscription" />
+
+    <fragment android:id="@+id/subscriptionSuccess"
+        android:name="com.aiavatar.app.feature.home.presentation.subscription.SubscriptionSuccessFragment"
+        android:label="Subscription Success"
+        tools:layout="@layout/fragment_subscription_success" />
 
     <fragment android:id="@+id/avatar_status"
         android:name="com.aiavatar.app.feature.home.presentation.create.AvatarStatusFragment"

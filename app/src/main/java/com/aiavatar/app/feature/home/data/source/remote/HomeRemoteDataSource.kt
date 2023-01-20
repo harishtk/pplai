@@ -4,9 +4,11 @@ import com.aiavatar.app.commons.data.source.remote.BaseRemoteDataSource
 import com.aiavatar.app.commons.util.NetWorkHelper
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.di.IoDispatcher
+import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPurchaseRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.model.HomeResponse
 import com.aiavatar.app.feature.home.data.source.remote.model.HomeResponseOld
 import com.aiavatar.app.feature.home.data.source.remote.model.SubscriptionPlanResponse
+import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -17,7 +19,7 @@ class HomeRemoteDataSource @Inject constructor(
     netWorkHelper: NetWorkHelper,
     private val apiService: HomeApi,
     @IoDispatcher
-    private val dispatcher: CoroutineDispatcher
+    private val dispatcher: CoroutineDispatcher,
 ) : BaseRemoteDataSource(netWorkHelper) {
 
     fun getHomeOld(): Flow<NetworkResult<HomeResponseOld>> = flow {
@@ -30,9 +32,16 @@ class HomeRemoteDataSource @Inject constructor(
         emit(safeApiCall { apiService.home() })
     }.flowOn(dispatcher)
 
-    fun getSubscriptionPlans(): Flow<NetworkResult<SubscriptionPlanResponse>> = flow<NetworkResult<SubscriptionPlanResponse>> {
-        emit(NetworkResult.Loading())
-        emit(safeApiCall { apiService.subscriptionPlans() })
-    }.flowOn(dispatcher)
+    fun getSubscriptionPlans(): Flow<NetworkResult<SubscriptionPlanResponse>> =
+        flow<NetworkResult<SubscriptionPlanResponse>> {
+            emit(NetworkResult.Loading())
+            emit(safeApiCall { apiService.subscriptionPlans() })
+        }.flowOn(dispatcher)
+
+    fun purchasePlan(subscriptionPurchaseRequestDto: SubscriptionPurchaseRequestDto): Flow<NetworkResult<BaseResponse>> =
+        flow<NetworkResult<BaseResponse>> {
+            emit(NetworkResult.Loading())
+            emit(safeApiCall { apiService.purchasePlan(subscriptionPurchaseRequestDto) })
+        }.flowOn(dispatcher)
 
 }

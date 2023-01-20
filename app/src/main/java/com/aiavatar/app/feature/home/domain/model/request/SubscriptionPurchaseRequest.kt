@@ -1,0 +1,7 @@
+package com.aiavatar.app.feature.home.domain.model.request
+
+data class SubscriptionPurchaseRequest(
+    val id: String,
+    val modelId: String,
+    val transactionId: String
+)

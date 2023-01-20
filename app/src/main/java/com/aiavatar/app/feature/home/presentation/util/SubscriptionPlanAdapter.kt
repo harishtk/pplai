@@ -71,6 +71,7 @@ class SubscriptionPlanAdapter(
 
         fun bind(data: SubscriptionPlan, selected: Boolean, callback: Callback) = with(binding) {
             textPrice.text = data.price
+            textCurrencySymbol.text = data.currencySymbol
             textPhotos.text = binding.root.context.getString(R.string.num_photos, data.photo)
             description.text = binding.root.context.getString(R.string.subscription_description, data.variation, data.style)
 
@@ -87,7 +88,7 @@ class SubscriptionPlanAdapter(
                 }
             }
 
-            bestSellerContainer.isVisible = adapterPosition == 1
+            bestSellerContainer.isVisible = data.bestSeller
         }
 
         fun toggleSelection(selected: Boolean) = with(binding) {

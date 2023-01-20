@@ -4,11 +4,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
+import androidx.navigation.fragment.findNavController
+import com.aiavatar.app.Constant
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.util.ResolvableException
+import com.aiavatar.app.commons.util.cancelSpinning
+import com.aiavatar.app.commons.util.setSpinning
+import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.databinding.FragmentSubscriptionBinding
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
@@ -60,6 +68,19 @@ class SubscriptionFragment : Fragment() {
                     is SubscriptionUiEvent.ShowToast -> {
                         context?.showToast(event.message.asString(requireContext()))
                     }
+                    is SubscriptionUiEvent.PurchaseComplete -> {
+                        findNavController().apply {
+                            val args = bundleOf(
+                                Constant.EXTRA_FROM to "login"
+                            )
+                            val navOpts = NavOptions.Builder()
+                                .setEnterAnim(R.anim.fade_scale_in)
+                                .setExitAnim(R.anim.fade_scale_out)
+                                .setPopUpTo(R.id.subscription_plans, inclusive = true, saveState = false)
+                                .build()
+                            navigate(R.id.subscriptionSuccess, args, navOpts)
+                        }
+                    }
                 }
             }
         }
@@ -79,6 +100,11 @@ class SubscriptionFragment : Fragment() {
                         if (uiErr != null) {
                             context?.showToast(uiErr.asString(requireContext()))
                         }
+                        when (e) {
+                            is ResolvableException -> {
+                                btnNext.shakeNow()
+                            }
+                        }
                         uiAction(SubscriptionUiAction.ErrorShown(e))
                     }
                 }
@@ -88,8 +114,13 @@ class SubscriptionFragment : Fragment() {
         val loadStateFlow = uiState.map { it.loadState }
             .distinctUntilChangedBy { it.refresh }
         viewLifecycleOwner.lifecycleScope.launch {
-            loadStateFlow.collectLatest { loadStateFlow ->
-                progressBar.isVisible = loadStateFlow.refresh is LoadState.Loading
+            loadStateFlow.collectLatest { loadState ->
+                progressBar.isVisible = loadState.refresh is LoadState.Loading
+                if (loadState.action is LoadState.Loading) {
+                    btnNext.setSpinning()
+                } else {
+                    btnNext.cancelSpinning()
+                }
             }
         }
 
@@ -109,6 +140,11 @@ class SubscriptionFragment : Fragment() {
             adapter = subscriptionPlanAdapter,
             uiState = uiState
         )
+
+        bindClick(
+            uiState = uiState,
+            uiAction = uiAction
+        )
     }
 
     private fun FragmentSubscriptionBinding.bindList(
@@ -123,6 +159,15 @@ class SubscriptionFragment : Fragment() {
             subscriptionPlansListFlow.collectLatest { subscriptionPlansList ->
                 adapter.submitList(subscriptionPlansList)
             }
+        }
+    }
+
+    private fun FragmentSubscriptionBinding.bindClick(
+        uiState: StateFlow<SubscriptionState>,
+        uiAction: (SubscriptionUiAction) -> Unit
+    ) {
+        btnNext.setOnClickListener {
+            uiAction(SubscriptionUiAction.NextClick)
         }
     }
 }

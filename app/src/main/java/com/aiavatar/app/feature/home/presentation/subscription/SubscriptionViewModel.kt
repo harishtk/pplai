@@ -3,12 +3,17 @@ package com.aiavatar.app.feature.home.presentation.subscription
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aiavatar.app.BuildConfig
+import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
+import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
@@ -34,6 +39,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SubscriptionViewModel @Inject constructor(
     private val homeRepository: HomeRepository,
+    private val appDatabase: AppDatabase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -49,6 +55,7 @@ class SubscriptionViewModel @Inject constructor(
     private val selectedToggleFlow = MutableStateFlow(false)
 
     private var subscriptionPlanFetchJob: Job? = null
+    private var subscriptionPurchaseJob: Job? = null
 
     init {
         val subscriptionPlanModelFlow = uiState.map { it.subscriptionPlans }
@@ -100,6 +107,55 @@ class SubscriptionViewModel @Inject constructor(
                     selectedToggleFlow.update { selectedToggleFlow.value.not() }
                 }
             }
+            is SubscriptionUiAction.NextClick -> {
+                startPurchaseFlowInternal()
+            }
+        }
+    }
+
+    private fun startPurchaseFlowInternal() {
+        // TODO: start Google Play purchase
+        viewModelScope.launch {
+            val avatarStatusId = ApplicationDependencies.getPersistentStore().currentAvatarStatusId
+            if (avatarStatusId != null) {
+                val avatarStatus = appDatabase.avatarStatusDao().getAvatarStatusSync(id = avatarStatusId.toLong())
+                    ?.avatarStatusEntity
+
+                if (avatarStatus != null) {
+                    val selectedPlan = uiState.value.subscriptionPlans
+                        .filterIsInstance<SubscriptionUiModel.Plan>()
+                        .find { it.selected }?.subscriptionPlan
+
+                    if (selectedPlan != null) {
+                        val request = SubscriptionPurchaseRequest(
+                            id = selectedPlan.id.toString(),
+                            modelId = avatarStatus.modelId,
+                            transactionId = ""
+                        )
+
+                        sendPurchaseDetailToServer(request)
+
+                    } else {
+                        val t = IllegalStateException("No plans selected")
+                        _uiState.update { state ->
+                            state.copy(
+                                exception = ResolvableException(t),
+                                uiErrorText = UiText.DynamicString("Please select a plan.")
+                            )
+                        }
+                    }
+
+                } else {
+                    sendEvent(SubscriptionUiEvent.ShowToast(
+                        UiText.DynamicString("Cannot complete your purchase")
+                    ))
+                    val t = IllegalStateException("Avatar status not found")
+                    Timber.e(t)
+                }
+            } else {
+                val t = IllegalStateException("Something went wrong")
+                Timber.e(t)
+            }
         }
     }
 
@@ -141,12 +197,60 @@ class SubscriptionViewModel @Inject constructor(
                     }
                     is Result.Success -> {
                         setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
-                        val plans: List<SubscriptionUiModel> = result.data.map { SubscriptionUiModel.Plan(it) }
+                        val plans: List<SubscriptionUiModel> = result.data.mapIndexed { index, subscriptionPlan ->
+                            if (subscriptionPlan.bestSeller) {
+                                selectedPlanId = subscriptionPlan.id
+                            }
+                            SubscriptionUiModel.Plan(subscriptionPlan)
+                        }
                         _uiState.update { state ->
                             state.copy(
                                 subscriptionPlans = plans
                             )
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun sendPurchaseDetailToServer(request: SubscriptionPurchaseRequest) {
+        if (subscriptionPurchaseJob?.isActive == true) {
+            val t = IllegalStateException("A purchase request is already active. Ignoring request")
+            if (BuildConfig.DEBUG) {
+                Timber.e(t)
+            }
+            return
+        }
+        subscriptionPurchaseJob?.cancel(CancellationException("New request")) // just in case
+        subscriptionPurchaseJob = viewModelScope.launch {
+            homeRepository.purchasePlan(request).collectLatest { result ->
+                when (result) {
+                    is Result.Loading -> setLoading(LoadType.ACTION, LoadState.Loading())
+                    is Result.Error -> {
+                        when (result.exception) {
+                            is ApiException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
+                                    )
+                                }
+                            }
+                            is NoInternetException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.noInternet
+                                    )
+                                }
+                            }
+                        }
+                        setLoading(LoadType.ACTION, LoadState.Error(result.exception))
+                    }
+                    is Result.Success -> {
+                        setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
+                        sendEvent(SubscriptionUiEvent.PurchaseComplete)
                     }
                 }
             }
@@ -182,10 +286,12 @@ interface SubscriptionUiAction {
     data class ErrorShown(val e: Exception) : SubscriptionUiAction
     data class ToggleSelectedPlan(val planId: Int) : SubscriptionUiAction
     object Retry : SubscriptionUiAction
+    object NextClick : SubscriptionUiAction
 }
 
 interface SubscriptionUiEvent {
     data class ShowToast(val message: UiText) : SubscriptionUiEvent
+    object PurchaseComplete : SubscriptionUiEvent
 }
 
 interface SubscriptionUiModel {

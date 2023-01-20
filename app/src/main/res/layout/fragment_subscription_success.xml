@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ImageView android:id="@+id/backdrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/app_background_1"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/content_description_backdrop"
+        android:translationZ="0dp"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardUseCompatPadding="true"
+            android:elevation="8dp"
+            app:cardElevation="8dp"
+            app:cardMaxElevation="8dp"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.App.MediumComponent.Rounded"
+            android:layout_gravity="center">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true">
+
+                <Space android:id="@+id/top_spacer"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/spacer_size_small"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toTopOf="@id/iv_popper"/>
+
+                <ImageView
+                    android:id="@+id/iv_popper"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_margin="@dimen/inset_large"
+                    android:src="@drawable/popper"
+                    app:layout_constraintWidth_percent="0.3"
+                    app:layout_constraintDimensionRatio="H,1:1"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/top_spacer"
+                    app:layout_constraintBottom_toTopOf="@id/title"/>
+
+                <TextView
+                    android:id="@+id/title"
+                    style="@style/Base.TextAppearance.Bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thank you for subscribing!"
+                    android:textColor="?attr/colorSecondary"
+                    android:textSize="@dimen/text_size_large"
+                    app:layout_constraintTop_toBottomOf="@id/iv_popper"
+                    app:layout_constraintBottom_toTopOf="@id/space1"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+                <Space
+                    android:id="@+id/space1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/spacer_size_very_small"
+                    android:visibility="visible"
+                    app:layout_constraintTop_toBottomOf="@id/title"
+                    app:layout_constraintBottom_toTopOf="@id/title2"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+                <TextView
+                    android:id="@+id/title2"
+                    style="@style/Base.TextAppearance.Light"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/inset_large"
+                    android:text="Now you can download all \n masterpieces"
+                    android:textAlignment="center"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="@dimen/text_size_very_small"
+                    app:layout_constraintTop_toBottomOf="@id/space1"
+                    app:layout_constraintBottom_toTopOf="@id/next_button"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/next_button"
+                    style="@style/Widget.App.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/content_description_action_button"
+                    android:elevation="@dimen/default_fab_elevation"
+                    android:insetLeft="@dimen/inset_large"
+                    android:insetTop="@dimen/inset_large"
+                    android:insetRight="@dimen/inset_large"
+                    android:insetBottom="@dimen/inset_large"
+                    android:src="@drawable/ic_baseline_chevron_right_24"
+                    android:text="Generate"
+                    android:visibility="visible"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/title2"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

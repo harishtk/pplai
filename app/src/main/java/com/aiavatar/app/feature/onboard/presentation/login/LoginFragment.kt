@@ -37,6 +37,7 @@ import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentLoginBinding
+import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.hideKeyboard
 import com.aiavatar.app.showSoftInputMode
 import com.aiavatar.app.showToast
@@ -453,7 +454,8 @@ class LoginFragment : Fragment() {
         Timber.d("Sign in: Google id = ${account?.id} email = ${account?.email}")
         if (account != null) {
             if (account.id != null && account.email != null) {
-                viewModel.socialLogin("google", account.id!!, email = account.email!!)
+                viewModel.socialLogin("google", account.id!!, email = account.email!!,
+                    photoUrl = account.photoUrl?.toString())
             } else {
                 context?.showToast("Cannot sign in with Google right now. Try other methods.")
                 googleSignInClient.signOut()

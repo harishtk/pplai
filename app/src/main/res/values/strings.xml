@@ -68,4 +68,7 @@
     <string name="desc_upload_notifications">Current status of the photos upload</string>
     <string name="cancel_upload">Cancel Upload</string>
     <string name="label_download">Download</string>
+    <string name="content_description_backdrop">Backdrop</string>
+    <string name="content_description_action_button">Page Action</string>
+    <string name="content_description_close">Close</string>
 </resources>

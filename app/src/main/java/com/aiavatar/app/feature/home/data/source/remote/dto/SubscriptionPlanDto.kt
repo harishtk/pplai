@@ -15,7 +15,13 @@ data class SubscriptionPlanDto(
     @SerializedName("style")
     val style: Int,
     @SerializedName("photo")
-    val photo: Int
+    val photo: Int,
+    @SerializedName("currencySymbol")
+    val currencySymbol: String,
+    @SerializedName("currencyCode")
+    val currencyCode: String,
+    @SerializedName("bestSeller")
+    val bestSeller: Boolean
 )
 
 fun SubscriptionPlanDto.toSubscriptionPlan(): SubscriptionPlan {
@@ -25,6 +31,9 @@ fun SubscriptionPlanDto.toSubscriptionPlan(): SubscriptionPlan {
         price = price,
         variation = variation,
         style = style,
-        photo = photo
+        photo = photo,
+        currencySymbol = currencySymbol,
+        currencyCode = currencyCode,
+        bestSeller = bestSeller
     )
 }
