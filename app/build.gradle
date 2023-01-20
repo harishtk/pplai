@@ -96,6 +96,8 @@ android {
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52"'
             buildConfigField "String", "ENV", '"dev"'
             buildConfigField "boolean", "IS_SECURED", "false"
+            buildConfigField "String", "S3_BUCKET", '"https://d19quh86lv8eyv.cloudfront.net"'
+            // https://d19quh86lv8eyv.cloudfront.net/aiAvatar/
         }
 
         prod {
@@ -108,6 +110,7 @@ android {
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
             buildConfigField "String", "ENV", '"prod"'
             buildConfigField "boolean", "IS_SECURED", "true"
+            buildConfigField "String", "S3_BUCKET", '""'
         }
     }
 }

@@ -3,8 +3,6 @@ package com.aiavatar.app
 object Constant {
     const val PLATFORM = "android"
 
-    const val AVATAR_IMAGE_PREFIX = "https://d1tg9uvib8ymg6.cloudfront.net/avatar/"
-
     /* Extras */
     const val EXTRA_DATA = "com.aiavatar.app.extras.DATA"
     const val EXTRA_ENGAGED_TIME = "com.aiavatar.app.extras.ENGAGED_TIME"

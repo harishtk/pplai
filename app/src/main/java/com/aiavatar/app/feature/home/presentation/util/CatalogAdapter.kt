@@ -10,6 +10,7 @@ import com.aiavatar.app.databinding.CatalogItemBinding
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.catalog.CatalogUiModel
 
+/*
 class CatalogAdapter(
     private val callback: Callback
 ) : ListAdapter<CatalogUiModel, CatalogAdapter.ItemViewHolder>(DIFF_CALLBACK) {
@@ -93,4 +94,4 @@ class CatalogAdapter(
 
         }
     }
-}
+}*/

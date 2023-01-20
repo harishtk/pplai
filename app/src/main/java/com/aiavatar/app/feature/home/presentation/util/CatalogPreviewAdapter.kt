@@ -10,8 +10,8 @@ import com.bumptech.glide.Glide
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.PresetPreviewItemBinding
-import com.aiavatar.app.feature.home.domain.model.CategoryPreset
 
+/*
 class CatalogPreviewAdapter(
     context: Context,
     private val onCardClick: (position: Int) -> Unit = { }
@@ -76,4 +76,4 @@ class CatalogPreviewAdapter(
 
         }
     }
-}
+}*/

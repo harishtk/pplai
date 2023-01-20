@@ -1,25 +1,8 @@
 package com.aiavatar.app.feature.home.data.source.remote.model
 
+import com.aiavatar.app.feature.home.domain.model.Category
+import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.google.gson.annotations.SerializedName
-import com.aiavatar.app.feature.home.data.source.remote.dto.CategoryDto
-import com.aiavatar.app.feature.home.data.source.remote.dto.UserModelDto
-import com.aiavatar.app.feature.home.domain.model.Avatar
-
-data class HomeResponseOld(
-    @SerializedName("statusCode")
-    val statusCode: Int,
-    @SerializedName("message")
-    val message: String,
-    @SerializedName("data")
-    val data: Data?
-) {
-    data class Data(
-        @SerializedName("avatars")
-        val userModel: List<UserModelDto>?,
-        @SerializedName("categories")
-        val categories: List<CategoryDto>?
-    )
-}
 
 data class HomeResponse(
     @SerializedName("statusCode")
@@ -31,24 +14,33 @@ data class HomeResponse(
 ) {
     data class Data(
         @SerializedName("avatars")
-        val avatars: List<AvatarDto>?
+        val avatars: List<ListAvatarDto>?
     )
 }
 
-data class AvatarDto(
+data class ListAvatarDto(
     @SerializedName("id")
-    val id: Int,
+    val id: Long,
     @SerializedName("category")
-    val categoryName: String,
-    @SerializedName("imageUrl")
-    val imageUrl: String,
+    val categoryName: String?,
+    @SerializedName("imageName")
+    val imageName: String,
 )
 
-fun AvatarDto.toAvatar(): Avatar {
-    return Avatar(
+fun ListAvatarDto.toCategory(): Category {
+    return Category(
         id = id,
         categoryName = categoryName,
-        imageUrl = imageUrl
+        imageName = imageName
     )
 }
+
+fun ListAvatarDto.toListAvatar(): ListAvatar {
+    return ListAvatar(
+        id = id,
+        categoryName = categoryName,
+        imageName = imageName
+    )
+}
+
 

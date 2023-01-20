@@ -10,10 +10,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
+import com.aiavatar.app.Constant
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.databinding.FragmentCatalogBinding
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
 import com.aiavatar.app.showToast
 import com.pepulnow.app.data.LoadState
@@ -72,8 +74,8 @@ class CatalogFragment : Fragment() {
         }
 
         val avatarsAdapterCallback = object : AvatarsAdapter.Callback {
-            override fun onItemClick(position: Int) {
-                // Noop
+            override fun onItemClick(position: Int, category: Category) {
+                gotoCatalogDetail(category)
             }
 
         }
@@ -209,12 +211,12 @@ class CatalogFragment : Fragment() {
         }
     }
 
-    /*private fun gotoCatalogDetail(category: Category, cardClickPosition: Int = -1) {
+    private fun gotoCatalogDetail(category: Category, cardClickPosition: Int = -1) {
         findNavController().apply {
             val args = Bundle()
             args.putParcelable(Constant.EXTRA_DATA, category)
             args.putInt("click_position", cardClickPosition)
             navigate(R.id.action_catalog_list_to_catalog_detail, args)
         }
-    }*/
+    }
 }

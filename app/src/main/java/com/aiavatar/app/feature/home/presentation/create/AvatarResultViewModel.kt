@@ -10,9 +10,6 @@ import com.aiavatar.app.core.data.source.local.entity.toAvatarFile
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarFile
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
-import com.aiavatar.app.feature.home.domain.model.Avatar
-import com.aiavatar.app.feature.home.presentation.catalog.AvatarUiModel
-import com.google.gson.annotations.SerializedName
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel

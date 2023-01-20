@@ -16,6 +16,7 @@
             app:destination="@id/catalog_detail"
             app:enterAnim="@anim/fast_fade_in"
             app:exitAnim="@anim/fast_fade_out"
+            app:popUpTo="@id/catalog_list"
             app:popEnterAnim="@anim/fast_fade_in"
             app:popExitAnim="@anim/fast_fade_out" />
 

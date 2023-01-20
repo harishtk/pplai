@@ -4,9 +4,10 @@ import com.aiavatar.app.commons.data.source.remote.BaseRemoteDataSource
 import com.aiavatar.app.commons.util.NetWorkHelper
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.di.IoDispatcher
+import com.aiavatar.app.feature.home.data.source.remote.dto.CatalogDetailRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPurchaseRequestDto
+import com.aiavatar.app.feature.home.data.source.remote.model.CatalogDetailResponse
 import com.aiavatar.app.feature.home.data.source.remote.model.HomeResponse
-import com.aiavatar.app.feature.home.data.source.remote.model.HomeResponseOld
 import com.aiavatar.app.feature.home.data.source.remote.model.SubscriptionPlanResponse
 import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
 import kotlinx.coroutines.CoroutineDispatcher
@@ -22,14 +23,14 @@ class HomeRemoteDataSource @Inject constructor(
     private val dispatcher: CoroutineDispatcher,
 ) : BaseRemoteDataSource(netWorkHelper) {
 
-    fun getHomeOld(): Flow<NetworkResult<HomeResponseOld>> = flow {
+    fun getCatalog(): Flow<NetworkResult<HomeResponse>> = flow {
         emit(NetworkResult.Loading())
-        emit(safeApiCall { apiService.homeOld() })
+        emit(safeApiCall { apiService.getCatalog() })
     }.flowOn(dispatcher)
 
-    fun getHome(): Flow<NetworkResult<HomeResponse>> = flow {
+    fun getCatalogDetail(catalogDetailRequestDto: CatalogDetailRequestDto): Flow<NetworkResult<CatalogDetailResponse>> = flow {
         emit(NetworkResult.Loading())
-        emit(safeApiCall { apiService.home() })
+        emit(safeApiCall { apiService.getCatalogDetail(catalogDetailRequestDto) })
     }.flowOn(dispatcher)
 
     fun getSubscriptionPlans(): Flow<NetworkResult<SubscriptionPlanResponse>> =

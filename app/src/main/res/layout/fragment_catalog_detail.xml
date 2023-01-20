@@ -7,7 +7,9 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:elevation="0dp"
+        app:elevation="0dp">
 
         <include layout="@layout/default_app_toolbar"
             android:id="@+id/toolbar_included"
@@ -25,12 +27,12 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:paddingHorizontal="40dp"
+            android:layout_marginVertical="@dimen/inset_large"
             android:orientation="horizontal"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintBottom_toTopOf="@id/avatar_scroller_list"
             app:layout_constraintVertical_bias="0.0"
             tools:listitem="@layout/large_preset_preview" />
 
@@ -39,6 +41,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/catalog_preview_pager"
             app:layout_constraintStart_toStartOf="@id/catalog_preview_pager"
             app:layout_constraintEnd_toEndOf="@id/catalog_preview_pager"/>
@@ -67,20 +70,16 @@
             app:layout_constraintEnd_toEndOf="@id/catalog_preview_pager"/>-->
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/catalog_preview_list"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:paddingHorizontal="40dp"
+            android:id="@+id/avatar_scroller_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintDimensionRatio="H,1:1"
-            app:layout_constraintVertical_bias="0.0"
-            tools:listitem="@layout/large_preset_preview" />
+            app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
+            app:layout_constraintTop_toBottomOf="@id/catalog_preview_pager"
+            tools:listitem="@layout/item_scroller_list"/>
 
         <ProgressBar android:id="@+id/progress_bar"
             android:layout_width="wrap_content"
@@ -90,6 +89,58 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/bottom_barrier"
+            app:barrierDirection="top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="btn_next"/>
+
+        <com.google.android.material.button.MaterialButton
+            style="@style/Widget.App.Button"
+            android:id="@+id/btn_next"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:insetBottom="@dimen/inset_large"
+            android:insetLeft="@dimen/inset_large"
+            android:insetTop="@dimen/inset_large"
+            android:insetRight="@dimen/inset_large"
+            android:text="@string/label_download"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/ic_download"
+            app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constrainedWidth="true"
+            android:visibility="visible"/>
+
+        <ImageView android:id="@+id/ic_download"
+            android:layout_width="@dimen/xxlarge_icon_size"
+            android:layout_height="@dimen/xxlarge_icon_size"
+            android:layout_margin="@dimen/default_touchable_inset"
+            android:src="@drawable/ic_download_outline"
+            android:background="@drawable/ripple_rounded"
+            android:contentDescription="@string/content_description_download"
+            app:layout_constraintStart_toEndOf="@id/btn_next"
+            app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
+            app:layout_constraintEnd_toStartOf="@id/ic_share"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constrainedWidth="true" />
+
+        <ImageView android:id="@+id/ic_share"
+            android:layout_width="@dimen/xxlarge_icon_size"
+            android:layout_height="@dimen/xxlarge_icon_size"
+            android:layout_margin="@dimen/default_touchable_inset"
+            android:src="@drawable/ic_share_outline"
+            android:background="@drawable/ripple_rounded"
+            android:contentDescription="@string/content_description_download"
+            app:layout_constraintStart_toEndOf="@id/ic_download"
+            app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constrainedWidth="true" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

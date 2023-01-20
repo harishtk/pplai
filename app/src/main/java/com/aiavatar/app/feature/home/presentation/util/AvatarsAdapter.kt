@@ -8,8 +8,9 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.bumptech.glide.Glide
 import com.aiavatar.app.Constant
 import com.aiavatar.app.R
+import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.ItemBigAvatarBinding
-import com.aiavatar.app.feature.home.domain.model.Avatar
+import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.catalog.AvatarUiModel
 
 class AvatarsAdapter(
@@ -24,7 +25,7 @@ class AvatarsAdapter(
         val model = getItem(position)
         if (holder is ItemViewHolder) {
             model as AvatarUiModel.AvatarItem
-            holder.bind(model.avatar, callback)
+            holder.bind(model.category, callback)
         }
     }
 
@@ -32,15 +33,15 @@ class AvatarsAdapter(
         private val binding: ItemBigAvatarBinding
     ) : ViewHolder(binding.root) {
 
-        fun bind(avatar: Avatar, callback: Callback) = with(binding) {
-            val url = "${Constant.AVATAR_IMAGE_PREFIX}${avatar.imageUrl}"
+        fun bind(category: Category, callback: Callback) = with(binding) {
+            val url = URLProvider.avatarUrl(category.imageName)
             Glide.with(image)
                 .load(url)
                 .placeholder(R.color.grey_divider)
                 .into(image)
-            textCategory.text = avatar.categoryName
+            textCategory.text = category.categoryName
 
-            binding.root.setOnClickListener { callback.onItemClick(adapterPosition) }
+            binding.root.setOnClickListener { callback.onItemClick(adapterPosition, category) }
         }
 
         companion object {
@@ -57,7 +58,7 @@ class AvatarsAdapter(
     }
 
     interface Callback {
-        fun onItemClick(position: Int)
+        fun onItemClick(position: Int, category: Category)
     }
 
     companion object {
@@ -69,7 +70,7 @@ class AvatarsAdapter(
                 newItem: AvatarUiModel,
             ): Boolean {
                 return (oldItem is AvatarUiModel.AvatarItem && newItem is AvatarUiModel.AvatarItem &&
-                        oldItem.avatar.id == newItem.avatar.id)
+                        oldItem.category.id == newItem.category.id)
             }
 
             override fun areContentsTheSame(
@@ -77,7 +78,7 @@ class AvatarsAdapter(
                 newItem: AvatarUiModel,
             ): Boolean {
                 return (oldItem is AvatarUiModel.AvatarItem && newItem is AvatarUiModel.AvatarItem &&
-                        oldItem.avatar == newItem.avatar)
+                        oldItem.category == newItem.category)
             }
 
         }

@@ -8,7 +8,6 @@ import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
-import com.aiavatar.app.feature.home.domain.model.Avatar
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.pepulnow.app.data.LoadState
@@ -79,7 +78,7 @@ class CatalogViewModel @Inject constructor(
         }
         catalogFetchJob?.cancel(CancellationException("New request")) // just in case
         catalogFetchJob = viewModelScope.launch {
-            homeRepository.getAvatars().collectLatest { result ->
+            homeRepository.getCatalog().collectLatest { result ->
                 when (result) {
                     is Result.Loading -> {
                         setLoadState(LoadType.REFRESH, LoadState.Loading())
@@ -155,5 +154,5 @@ interface CatalogUiModel {
 }
 
 interface AvatarUiModel {
-    data class AvatarItem(val avatar: Avatar) : AvatarUiModel
+    data class AvatarItem(val category: Category) : AvatarUiModel
 }
