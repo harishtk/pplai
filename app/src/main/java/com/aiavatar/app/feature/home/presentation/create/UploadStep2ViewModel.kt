@@ -20,16 +20,7 @@ import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -74,20 +65,39 @@ class UploadStep2ViewModel @Inject constructor(
             }
             newPickedList
         }.onEach { pickedUriModelList ->
+            val remainingCount = (MAX_IMAGE_COUNT - pickedUriModelList.filterIsInstance<UploadPreviewUiModel.Item>()
+                .count { it.selected }).coerceAtLeast(0)
             _uiState.update { state ->
                 state.copy(
-                    previewModelList = pickedUriModelList
+                    previewModelList = pickedUriModelList,
+                    remainingPhotoCount = remainingCount
                 )
             }
         }.launchIn(viewModelScope)
     }
 
-
-    fun setPickedUris(pickedUris: List<Uri>) {
-        pickedUris.forEach { selectedItems[it.toString()] = true }
+    fun setFaceDetectionRunning(isRunning: Boolean) {
         _uiState.update { state ->
             state.copy(
-                pickedUris = pickedUris
+                detectingFaces = isRunning
+            )
+        }
+    }
+
+    fun getMaxImages(): Int {
+        return (MAX_IMAGE_COUNT - uiState.value.pickedUris.filter { uri -> selectedItems[uri.toString()] == true }
+            .size).coerceAtLeast(0)
+    }
+
+    fun setPickedUris(pickedUris: List<Uri>, faceResult: HashMap<String, Boolean>) {
+        // selectedItems.clear()
+        selectedItems.putAll(faceResult)
+        val newPickedUris = uiState.value.pickedUris.toMutableList().apply {
+            addAll(pickedUris)
+        }
+        _uiState.update { state ->
+            state.copy(
+                pickedUris = newPickedUris
             )
         }
     }
@@ -158,8 +168,10 @@ class UploadStep2ViewModel @Inject constructor(
 
 data class UploadStep2State(
     val loadState: LoadStates = LoadStates.IDLE,
+    val detectingFaces: Boolean = false,
     val pickedUris: List<Uri> = emptyList(),
-    val previewModelList: List<UploadPreviewUiModel> = emptyList()
+    val previewModelList: List<UploadPreviewUiModel> = emptyList(),
+    val remainingPhotoCount: Int = MAX_IMAGE_COUNT
 )
 
 interface UploadStep2UiEvent {

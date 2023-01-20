@@ -191,25 +191,13 @@
                     android:layout_height="match_parent"
                     tools:visibility="visible">
 
-                    <com.google.android.material.button.MaterialButton style="@style/Widget.App.Button.Alt"
-                        android:id="@+id/btn_start_upload"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Start upload"
-                        android:visibility="gone"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toTopOf="@id/preview_list_title"
-                        app:layout_constraintVertical_chainStyle="packed"
-                        app:layout_constraintVertical_bias="0.0"/>
-
                     <TextView style="@style/TextStyle.VerySmall"
                         android:id="@+id/preview_list_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="List comes \n here"
                         android:textAlignment="center"
+                        android:visibility="gone"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
@@ -299,7 +287,43 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bottom_spacer"
+        app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
         android:visibility="visible"/>
+
+    <FrameLayout android:id="@+id/fullscreen_loader"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/app_background_1"
+        android:visibility="gone">
+
+        <LinearLayout android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <com.airbnb.lottie.LottieAnimationView android:id="@+id/thinking"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                app:lottie_rawRes="@raw/thinking"
+                app:lottie_loop="true"
+                app:lottie_autoPlay="true"
+                android:visibility="visible"
+                android:layout_gravity="center"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/half_screen_guideline"
+                app:layout_constraintBottom_toBottomOf="@id/half_screen_guideline"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintWidth_percent="1"
+                app:layout_constraintDimensionRatio="H,1:1" />
+
+            <TextView style="@style/TextStyle.Large"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Processing images.."/>
+
+        </LinearLayout>
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -28,6 +28,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.Constant
 import com.aiavatar.app.Constant.MIME_TYPE_JPEG
 import com.aiavatar.app.Continuation
@@ -37,18 +38,21 @@ import com.aiavatar.app.databinding.FragmentUploadStep2Binding
 import com.aiavatar.app.databinding.ItemExamplePhotoBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewPlaceholderBinding
-import com.aiavatar.app.service.UploadService
 import com.aiavatar.app.showToast
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
+import com.google.android.gms.tasks.Task
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.Face
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetectorOptions
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.math.max
 
 @AndroidEntryPoint
 class UploadStep2Fragment : Fragment() {
@@ -56,12 +60,21 @@ class UploadStep2Fragment : Fragment() {
     private val viewModel: UploadStep2ViewModel by viewModels()
     private val sharedViewModel: SharedViewModel by activityViewModels()
 
+    private var isFaceDetectionRunning = false
+    private var faceDetectionJob: Job? = null
+
     private val photoPickerLauncher = registerForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(MAX_IMAGES)
     ) { pickedUris ->
         Timber.d("Picked Uris: $pickedUris")
         if (pickedUris.isNotEmpty()) {
-            viewModel.setPickedUris(pickedUris)
+            val maxPick = viewModel.getMaxImages()
+            if (pickedUris.size > maxPick) {
+                context?.showToast("Up to $maxPick images are allowed")
+            } else {
+                faceDetectionJob = detectFacesInternal(pickedUris)
+            }
+            // viewModel.setPickedUris(pickedUris)
         }
     }
 
@@ -70,7 +83,13 @@ class UploadStep2Fragment : Fragment() {
     ) { pickedUris ->
         Timber.d("Picked Uris Generic: $pickedUris")
         if (pickedUris.isNotEmpty()) {
-            viewModel.setPickedUris(pickedUris)
+            val maxPick = viewModel.getMaxImages()
+            if (pickedUris.size > maxPick) {
+                context?.showToast("Up to $maxPick images are allowed")
+            } else {
+                faceDetectionJob = detectFacesInternal(pickedUris)
+            }
+            // viewModel.setPickedUris(pickedUris)
         }
     }
 
@@ -164,7 +183,7 @@ class UploadStep2Fragment : Fragment() {
             override fun onItemClick(position: Int, model: UploadPreviewUiModel.Item) {
                 try {
                     model as UploadPreviewUiModel.Item
-                    viewModel.toggleSelectionInternal(model.selectedMediaItem.uri)
+                    // viewModel.toggleSelectionInternal(model.selectedMediaItem.uri)
                 } catch (ignore: Exception) {}
             }
 
@@ -224,6 +243,11 @@ class UploadStep2Fragment : Fragment() {
         badExamplesList.adapter = badExamplesAdapter
 
         btnNext.setOnClickListener {
+            /*if (uiState.value.remainingPhotoCount >= MIN_IMAGES || BuildConfig.DEBUG) {
+                viewModel.startUpload(requireContext())
+            } else {
+                launchPhotoPicker()
+            }*/
             if (uiState.value.pickedUris.isNotEmpty()) {
                 viewModel.startUpload(requireContext())
             } else {
@@ -231,14 +255,71 @@ class UploadStep2Fragment : Fragment() {
             }
         }
 
-        btnStartUpload.setOnClickListener {
-            // TODO: 1. create an upload session.
-            // TODO: 2. submit the session id to upload service
-            viewModel.startUpload(requireContext())
+        val remainingPhotosCountFlow = uiState.map { it.remainingPhotoCount }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            remainingPhotosCountFlow.collectLatest { remainingPhotos ->
+                Timber.d("Remaining photos: $remainingPhotos")
+                val btnTextString = when {
+                    remainingPhotos > MIN_IMAGES -> "Select 10 - 20 selfies"
+                    else -> "Continue"
+                }
+                btnNext.setText(btnTextString)
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            uiState.map { it.pickedUris }.collectLatest { uris ->
+                if (!isFaceDetectionRunning) {
+                    // detectFacesInternal(uris)
+                }
+            }
+        }
+
+        val faceDetectionRunningFlow = uiState.map { it.detectingFaces }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            faceDetectionRunningFlow.collectLatest { isRunning ->
+                // fullscreenLoader.isVisible = isRunning
+            }
         }
     }
 
+    private fun detectFacesInternal(pickedUris: List<Uri>) = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+        isFaceDetectionRunning = true
+        viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
+        val result = HashMap<String, Boolean>()
+        val faceDetectorOpts = FaceDetectorOptions.Builder()
+            .setMinFaceSize(0.3F)
+            .enableTracking()
+            .build()
+        val faceDetector = FaceDetection.getClient(faceDetectorOpts)
+        val countDownLatch = CountDownLatch(pickedUris.size)
+        val taskList: List<Task<List<Face>>> = pickedUris.mapIndexed { index, uri ->
+            val ft = faceDetector.process(InputImage.fromFilePath(requireContext(), uri))
+                .addOnCompleteListener { countDownLatch.countDown() }
+                .addOnFailureListener { countDownLatch.countDown() }
+            ft
+        }
+        runBlocking(Dispatchers.IO) {
+            countDownLatch.await(1, TimeUnit.MINUTES)
+            val distinctFaces = HashSet<Int>()
+            taskList.onEachIndexed { index, task ->
+                val trackedIds = task.result.mapNotNull { it.trackingId }.distinct()
+                result[pickedUris[index].toString()] = task.result.isNotEmpty() &&
+                        trackedIds.size == 1
+                Timber.d("Detecting: id = $index faces $trackedIds")
+            }
+            viewModel.setPickedUris(pickedUris, result)
+            Timber.d("Detected Faces: $result")
+        }
+        isFaceDetectionRunning = false
+        viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
+    }
+
     private fun launchPhotoPicker() {
+        val maxPick = viewModel.getMaxImages()
+        Timber.d("Mx pick: $maxPick")
         if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable()) {
             photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         } else {
@@ -288,6 +369,7 @@ class UploadStep2Fragment : Fragment() {
 
     companion object {
         const val MAX_IMAGES = 20
+        const val MIN_IMAGES = 10
     }
 }
 
@@ -360,14 +442,22 @@ class UploadPreviewAdapter(
         }
 
         fun toggleSelection(selected: Boolean) = with(binding) {
+            selectionIndicator.isVisible = true
             if (selected) {
+                selectionIndicator.setImageResource(R.drawable.ic_thumbs_up)
+                root.alpha = 1.0F
+            } else {
+                selectionIndicator.setImageResource(R.drawable.ic_thumbs_down)
+                root.alpha = 0.5F
+            }
+            /*if (selected) {
                 // profileImage.isVisible = false
                 flip(selectionIndicator, true)
             } else {
                 // profileImage.isVisible = true
                 // flip(selectionIndicator, false)
                 selectionIndicator.isVisible = false
-            }
+            }*/
         }
 
         private fun flip(v: View, show: Boolean) {

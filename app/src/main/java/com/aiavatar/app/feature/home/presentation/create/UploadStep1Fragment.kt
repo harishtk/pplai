@@ -8,10 +8,12 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentUploadStep1Binding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageAdapter
+import timber.log.Timber
 
 class UploadStep1Fragment : Fragment() {
 
@@ -56,7 +58,11 @@ class UploadStep1Fragment : Fragment() {
                 findNavController().apply {
                     navigate(R.id.action_upload_step_1_to_upload_step_2)
                 }
-            } catch (ignore: Exception) {}
+            } catch (e: Exception) {
+                if (BuildConfig.DEBUG) {
+                    Timber.e(e)
+                }
+            }
         }
 
         tvSkip.setOnClickListener {

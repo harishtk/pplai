@@ -13,7 +13,6 @@
         android:padding="1dp"
         android:contentDescription="@string/content_description_selected_photo"
         android:src="@drawable/ic_tick_rounded_24"
-        android:background="@drawable/bg_rounded"
         android:visibility="gone"
         android:layout_gravity="bottom|end"
         android:elevation="1dp"

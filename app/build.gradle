@@ -145,6 +145,9 @@ dependencies {
     implementation "androidx.datastore:datastore-preferences:1.0.0"
     implementation "androidx.datastore:datastore:1.0.0"
 
+    /* ML Kit */
+    implementation("com.google.mlkit:face-detection:16.1.5")
+
     /* Kotlinx Coroutines */
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
