@@ -18,6 +18,9 @@ interface HomeApi {
     @POST("ai/list")
     suspend fun getCatalogDetail(@Body catalogDetailRequestDto: CatalogDetailRequestDto): Response<CatalogDetailResponse>
 
+    @POST("user/models")
+    suspend fun getMyModels(): Response<MyModelsResponse>
+
     @POST("subscription/plans")
     suspend fun subscriptionPlans(): Response<SubscriptionPlanResponse>
 
