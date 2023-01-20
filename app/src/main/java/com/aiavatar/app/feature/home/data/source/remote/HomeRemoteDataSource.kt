@@ -5,8 +5,10 @@ import com.aiavatar.app.commons.util.NetWorkHelper
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.di.IoDispatcher
 import com.aiavatar.app.feature.home.data.source.remote.dto.CatalogDetailRequestDto
+import com.aiavatar.app.feature.home.data.source.remote.dto.GenerateAvatarRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPurchaseRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.model.CatalogDetailResponse
+import com.aiavatar.app.feature.home.data.source.remote.model.GenerateAvatarResponse
 import com.aiavatar.app.feature.home.data.source.remote.model.HomeResponse
 import com.aiavatar.app.feature.home.data.source.remote.model.SubscriptionPlanResponse
 import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
@@ -28,10 +30,11 @@ class HomeRemoteDataSource @Inject constructor(
         emit(safeApiCall { apiService.getCatalog() })
     }.flowOn(dispatcher)
 
-    fun getCatalogDetail(catalogDetailRequestDto: CatalogDetailRequestDto): Flow<NetworkResult<CatalogDetailResponse>> = flow {
-        emit(NetworkResult.Loading())
-        emit(safeApiCall { apiService.getCatalogDetail(catalogDetailRequestDto) })
-    }.flowOn(dispatcher)
+    fun getCatalogDetail(catalogDetailRequestDto: CatalogDetailRequestDto): Flow<NetworkResult<CatalogDetailResponse>> =
+        flow {
+            emit(NetworkResult.Loading())
+            emit(safeApiCall { apiService.getCatalogDetail(catalogDetailRequestDto) })
+        }.flowOn(dispatcher)
 
     fun getSubscriptionPlans(): Flow<NetworkResult<SubscriptionPlanResponse>> =
         flow<NetworkResult<SubscriptionPlanResponse>> {
@@ -43,6 +46,12 @@ class HomeRemoteDataSource @Inject constructor(
         flow<NetworkResult<BaseResponse>> {
             emit(NetworkResult.Loading())
             emit(safeApiCall { apiService.purchasePlan(subscriptionPurchaseRequestDto) })
+        }.flowOn(dispatcher)
+
+    fun generateAvatar(generateAvatarRequestDto: GenerateAvatarRequestDto): Flow<NetworkResult<GenerateAvatarResponse>> =
+        flow<NetworkResult<GenerateAvatarResponse>> {
+            emit(NetworkResult.Loading())
+            emit(safeApiCall { apiService.generateAvatar(generateAvatarRequestDto) })
         }.flowOn(dispatcher)
 
 }

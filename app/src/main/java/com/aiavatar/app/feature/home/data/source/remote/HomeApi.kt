@@ -1,10 +1,9 @@
 package com.aiavatar.app.feature.home.data.source.remote
 
 import com.aiavatar.app.feature.home.data.source.remote.dto.CatalogDetailRequestDto
+import com.aiavatar.app.feature.home.data.source.remote.dto.GenerateAvatarRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPurchaseRequestDto
-import com.aiavatar.app.feature.home.data.source.remote.model.CatalogDetailResponse
-import com.aiavatar.app.feature.home.data.source.remote.model.HomeResponse
-import com.aiavatar.app.feature.home.data.source.remote.model.SubscriptionPlanResponse
+import com.aiavatar.app.feature.home.data.source.remote.model.*
 import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -17,6 +16,9 @@ interface HomeApi {
 
     @POST("ai/list")
     suspend fun getCatalogDetail(@Body catalogDetailRequestDto: CatalogDetailRequestDto): Response<CatalogDetailResponse>
+
+    @POST("ai/generateAvatar")
+    suspend fun generateAvatar(@Body requestDto: GenerateAvatarRequestDto): Response<GenerateAvatarResponse>
 
     @POST("user/models")
     suspend fun getMyModels(): Response<MyModelsResponse>

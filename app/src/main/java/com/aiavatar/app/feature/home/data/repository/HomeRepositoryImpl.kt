@@ -16,6 +16,7 @@ import com.aiavatar.app.feature.home.domain.model.CatalogDetailData
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
+import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import kotlinx.coroutines.flow.Flow
@@ -123,5 +124,29 @@ class HomeRepositoryImpl @Inject constructor(
                     else -> parseErrorNetworkResult(networkResult)
                 }
             }
+    }
+
+    override fun generateAvatar(generateAvatarRequest: GenerateAvatarRequest): Flow<Result<Long>> {
+        return remoteDataSource.generateAvatar(generateAvatarRequest.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val avatarStatusId = networkResult.data?.data?.id
+                        if (avatarStatusId != null) {
+                            Result.Success(avatarStatusId)
+                        } else {
+                            val cause = EmptyResponseException("No data")
+                            Result.Error(ApiException(cause))
+                        }
+                    } else {
+                        val cause =
+                            BadResponseException("Unexpected response code: ${networkResult.code}")
+                        Result.Error(ApiException(cause))
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
     }
 }

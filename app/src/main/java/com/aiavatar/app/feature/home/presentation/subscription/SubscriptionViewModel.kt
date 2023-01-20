@@ -250,7 +250,7 @@ class SubscriptionViewModel @Inject constructor(
                     }
                     is Result.Success -> {
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
-                        sendEvent(SubscriptionUiEvent.PurchaseComplete)
+                        sendEvent(SubscriptionUiEvent.PurchaseComplete(request.id))
                     }
                 }
             }
@@ -291,7 +291,7 @@ interface SubscriptionUiAction {
 
 interface SubscriptionUiEvent {
     data class ShowToast(val message: UiText) : SubscriptionUiEvent
-    object PurchaseComplete : SubscriptionUiEvent
+    data class PurchaseComplete(val planId: String) : SubscriptionUiEvent
 }
 
 interface SubscriptionUiModel {

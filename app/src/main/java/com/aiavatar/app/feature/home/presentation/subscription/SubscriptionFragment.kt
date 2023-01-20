@@ -71,7 +71,8 @@ class SubscriptionFragment : Fragment() {
                     is SubscriptionUiEvent.PurchaseComplete -> {
                         findNavController().apply {
                             val args = bundleOf(
-                                Constant.EXTRA_FROM to "login"
+                                Constant.EXTRA_FROM to "login",
+                                Constant.EXTRA_PLAN_ID to event.planId
                             )
                             val navOpts = NavOptions.Builder()
                                 .setEnterAnim(R.anim.fade_scale_in)

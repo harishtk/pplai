@@ -209,7 +209,7 @@ class AvatarStatusViewModel @Inject constructor(
                         ApplicationDependencies.getPersistentStore().apply {
                             setProcessingModel(true)
                             setUploadingPhotos(false)
-                            setGuestUserId(result.data.guestUserId)
+                            result.data.guestUserId?.let { setGuestUserId(it) }
                             setCurrentAvatarStatusId(result.data.statusId.toString())
                         }
                         appDatabase.uploadSessionDao().apply {

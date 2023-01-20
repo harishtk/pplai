@@ -199,7 +199,7 @@ class UploadStep3ViewModel @Inject constructor(
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
                         ApplicationDependencies.getPersistentStore().apply {
                             setProcessingModel(true)
-                            setGuestUserId(result.data.guestUserId)
+                            result.data.guestUserId?.let { setGuestUserId(it) }
                             setCurrentAvatarStatusId(result.data.statusId.toString())
                         }
                         appDatabase.avatarStatusDao().apply {
