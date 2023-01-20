@@ -22,7 +22,7 @@ import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 @HiltViewModel
-class CatalogDetailViewModel @Inject constructor(
+class ModelDetailViewModel @Inject constructor(
     private val homeRepository: HomeRepository
 ): ViewModel() {
 

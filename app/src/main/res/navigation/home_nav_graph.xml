@@ -12,8 +12,8 @@
         android:label="AI Catalog"
         tools:layout="@layout/fragment_catalog">
 
-        <action android:id="@+id/action_catalog_list_to_catalog_detail"
-            app:destination="@id/catalog_detail"
+        <action android:id="@+id/action_catalog_list_to_more_catalog"
+            app:destination="@id/more_catalog"
             app:enterAnim="@anim/fast_fade_in"
             app:exitAnim="@anim/fast_fade_out"
             app:popUpTo="@id/catalog_list"
@@ -43,10 +43,15 @@
 
     </fragment>
 
-    <fragment android:id="@+id/catalog_detail"
-        android:name="com.aiavatar.app.feature.home.presentation.catalog.CatalogDetailFragment"
-        android:label="Catalog Detail"
-        tools:layout="@layout/fragment_catalog_detail"/>
+    <fragment android:id="@+id/more_catalog"
+        android:name="com.aiavatar.app.feature.home.presentation.catalog.MoreCatalogFragment"
+        android:label="More Catalog"
+        tools:layout="@layout/fragment_more_catalog" />
+
+    <fragment android:id="@+id/model_detail"
+        android:name="com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment"
+        android:label="Model Detail"
+        tools:layout="@layout/fragment_model_detail"/>
 
     <fragment android:id="@+id/profile"
         android:name="com.aiavatar.app.feature.home.presentation.profile.ProfileFragment"

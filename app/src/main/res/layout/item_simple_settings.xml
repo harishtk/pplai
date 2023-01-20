@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingVertical="@dimen/inset_large"
+    android:paddingVertical="@dimen/inset_large_medium"
     android:paddingHorizontal="@dimen/inset_small">
 
     <ImageView
@@ -12,7 +12,7 @@
         android:layout_width="@dimen/default_icon_size"
         android:layout_height="@dimen/default_icon_size"
         android:layout_margin="@dimen/inset_large"
-        android:src="@drawable/ic_settings_filled"
+        android:src="@drawable/ic_feedback_outline"
         app:tint="?attr/colorOnPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/left_barrier"
@@ -28,7 +28,7 @@
 
     <TextView
         android:id="@+id/settings_title"
-        style="@style/TextStyle.Medium.Bold"
+        style="@style/TextStyle.VerySmall.Bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constrainedWidth="true"
@@ -40,10 +40,11 @@
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="Title" />
 
-    <TextView
+    <TextView style="@style/TextStyle.Tiny"
         android:id="@+id/settings_description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/text_secondary_alt"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/right_barrier"
         app:layout_constraintHorizontal_bias="0.0"
@@ -60,8 +61,8 @@
         app:constraint_referenced_ids="iv_arrow" />
 
     <ImageView android:id="@+id/iv_arrow"
-        android:layout_width="@dimen/xlarge_icon_size"
-        android:layout_height="@dimen/xlarge_icon_size"
+        android:layout_width="@dimen/large_icon_size"
+        android:layout_height="@dimen/large_icon_size"
         android:layout_margin="@dimen/inset_small"
         android:src="@drawable/arrow_right"
         app:layout_constraintBottom_toBottomOf="parent"

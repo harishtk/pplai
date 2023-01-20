@@ -12,7 +12,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.CompositePageTransformer
@@ -23,9 +22,8 @@ import com.aiavatar.app.Constant
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.core.URLProvider
-import com.aiavatar.app.databinding.FragmentCatalogDetailBinding
+import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
-import com.aiavatar.app.databinding.LargePresetPreviewBinding
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
@@ -39,13 +37,13 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 @AndroidEntryPoint
-class CatalogDetailFragment : Fragment() {
+class ModelDetailFragment : Fragment() {
 
-    private var _binding: FragmentCatalogDetailBinding? = null
-    private val binding: FragmentCatalogDetailBinding
+    private var _binding: FragmentModelDetailBinding? = null
+    private val binding: FragmentModelDetailBinding
         get() = _binding!!
 
-    private val viewModel: CatalogDetailViewModel by viewModels()
+    private val viewModel: ModelDetailViewModel by viewModels()
 
     private var jumpToPosition = -1
 
@@ -64,19 +62,19 @@ class CatalogDetailFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_catalog_detail, container, false)
+        return inflater.inflate(R.layout.fragment_model_detail, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentCatalogDetailBinding.bind(view)
+        _binding = FragmentModelDetailBinding.bind(view)
 
         binding.bindState(
             uiState = viewModel.uiState
         )
     }
 
-    private fun FragmentCatalogDetailBinding.bindState(
+    private fun FragmentModelDetailBinding.bindState(
         uiState: StateFlow<CatalogDetailState>
     ) {
         val catalogPresetAdapter = CatalogPagerAdapter(requireContext())
@@ -171,7 +169,7 @@ class CatalogDetailFragment : Fragment() {
         )
     }
 
-    private fun FragmentCatalogDetailBinding.bindToolbar(uiState: StateFlow<CatalogDetailState>) {
+    private fun FragmentModelDetailBinding.bindToolbar(uiState: StateFlow<CatalogDetailState>) {
         val catalogTitleFlow = uiState.mapNotNull { it.category?.categoryName }
         viewLifecycleOwner.lifecycleScope.launch {
             catalogTitleFlow.collectLatest { catalogTitle ->
@@ -246,7 +244,7 @@ class CatalogDetailFragment : Fragment() {
     }
 
     companion object {
-        val TAG = CatalogDetailFragment::class.java.simpleName
+        val TAG = ModelDetailFragment::class.java.simpleName
     }
 }
 

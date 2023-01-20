@@ -8,7 +8,9 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        app:elevation="0dp"
+        android:elevation="0dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:layout_width="match_parent"
@@ -108,7 +110,6 @@
                             android:layout_height="@dimen/xxlarge_icon_size"
                             android:layout_margin="@dimen/touchable_padding_large"
                             android:src="@drawable/ic_account_outline"
-                            app:tint="?attr/colorOnPrimary"
                             android:background="@drawable/ripple_rounded"
                             android:contentDescription="@string/content_description_profile"
                             android:visibility="visible"
@@ -182,7 +183,6 @@
                 android:text="@string/create_your_masterpiece"
                 app:icon="@drawable/baseline_add_24"
                 app:iconGravity="textStart"
-                app:iconPadding="0dp"
                 app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

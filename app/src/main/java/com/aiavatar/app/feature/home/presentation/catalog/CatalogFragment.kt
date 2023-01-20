@@ -173,8 +173,10 @@ class CatalogFragment : Fragment() {
 
         ApplicationDependencies.getPersistentStore().apply {
             if (isLogged) {
-                val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
-                profileName.setText(initialLetter)
+                /*val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
+                profileName.setText(initialLetter)*/
+                profileName.setText(null)
+                profileImage.setImageResource(R.drawable.profile_placeholder)
             } else {
                 profileName.setText(null)
                 profileImage.setImageResource(R.drawable.ic_account_outline)
@@ -215,8 +217,7 @@ class CatalogFragment : Fragment() {
         findNavController().apply {
             val args = Bundle()
             args.putParcelable(Constant.EXTRA_DATA, category)
-            args.putInt("click_position", cardClickPosition)
-            navigate(R.id.action_catalog_list_to_catalog_detail, args)
+            navigate(R.id.action_catalog_list_to_more_catalog, args)
         }
     }
 }
