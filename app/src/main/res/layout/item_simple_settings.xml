@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingVertical="@dimen/inset_large"
+    android:paddingHorizontal="@dimen/inset_small">
 
     <ImageView
         android:id="@+id/settings_icon"
@@ -11,7 +13,7 @@
         android:layout_height="@dimen/default_icon_size"
         android:layout_margin="@dimen/inset_large"
         android:src="@drawable/ic_settings_filled"
-        app:tint="@color/black"
+        app:tint="?attr/colorOnPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/left_barrier"
         app:layout_constraintStart_toStartOf="parent"
@@ -31,7 +33,7 @@
         android:layout_height="wrap_content"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toTopOf="@id/settings_description"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/right_barrier"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@id/left_barrier"
         app:layout_constraintTop_toTopOf="parent"
@@ -43,11 +45,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/right_barrier"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@id/left_barrier"
         app:layout_constraintTop_toBottomOf="@id/settings_title"
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="This is a sample description" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/right_barrier"
+        app:barrierDirection="left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="iv_arrow" />
+
+    <ImageView android:id="@+id/iv_arrow"
+        android:layout_width="@dimen/xlarge_icon_size"
+        android:layout_height="@dimen/xlarge_icon_size"
+        android:layout_margin="@dimen/inset_small"
+        android:src="@drawable/arrow_right"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/right_barrier" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

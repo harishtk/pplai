@@ -8,6 +8,7 @@ data class SettingsItem(
     val title: String,
     @DrawableRes val icon: Int?,
     val description: String?,
+    val hasMore: Boolean = false
 )
 
 enum class SettingsListType {

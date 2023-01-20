@@ -16,6 +16,7 @@ import android.view.View
 import androidx.annotation.Px
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.navigation.NavOptions
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -56,10 +57,15 @@ public fun parseViews(viewCount: Int): String = when {
     }
 }
 
+fun defaultNavOptsBuilder(): NavOptions.Builder {
+    return NavOptions.Builder()
+        .setEnterAnim(R.anim.fade_scale_in)
+        .setExitAnim(R.anim.fade_scale_out)
+}
+
 /**
  *
  */
-
 private fun saveImageInCache(
     context: Context,
     outFile: File,

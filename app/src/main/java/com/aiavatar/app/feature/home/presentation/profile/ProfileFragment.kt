@@ -5,9 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentProfileBinding
+import com.aiavatar.app.defaultNavOptsBuilder
 import com.aiavatar.app.di.ApplicationDependencies
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
@@ -47,7 +49,12 @@ class ProfileFragment : Fragment() {
 
     private fun gotoSettings() {
         findNavController().apply {
-            navigate(R.id.action_profile_to_settings)
+            val navOpts = NavOptions.Builder()
+                .setEnterAnim(R.anim.slide_in_right)
+                .setExitAnim(R.anim.slide_out_right)
+                .setPopExitAnim(R.anim.slide_out_right)
+                .build()
+            navigate(R.id.action_profile_to_settings, null, navOpts)
         }
     }
 }

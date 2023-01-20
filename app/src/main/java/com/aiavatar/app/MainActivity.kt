@@ -195,11 +195,5 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 Timber.d("Thumb: id=$stream url=$it")
             }
         }
-
-        fun defaultNavOptsBuilder(): NavOptions.Builder {
-            return NavOptions.Builder()
-                .setEnterAnim(R.anim.fade_scale_in)
-                .setExitAnim(R.anim.fade_scale_out)
-        }
     }
 }

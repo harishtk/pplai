@@ -8,6 +8,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
@@ -168,17 +169,43 @@ class CatalogFragment : Fragment() {
         toolbarNavigationIcon.isVisible = false
         toolbarTitle.text = "Avatar"
 
-        /*val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
-        profileName.setText(initialLetter)*/
+        ApplicationDependencies.getPersistentStore().apply {
+            if (isLogged) {
+                val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
+                profileName.setText(initialLetter)
+            } else {
+                profileName.setText(null)
+                profileImage.setImageResource(R.drawable.ic_account_outline)
+            }
+        }
 
         profileContainer.setOnClickListener {
-            gotoProfile()
+            if (ApplicationDependencies.getPersistentStore().isLogged) {
+                gotoProfile()
+            } else {
+                gotoLogin()
+            }
+        }
+    }
+
+    private fun gotoLogin() {
+        findNavController().apply {
+            val navOpts = NavOptions.Builder()
+                .setEnterAnim(R.anim.fade_scale_in)
+                .setExitAnim(R.anim.fade_scale_out)
+                .build()
+            navigate(R.id.login_fragment, null, navOpts)
         }
     }
 
     private fun gotoProfile() {
         findNavController().apply {
-            navigate(R.id.action_catalog_list_to_profile)
+            val navOpts = NavOptions.Builder()
+                .setEnterAnim(R.anim.slide_in_right)
+                .setExitAnim(R.anim.slide_out_right)
+                .setPopExitAnim(R.anim.slide_out_right)
+                .build()
+            navigate(R.id.action_catalog_list_to_profile, null, navOpts)
         }
     }
 
