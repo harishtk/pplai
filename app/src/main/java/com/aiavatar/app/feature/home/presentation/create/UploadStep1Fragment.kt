@@ -4,10 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentUploadStep1Binding
+import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageAdapter
 
 class UploadStep1Fragment : Fragment() {
@@ -55,6 +58,18 @@ class UploadStep1Fragment : Fragment() {
                 }
             } catch (ignore: Exception) {}
         }
+
+        tvSkip.setOnClickListener {
+            findNavController().apply {
+                val navOpts = NavOptions.Builder()
+                    .setPopUpTo(R.id.upload_step_1, inclusive = true, saveState = false)
+                    .setEnterAnim(R.anim.slide_in_left)
+                    .setExitAnim(R.anim.slide_out_left)
+                    .build()
+                navigate(R.id.landingPage, null, navOpts)
+            }
+        }
+        tvSkip.isVisible = !ApplicationDependencies.getPersistentStore().isLogged
     }
 }
 

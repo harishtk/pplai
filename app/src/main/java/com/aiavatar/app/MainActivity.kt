@@ -16,6 +16,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
@@ -107,7 +108,8 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                     graph = inflater.inflate(R.navigation.home_nav_graph)
                     graph.setStartDestination(R.id.avatar_status)
                 }
-                persistentStore.isLogged -> {
+                persistentStore.isLogged ||
+                persistentStore.isUploadStepSkipped -> {
                     graph = inflater.inflate(R.navigation.home_nav_graph)
                     graph.setStartDestination(R.id.catalog_list)
                 }
@@ -192,6 +194,12 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
             return "${BuildConfig.THUMBNAIL_BASE_URL}${stream}/thumbnail_05.jpg".also {
                 Timber.d("Thumb: id=$stream url=$it")
             }
+        }
+
+        fun defaultNavOptsBuilder(): NavOptions.Builder {
+            return NavOptions.Builder()
+                .setEnterAnim(R.anim.fade_scale_in)
+                .setExitAnim(R.anim.fade_scale_out)
         }
     }
 }

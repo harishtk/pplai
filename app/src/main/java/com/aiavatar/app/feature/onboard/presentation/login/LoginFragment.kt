@@ -133,10 +133,26 @@ class LoginFragment : Fragment() {
                                     val navOpts = NavOptions.Builder()
                                         .setEnterAnim(R.anim.fade_scale_in)
                                         .setExitAnim(R.anim.fade_scale_out)
-                                        .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
+                                        .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = false)
                                         .build()
                                     navigate(R.id.subscription_plans, args, navOpts)
                                 }
+                            }
+                            "create_masterpiece" -> {
+                                findNavController().apply {
+                                    val args = bundleOf(
+                                        Constant.EXTRA_FROM to "login"
+                                    )
+                                    val navOpts = NavOptions.Builder()
+                                        .setEnterAnim(R.anim.fade_scale_in)
+                                        .setExitAnim(R.anim.fade_scale_out)
+                                        .setPopUpTo(R.id.landingPage, inclusive = true, saveState = false)
+                                        .build()
+                                    navigate(R.id.upload_step_1, args, navOpts)
+                                }
+                            }
+                            else -> {
+                                gotoHome()
                             }
                         }
                     }

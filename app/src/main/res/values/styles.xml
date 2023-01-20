@@ -279,7 +279,7 @@
         <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
         <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
         <item name="android:textAppearance">@style/Base.TextAppearance.Bold</item>
-        <item name="colorPrimary">@color/yellow_200</item>
+        <item name="colorPrimary">?attr/colorOnPrimary</item>
     </style>
 
     <style name="ThemeOverlay.App.Button.TextButton.Danger" parent="">

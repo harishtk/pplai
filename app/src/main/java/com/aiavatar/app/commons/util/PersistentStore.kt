@@ -41,6 +41,9 @@ class PersistentStore private constructor(
     val isUploadingPhotos: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.UPLOADING_PHOTOS, false)
 
+    val isUploadStepSkipped: Boolean
+        get() = getAppPreferences().getBoolean(UserPreferenceKeys.UPLOAD_STEP_SKIPPED, false)
+
     val currentAvatarStatusId: String?
         get() = getAppPreferences().getString(UserPreferenceKeys.CURRENT_AVATAR_STATUS_ID, null)
 
@@ -117,6 +120,11 @@ class PersistentStore private constructor(
         return this
     }
 
+    fun setUploadStepSkipped(isSkipped: Boolean): PersistentStore {
+        getAppPreferences().edit().putBoolean(UserPreferenceKeys.UPLOAD_STEP_SKIPPED, isSkipped).apply()
+        return this
+    }
+
     fun logout() {
         setUserId("")
         setDeviceToken("")
@@ -126,6 +134,12 @@ class PersistentStore private constructor(
         setSocialImage(null)
         setCurrentAvatarStatusId(null)
         setProcessingModel(false)
+        setUploadStepSkipped(false)
+        setOnboardPresented(false)
+    }
+
+    fun resetPreferences() {
+        appPreferences.edit().clear().apply()
     }
 
     fun getOrCreateDeviceId(): String {
@@ -171,6 +185,7 @@ class PersistentStore private constructor(
             const val PROCESSING_MODEL = "processing_model"
             const val UPLOADING_PHOTOS = "uploading_photos"
             const val CURRENT_AVATAR_STATUS_ID = "current_avatar_status_id"
+            const val UPLOAD_STEP_SKIPPED: String = "upload_step_skipped"
         }
 
         object AppEssentialKeys {
