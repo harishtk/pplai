@@ -18,8 +18,9 @@
         <item name="isLightTheme">true</item>
         <item name="android:isLightTheme" tools:targetApi="q">true</item>
         <item name="android:windowLightStatusBar">true</item>
-        <!-- Customize your theme here. -->
 
+        <!-- Customize your theme here. -->
+        <item name="colorError">@color/red_700</item>
 
     </style>
 
@@ -29,7 +30,25 @@
         <item name="postSplashScreenTheme">@style/Theme.AiAvatar</item>
     </style>
 
-    <style name="AppTheme.Dialog" parent="Theme.AppCompat.Light.Dialog"/>
+    <style name="AppTheme.Dialog" parent="Theme.MaterialComponents.Dialog">
+        <item name="colorSurface">@color/blue_grey_700</item>
+        <item name="colorSurfaceVariant">@color/white_grey</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorOnSurfaceVariant">@color/black</item>
+
+        <item name="colorSecondary">@color/yellow_200</item>
+        <item name="colorSecondaryVariant">@color/yellow_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <item name="colorError">@color/red_700</item>
+
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 
     <style name="AppTheme.Dialog.FullScreen" parent="">
         <item name="android:windowNoTitle">true</item>

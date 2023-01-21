@@ -9,12 +9,14 @@ import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toFile
 import androidx.hilt.work.HiltWorker
+import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.aiavatar.app.Constant
+import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.net.ProgressRequestBody
@@ -175,6 +177,11 @@ class UploadWorker @AssistedInject constructor(
         val channelId = context.getString(R.string.upload_notification_channel_id)
 
         // TODO: add pending intent to create avatar
+        val contentIntent = NavDeepLinkBuilder(context)
+            .setGraph(R.navigation.home_nav_graph)
+            .setDestination(R.id.avatar_status)
+            .setComponentName(MainActivity::class.java)
+            .createPendingIntent()
 
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
         val notification = notificationBuilder.setOngoing(true)
@@ -185,6 +192,7 @@ class UploadWorker @AssistedInject constructor(
             .setAutoCancel(true)
             .setContentTitle("Upload Complete!")
             .setContentText("$photosCount Photos uploaded. Tap here to create your avatar!")
+            .setContentIntent(contentIntent)
             .build()
         ServiceUtil.getNotificationManager(context)
             .notify(STATUS_NOTIFICATION_ID, notification)
@@ -200,6 +208,12 @@ class UploadWorker @AssistedInject constructor(
             .createCancelPendingIntent(getId())
         val channelId = context.getString(R.string.upload_notification_channel_id)
 
+        val contentIntent = NavDeepLinkBuilder(context)
+            .setGraph(R.navigation.home_nav_graph)
+            .setDestination(R.id.avatar_status)
+            .setComponentName(MainActivity::class.java)
+            .createPendingIntent()
+
         // TODO: show notification
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
         val notification = notificationBuilder.setOngoing(true)
@@ -209,6 +223,7 @@ class UploadWorker @AssistedInject constructor(
             .setContentTitle("Preparing upload")
             .setProgress(100, progress, true)
             .setOngoing(true)
+            .setContentIntent(contentIntent)
             .build()
         return ForegroundInfo(ONGOING_NOTIFICATION_ID, notification)
     }

@@ -76,6 +76,10 @@ object StorageUtil {
         return targetDir.name to savedFiles
     }
 
+    fun checkIfFolderExists(context: Context, name: String): Boolean {
+        return true
+    }
+
     @Suppress("BlockingMethodInNonBlockingContext")
     fun saveThumbnail(context: Context, bitmap: Bitmap, streamName: String, fileName: String): File? {
         val targetDir = File(context.filesDir, "$DIR_THUMBNAILS/$streamName")
@@ -196,4 +200,6 @@ object StorageUtil {
 
     private const val UPLOAD_DIR_PREFIX = "Avatar_"
     private const val PHOTO_FILE_PREFIX = "photo_"
+
+    private const val PARENT_EXPORT_DIR_NAME = "AI Avatar"
 }

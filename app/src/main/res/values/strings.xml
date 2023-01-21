@@ -71,4 +71,5 @@
     <string name="content_description_backdrop">Backdrop</string>
     <string name="content_description_action_button">Page Action</string>
     <string name="content_description_close">Close</string>
+    <string name="label_save">Save</string>
 </resources>

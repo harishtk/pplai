@@ -19,7 +19,8 @@ import com.aiavatar.app.*
 import com.aiavatar.app.databinding.FragmentAvatarResultBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
 import com.aiavatar.app.di.ApplicationDependencies
-import com.aiavatar.app.showToast
+import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
+import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
@@ -114,6 +115,23 @@ class AvatarResultFragment : Fragment() {
                 if (avatarStatus != null && avatarStatus.paid) {
                     // TODO: get folder name
                     context?.showToast("Getting folder name")
+                    EditFolderNameDialog { typedName ->
+                        if (typedName.isBlank()) {
+                            return@EditFolderNameDialog "Name cannot be empty!"
+                        }
+                        if (typedName.length < 4) {
+                            return@EditFolderNameDialog "Name too short"
+                        }
+                        // TODO: move 'save to gallery' to a foreground service
+                        context?.showToast("Saved to $typedName")
+                        ApplicationDependencies.getPersistentStore().apply {
+                            setCurrentAvatarStatusId(null)
+                            setUploadingPhotos(false)
+                            setProcessingModel(false)
+                        }
+                        (activity as? MainActivity)?.restart()
+                        null
+                    }.show(childFragmentManager, "folder-name-dialog")
                 } else {
                     // TODO: goto payment
                     findNavController().apply {
@@ -147,6 +165,25 @@ class AvatarResultFragment : Fragment() {
         icShare.setOnClickListener {  }
 
         btnClose.setOnClickListener { findNavController().navigateUp() }
+    }
+
+    private fun checkFolderName(name: String) {
+
+    }
+
+    private fun gotoModelDetail(position: Int, data: AvatarResultUiModel.AvatarItem) {
+        val modelId = viewModel.getModelId()
+        try {
+            findNavController().apply {
+                val navOpts = defaultNavOptsBuilder().build()
+                val args = Bundle().apply {
+                    putString(Constant.EXTRA_FROM, "result_preview")
+                    putString(ModelDetailFragment.ARG_MODEL_ID, modelId)
+                    putInt(ModelDetailFragment.ARG_JUMP_TO_POSITION, position)
+                }
+                navigate(R.id.model_detail, args, navOpts)
+            }
+        } catch (ignore: Exception) {}
     }
 }
 
