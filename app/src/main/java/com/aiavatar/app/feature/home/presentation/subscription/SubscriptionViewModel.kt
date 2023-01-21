@@ -250,6 +250,9 @@ class SubscriptionViewModel @Inject constructor(
                     }
                     is Result.Success -> {
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
+                        ApplicationDependencies.getPersistentStore().apply {
+                            setCurrentAvatarStatusId(result.data)
+                        }
                         sendEvent(SubscriptionUiEvent.PurchaseComplete(request.id))
                     }
                 }

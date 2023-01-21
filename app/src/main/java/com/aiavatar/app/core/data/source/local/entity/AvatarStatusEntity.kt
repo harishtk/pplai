@@ -14,10 +14,10 @@ data class AvatarStatusEntity(
     val totalAiCount: Int,
     @ColumnInfo("generated_ai_count")
     val generatedAiCount: Int,
-    @ColumnInfo("model_paid_once")
-    val modelPaidOnce: Boolean,
-    @ColumnInfo("model_name")
-    val userModelName: Boolean,
+    @ColumnInfo("paid")
+    val paid: Boolean,
+    @ColumnInfo("model_renamed")
+    val modelRenamed: Boolean,
     @ColumnInfo("model_id")
     val modelId: String,
     @ColumnInfo("eta")
@@ -33,8 +33,8 @@ fun AvatarStatusEntity.toAvatarStatus(): AvatarStatus {
         modelStatus = modelStatus,
         totalAiCount = totalAiCount,
         generatedAiCount = generatedAiCount,
-        modelPaidOnce = modelPaidOnce,
-        userModelName = userModelName,
+        paid = paid,
+        modelRenamedByUser = modelRenamed,
         modelId = modelId,
         eta = eta
     ).also {
@@ -47,8 +47,8 @@ fun AvatarStatus.toEntity(): AvatarStatusEntity {
         modelStatus = modelStatus,
         totalAiCount = totalAiCount,
         generatedAiCount = generatedAiCount,
-        modelPaidOnce = modelPaidOnce,
-        userModelName = userModelName,
+        paid = paid,
+        modelRenamed = modelRenamedByUser,
         modelId = modelId,
         eta = eta
     ).also {
@@ -64,8 +64,8 @@ object AvatarStatusTable {
         const val MODEL_STATUS          = "model_status"
         const val TOTAL_AI_COUNT        = "total_ai_count"
         const val GENERATED_AI_COUNT    = "generated_ai_count"
-        const val MODEL_PAID_ONCE       = "model_paid_once"
-        const val MODEL_NAME            = "model_name"
+        const val PAID                  = "paid"
+        const val MODEL_RENAMED         = "model_renamed"
         const val MODEL_ID              = "model_id"
     }
 }

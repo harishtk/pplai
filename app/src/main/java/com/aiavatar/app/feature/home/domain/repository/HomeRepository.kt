@@ -4,6 +4,7 @@ import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.feature.home.data.source.remote.model.ListAvatarDto
 import com.aiavatar.app.feature.home.domain.model.CatalogDetailData
 import com.aiavatar.app.feature.home.domain.model.Category
+import com.aiavatar.app.feature.home.domain.model.ModelList
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
 import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
@@ -21,5 +22,7 @@ interface HomeRepository {
     fun purchasePlan(subscriptionPurchaseRequest: SubscriptionPurchaseRequest): Flow<Result<String>>
 
     fun generateAvatar(generateAvatarRequest: GenerateAvatarRequest): Flow<Result<Long>>
+
+    fun getMyModels(): Flow<Result<List<ModelList>>>
 
 }

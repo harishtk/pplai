@@ -4,8 +4,8 @@ data class AvatarStatus(
     val modelStatus: String,
     val totalAiCount: Int,
     val generatedAiCount: Int,
-    val modelPaidOnce: Boolean,
-    val userModelName: Boolean,
+    val paid: Boolean,
+    val modelRenamedByUser: Boolean,
     val modelId: String,
     val eta: Int,
 ) {

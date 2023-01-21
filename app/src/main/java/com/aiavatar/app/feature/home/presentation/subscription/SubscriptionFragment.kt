@@ -72,7 +72,7 @@ class SubscriptionFragment : Fragment() {
                         findNavController().apply {
                             val args = bundleOf(
                                 Constant.EXTRA_FROM to "login",
-                                Constant.EXTRA_PLAN_ID to event.planId
+                                Constant.ARG_PLAN_ID to event.planId
                             )
                             val navOpts = NavOptions.Builder()
                                 .setEnterAnim(R.anim.fade_scale_in)
@@ -169,6 +169,11 @@ class SubscriptionFragment : Fragment() {
     ) {
         btnNext.setOnClickListener {
             uiAction(SubscriptionUiAction.NextClick)
+        }
+
+        btnClose.setOnClickListener {
+            try { findNavController().navigateUp() }
+            catch (ignore: Exception) {}
         }
     }
 }

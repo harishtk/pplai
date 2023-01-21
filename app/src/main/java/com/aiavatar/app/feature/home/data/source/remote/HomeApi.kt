@@ -27,5 +27,5 @@ interface HomeApi {
     suspend fun subscriptionPlans(): Response<SubscriptionPlanResponse>
 
     @POST("subscription/purchase")
-    suspend fun purchasePlan(@Body subscriptionPurchaseRequestDto: SubscriptionPurchaseRequestDto): Response<BaseResponse>
+    suspend fun purchasePlan(@Body subscriptionPurchaseRequestDto: SubscriptionPurchaseRequestDto): Response<PurchasePlanResponse>
 }

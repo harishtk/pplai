@@ -30,7 +30,7 @@ class SubscriptionSuccessFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        planId = arguments?.getString(Constant.EXTRA_PLAN_ID, "") ?: ""
+        planId = arguments?.getString(Constant.ARG_PLAN_ID, "") ?: ""
     }
 
     override fun onCreateView(
@@ -52,7 +52,7 @@ class SubscriptionSuccessFragment : Fragment() {
             uiEvent = viewModel.uiEvent
         )
         pagePresentedAt = System.currentTimeMillis()
-        viewModel.generateAvatarRequest(planId)
+        // viewModel.generateAvatarRequest(planId)
     }
 
     private fun FragmentSubscriptionSuccessBinding.bindState(
@@ -118,9 +118,17 @@ class SubscriptionSuccessFragment : Fragment() {
             }
         }
 
-        nextButton.setOnClickListener {
+        /*nextButton.setOnClickListener {
             viewModel.generateAvatarRequest(planId)
+        }*/
+
+        val delta = System.currentTimeMillis() - pagePresentedAt
+        viewLifecycleOwner.lifecycleScope.launch {
+            delay((UI_PRESENTATION_TIME - delta).coerceAtLeast(0))
+            nextButton.cancelSpinning()
+            (activity as? MainActivity)?.restart()
         }
+        nextButton.setSpinning()
     }
 
     companion object {

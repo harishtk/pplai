@@ -84,7 +84,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="@dimen/inset_large"
-                    android:text="Now you can download all \n masterpieces"
+                    android:text="Generating your Avatars! Once finished we will notify you and you can download all masterpieces"
                     android:textAlignment="center"
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="@dimen/text_size_very_small"

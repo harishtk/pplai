@@ -1,9 +1,9 @@
 package com.aiavatar.app.feature.home.data.source.remote.model
 
-import com.aiavatar.app.feature.home.data.source.remote.model.dto.ModelListDto
 import com.google.gson.annotations.SerializedName
+import retrofit2.SkipCallbackExecutor
 
-data class MyModelsResponse(
+data class PurchasePlanResponse(
     @SerializedName("statusCode")
     val statusCode: Int,
     @SerializedName("message")
@@ -11,9 +11,9 @@ data class MyModelsResponse(
     @SerializedName("data")
     val data: Data?
 ) {
+
     data class Data(
-        @SerializedName("models")
-        val models: List<ModelListDto>
+        @SerializedName("statusId")
+        val avatarStatusId: String
     )
 }
-

@@ -25,10 +25,10 @@ data class AvatarStatusDto(
     val generatedAiCount: Int,
     @SerializedName("generatedImages")
     val generatedImages: List<String>,
-    @SerializedName("modelPaidOnce")
-    val modelPaidOnce: Boolean,
-    @SerializedName("userModelname")
-    val userModelName: Boolean,
+    @SerializedName("paid")
+    val paid: Boolean,
+    @SerializedName("renamed")
+    val modelRenamedByUser: Boolean,
     @SerializedName("modelId")
     val modelId: String,
     @SerializedName("eta")
@@ -40,8 +40,8 @@ fun AvatarStatusDto.toAvatarStatus(): AvatarStatus {
         modelStatus = modelStatus,
         totalAiCount = totalAiCount,
         generatedAiCount = generatedAiCount,
-        modelPaidOnce = modelPaidOnce,
-        userModelName = userModelName,
+        paid = paid,
+        modelRenamedByUser = modelRenamedByUser,
         modelId = modelId,
         eta = eta
     ).also {

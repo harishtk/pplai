@@ -11,7 +11,9 @@ object Constant {
     const val EXTRA_STREAM_ID   = "com.aiavatar.app.extras.STREAM_ID"
     const val EXTRA_SESSION_ID = "com.aiavatar.app.extras.SESSION_ID"
     const val EXTRA_FROM = "com.aiavatar.app.extras.FROM"
-    const val EXTRA_PLAN_ID = "com.aiavatar.app.extras.PLAN_ID"
+
+    /* Args */
+    const val ARG_PLAN_ID = "com.aiavatar.app.args.PLAN_ID"
 
     const val MIME_TYPE_JPEG = "image/jpeg"
     const val MIME_TYPE_PLAIN_TEXT = "text/plain"
