@@ -34,6 +34,11 @@ import com.aiavatar.app.Constant.MIME_TYPE_JPEG
 import com.aiavatar.app.Continuation
 import com.aiavatar.app.R
 import com.aiavatar.app.SharedViewModel
+import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
+import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
+import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.cancelSpinning
+import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentUploadStep2Binding
 import com.aiavatar.app.databinding.ItemExamplePhotoBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewBinding
@@ -46,6 +51,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -71,8 +77,9 @@ class UploadStep2Fragment : Fragment() {
             val maxPick = viewModel.getMaxImages()
             if (pickedUris.size > maxPick) {
                 context?.showToast("Up to $maxPick images are allowed")
+                HapticUtil.createError(requireContext())
             } else {
-                faceDetectionJob = detectFacesInternal(pickedUris)
+                preprocessUris(pickedUris)
             }
             // viewModel.setPickedUris(pickedUris)
         }
@@ -86,8 +93,9 @@ class UploadStep2Fragment : Fragment() {
             val maxPick = viewModel.getMaxImages()
             if (pickedUris.size > maxPick) {
                 context?.showToast("Up to $maxPick images are allowed")
+                HapticUtil.createError(requireContext())
             } else {
-                faceDetectionJob = detectFacesInternal(pickedUris)
+                preprocessUris(pickedUris)
             }
             // viewModel.setPickedUris(pickedUris)
         }
@@ -208,6 +216,18 @@ class UploadStep2Fragment : Fragment() {
             }
         }
 
+        val loadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                if (loadState.action is LoadState.Loading) {
+                    btnNext.setSpinning()
+                } else {
+                    btnNext.cancelSpinning()
+                }
+            }
+        }
+
         /* Simple permission rationale dialog */
         /*SimpleDialog(
             context = requireContext(),
@@ -220,27 +240,7 @@ class UploadStep2Fragment : Fragment() {
             showCancelButton = true
         ).show()*/
 
-        val goodPhotoSamples = listOf(
-            R.drawable.good_photo_1,
-            R.drawable.good_photo_2,
-            R.drawable.good_photo_3,
-            R.drawable.good_photo_4,
-        )
-        val goodExamplesAdapter = ExamplePhotoAdapter(ExamplePhotoType.GOOD).also {
-            it.submitList(goodPhotoSamples)
-        }
-        goodExamplesList.adapter = goodExamplesAdapter
-
-        val badPhotoSamples = listOf(
-            R.drawable.bad_photo_1,
-            R.drawable.bad_photo_2,
-            R.drawable.bad_photo_3,
-            R.drawable.bad_photo_4,
-        )
-        val badExamplesAdapter = ExamplePhotoAdapter(ExamplePhotoType.BAD).also {
-            it.submitList(badPhotoSamples)
-        }
-        badExamplesList.adapter = badExamplesAdapter
+        bindExamplesAdapter()
 
         btnNext.setOnClickListener {
             /*if (uiState.value.remainingPhotoCount >= MIN_IMAGES || BuildConfig.DEBUG) {
@@ -265,6 +265,13 @@ class UploadStep2Fragment : Fragment() {
                     else -> "Continue"
                 }
                 btnNext.setText(btnTextString)
+                if (remainingPhotos != MAX_IMAGES) {
+                    previewListTitle.isVisible = true
+                    previewListTitle.text = "${MAX_IMAGES - remainingPhotos} photos selected"
+                } else {
+                    previewListTitle.isVisible = false
+                    previewListTitle.text = null
+                }
             }
         }
 
@@ -281,7 +288,51 @@ class UploadStep2Fragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             faceDetectionRunningFlow.collectLatest { isRunning ->
                 // fullscreenLoader.isVisible = isRunning
+                if (isRunning) {
+                    btnNext.setSpinning()
+                } else {
+                    btnNext.cancelSpinning()
+                }
             }
+        }
+    }
+
+    private fun FragmentUploadStep2Binding.bindExamplesAdapter() {
+        val goodPhotoSamples = listOf(
+            R.drawable.good_photo_1,
+            R.drawable.good_photo_2,
+            R.drawable.good_photo_3,
+            R.drawable.good_photo_4,
+        )
+        val goodExamplesAdapter = ExamplePhotoAdapter(ExamplePhotoType.GOOD).also {
+            it.submitList(goodPhotoSamples)
+        }
+        goodExamplesList.adapter = goodExamplesAdapter
+
+        val badPhotoSamples = listOf(
+            R.drawable.bad_photo_1,
+            R.drawable.bad_photo_2,
+            R.drawable.bad_photo_3,
+            R.drawable.bad_photo_4,
+        )
+        val badExamplesAdapter = ExamplePhotoAdapter(ExamplePhotoType.BAD).also {
+            it.submitList(badPhotoSamples)
+        }
+        badExamplesList.adapter = badExamplesAdapter
+    }
+
+    private fun preprocessUris(pickedUris: List<Uri>) {
+        viewModel.removeDuplicates(pickedUris) { duplicateCount, newUris ->
+            Timber.d("Duplicate result: $duplicateCount $newUris")
+            if (duplicateCount > 0) {
+                SimpleDialog(
+                    requireContext(),
+                    message = "$duplicateCount duplicate photos have been removed.",
+                    positiveButtonText = "Okay"
+                ).show()
+                HapticUtil.createOneShot(requireContext())
+            }
+            faceDetectionJob = detectFacesInternal(newUris)
         }
     }
 
@@ -291,7 +342,6 @@ class UploadStep2Fragment : Fragment() {
         val result = HashMap<String, Boolean>()
         val faceDetectorOpts = FaceDetectorOptions.Builder()
             .setMinFaceSize(0.3F)
-            .enableTracking()
             .build()
         val faceDetector = FaceDetection.getClient(faceDetectorOpts)
         val countDownLatch = CountDownLatch(pickedUris.size)
@@ -303,11 +353,10 @@ class UploadStep2Fragment : Fragment() {
         }
         runBlocking(Dispatchers.IO) {
             countDownLatch.await(1, TimeUnit.MINUTES)
-            val distinctFaces = HashSet<Int>()
             taskList.onEachIndexed { index, task ->
                 val trackedIds = task.result.mapNotNull { it.trackingId }.distinct()
-                result[pickedUris[index].toString()] = task.result.isNotEmpty() &&
-                        trackedIds.size == 1
+                result[pickedUris[index].toString()] = task.result.isNotEmpty()/* &&
+                        trackedIds.size == 1*/
                 Timber.d("Detecting: id = $index faces $trackedIds")
             }
             viewModel.setPickedUris(pickedUris, result)
@@ -320,6 +369,9 @@ class UploadStep2Fragment : Fragment() {
     private fun launchPhotoPicker() {
         val maxPick = viewModel.getMaxImages()
         Timber.d("Mx pick: $maxPick")
+        if (BuildConfig.DEBUG) {
+            context?.showToast("Pick up to $maxPick selfies")
+        }
         if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable()) {
             photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         } else {
@@ -445,10 +497,10 @@ class UploadPreviewAdapter(
             selectionIndicator.isVisible = true
             if (selected) {
                 selectionIndicator.setImageResource(R.drawable.ic_thumbs_up)
-                root.alpha = 1.0F
+                view1.alpha = 1.0F
             } else {
                 selectionIndicator.setImageResource(R.drawable.ic_thumbs_down)
-                root.alpha = 0.5F
+                view1.alpha = 0.5F
             }
             /*if (selected) {
                 // profileImage.isVisible = false
@@ -492,7 +544,10 @@ class UploadPreviewAdapter(
         fun bind(data: UploadPreviewUiModel.Placeholder, callback: Callback) = with(binding) {
             view1.setImageResource(R.drawable.ic_add_placeholder)
 
-            root.setOnClickListener { callback.onPlaceholerClick(adapterPosition) }
+            root.setOnClickListener {
+                view1.touchInteractFeedback()
+                callback.onPlaceholerClick(adapterPosition)
+            }
         }
 
         companion object {

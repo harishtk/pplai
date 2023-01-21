@@ -135,6 +135,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         super.onNewIntent(intent)
 
         setNavGraph()
+        mainNavController.handleDeepLink(intent)
     }
 
     override fun onDestinationChanged(

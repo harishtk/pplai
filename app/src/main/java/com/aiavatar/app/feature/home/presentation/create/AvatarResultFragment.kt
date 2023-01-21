@@ -106,17 +106,23 @@ class AvatarResultFragment : Fragment() {
         btnNext.text = getString(R.string.label_download)
         btnNext.setOnClickListener {
             if (ApplicationDependencies.getPersistentStore().isLogged) {
-                // TODO: goto payment
-                findNavController().apply {
-                    val args = bundleOf(
-                        Constant.EXTRA_FROM to "login"
-                    )
-                    val navOpts = NavOptions.Builder()
-                        .setEnterAnim(R.anim.fade_scale_in)
-                        .setExitAnim(R.anim.fade_scale_out)
-                        .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
-                        .build()
-                    navigate(R.id.subscription_plans, args, navOpts)
+                val avatarStatus = uiState.value.avatarStatusWithFiles?.avatarStatus
+                if (avatarStatus != null && avatarStatus.paid) {
+                    // TODO: get folder name
+                    context?.showToast("Getting folder name")
+                } else {
+                    // TODO: goto payment
+                    findNavController().apply {
+                        val args = bundleOf(
+                            Constant.EXTRA_FROM to "login"
+                        )
+                        val navOpts = NavOptions.Builder()
+                            .setEnterAnim(R.anim.fade_scale_in)
+                            .setExitAnim(R.anim.fade_scale_out)
+                            .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
+                            .build()
+                        navigate(R.id.subscription_plans, args, navOpts)
+                    }
                 }
             } else {
                 findNavController().apply {
@@ -126,7 +132,7 @@ class AvatarResultFragment : Fragment() {
                     val navOpts = NavOptions.Builder()
                         .setEnterAnim(R.anim.fade_scale_in)
                         .setExitAnim(R.anim.fade_scale_out)
-                        .setPopUpTo(R.id.avatar_result, inclusive = true, saveState = true)
+                        .setPopUpTo(R.id.avatar_result, inclusive = false, saveState = true)
                         .build()
                     navigate(R.id.login_fragment, args, navOpts)
                 }
@@ -135,6 +141,8 @@ class AvatarResultFragment : Fragment() {
 
         icShare.isVisible = true
         icShare.setOnClickListener {  }
+
+        btnClose.setOnClickListener { findNavController().navigateUp() }
     }
 }
 

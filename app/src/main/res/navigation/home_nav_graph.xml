@@ -128,10 +128,16 @@
         android:label="Subscription Success"
         tools:layout="@layout/fragment_subscription_success" />
 
-    <fragment android:id="@+id/avatar_status"
+    <fragment
+        android:id="@+id/avatar_status"
         android:name="com.aiavatar.app.feature.home.presentation.create.AvatarStatusFragment"
         android:label="Avatar Status"
-        tools:layout="@layout/fragment_avatar_status" />
+        tools:layout="@layout/fragment_avatar_status">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:action="ACTION_VIEW"
+            app:uri="aiavatar://aiavatar.com/avatarStatus" />
+    </fragment>
 
     <fragment android:id="@+id/avatar_result"
         android:name="com.aiavatar.app.feature.home.presentation.create.AvatarResultFragment"

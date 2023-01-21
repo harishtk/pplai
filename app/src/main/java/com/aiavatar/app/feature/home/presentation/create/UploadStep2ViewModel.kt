@@ -38,17 +38,10 @@ class UploadStep2ViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<UploadStep2UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private val selectedItems: HashMap<String, Boolean> = HashMap()
-    private val selectedToggleFlow = MutableStateFlow(false)
-
     init {
-        /*val placeholders: List<UploadPreviewUiModel> = (0 until MAX_IMAGE_COUNT).mapIndexed { index, _ ->
-            UploadPreviewUiModel.Placeholder(position = index)
-        }*/
-
         val pickedUrisFlow = uiState.map { it.pickedUris }
 
-        combine(
+        /*combine(
             selectedToggleFlow,
             pickedUrisFlow,
             ::Pair
@@ -73,7 +66,7 @@ class UploadStep2ViewModel @Inject constructor(
                     remainingPhotoCount = remainingCount
                 )
             }
-        }.launchIn(viewModelScope)
+        }.launchIn(viewModelScope)*/
     }
 
     fun setFaceDetectionRunning(isRunning: Boolean) {
@@ -85,19 +78,51 @@ class UploadStep2ViewModel @Inject constructor(
     }
 
     fun getMaxImages(): Int {
-        return (MAX_IMAGE_COUNT - uiState.value.pickedUris.filter { uri -> selectedItems[uri.toString()] == true }
-            .size).coerceAtLeast(0)
+        return uiState.value.remainingPhotoCount
+    }
+
+    fun removeDuplicates(
+        pickedUris: List<Uri>,
+        completion: (removed: Int, normalizedList: List<Uri>) -> Unit,
+    ) = viewModelScope.launch {
+        val originalList = uiState.value.pickedUris
+        val combinedUris = originalList.toMutableList().apply {
+            addAll(pickedUris)
+        }
+
+        val normalizedList = combinedUris.distinct().toMutableList()
+        val removed = (combinedUris.size - normalizedList.size).coerceAtLeast(0)
+        normalizedList.removeAll(originalList)
+        completion(removed, normalizedList)
     }
 
     fun setPickedUris(pickedUris: List<Uri>, faceResult: HashMap<String, Boolean>) {
-        // selectedItems.clear()
-        selectedItems.putAll(faceResult)
+        // TODO: process the result
         val newPickedUris = uiState.value.pickedUris.toMutableList().apply {
             addAll(pickedUris)
         }
+        val pickedModelList = pickedUris.map { uri ->
+            val model = SelectedMediaItem(uri)
+            UploadPreviewUiModel.Item(model, selected = faceResult[uri.toString()] == true)
+        }
+        var remainingPhotoCount = 0
+        val newModelList = uiState.value.previewModelList
+            .filterNot { it is UploadPreviewUiModel.Placeholder }
+            .toMutableList().apply {
+            addAll(pickedModelList)
+                val selectedCount = count { model ->
+                    model is UploadPreviewUiModel.Item && model.selected
+                }
+            if (selectedCount < MAX_IMAGE_COUNT) {
+                remainingPhotoCount = (MAX_IMAGE_COUNT - selectedCount)
+                add(UploadPreviewUiModel.Placeholder(size))
+            }
+        }
         _uiState.update { state ->
             state.copy(
-                pickedUris = newPickedUris
+                pickedUris = newPickedUris,
+                previewModelList = newModelList,
+                remainingPhotoCount = remainingPhotoCount
             )
         }
     }
@@ -105,8 +130,6 @@ class UploadStep2ViewModel @Inject constructor(
     fun startUpload(context: Context) {
         setLoadState(LoadType.ACTION, LoadState.Loading())
         viewModelScope.launch(Dispatchers.IO) {
-            // TODO: -done- create session id.
-
             appDatabase.withTransaction {
                 appDatabase.uploadSessionDao().deleteAllUploadSessions()
             }
@@ -134,19 +157,6 @@ class UploadStep2ViewModel @Inject constructor(
             setLoadState(LoadType.ACTION, LoadState.NotLoading.Complete)
             sendEvent(UploadStep2UiEvent.PrepareUpload(sessionId))
         }
-    }
-
-    fun toggleSelectionInternal(uri: Uri) = viewModelScope.launch {
-        val selected = selectedItems[uri.toString()] ?: false
-        selectedItems[uri.toString()] = selected.toggle()
-        // Signals the flow
-        selectedToggleFlow.update { selectedToggleFlow.value.not() }
-    }
-
-    fun clearSelectionInternal() = viewModelScope.launch {
-        selectedItems.clear()
-        // Signals the flow
-        selectedToggleFlow.update { selectedToggleFlow.value.not() }
     }
 
     private fun setLoadState(

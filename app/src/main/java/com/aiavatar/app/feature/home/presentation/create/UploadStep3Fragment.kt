@@ -70,7 +70,7 @@ class UploadStep3Fragment : Fragment() {
             uiEvent.collectLatest { event ->
                 when (event) {
                     is Step3UiEvent.NextScreen -> {
-                        (activity as? MainActivity)?.restart()
+                        gotoNextScreen()
                     }
                 }
             }
@@ -117,6 +117,19 @@ class UploadStep3Fragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun gotoNextScreen() {
+        try {
+            findNavController().apply {
+                val navOpts = NavOptions.Builder()
+                    .setEnterAnim(R.anim.slide_in_right)
+                    .setExitAnim(R.anim.slide_out_right)
+                    .setPopUpTo(R.id.upload_step_3, inclusive = false, saveState = true)
+                    .build()
+                navigate(R.id.avatar_status, null, navOpts)
+            }
+        } catch (ignore: Exception) {}
     }
 }
 

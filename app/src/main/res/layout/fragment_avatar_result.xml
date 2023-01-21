@@ -13,6 +13,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView android:id="@+id/btn_close"
+        android:layout_width="@dimen/large_icon_size"
+        android:layout_height="@dimen/large_icon_size"
+        android:layout_margin="@dimen/inset_large"
+        android:src="@drawable/cancel_trasparent_rounded"
+        android:background="@drawable/ripple_rounded"
+        android:contentDescription="@string/content_description_close"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintHorizontal_bias="1.0" />
+
     <TextView android:id="@+id/title"
         style="@style/TextStyle.Large.Bold"
         android:layout_width="wrap_content"

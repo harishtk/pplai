@@ -195,9 +195,10 @@
                         android:id="@+id/preview_list_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="List comes \n here"
+                        android:padding="@dimen/inset_very_small"
+                        android:text="List comes here"
                         android:textAlignment="center"
-                        android:visibility="gone"
+                        android:visibility="visible"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
@@ -273,9 +274,33 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <com.dd.CircularProgressButton
+        android:id="@+id/btn_next"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/inset_large"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        android:textAppearance="@style/Base.TextAppearance.Bold"
+        android:textSize="16sp"
+        android:text="@string/label_continue"
+        app:cornerRadius="@dimen/button_corner_size"
+        app:cpb_colorIndicator="@color/white"
+        app:cpb_colorProgress="?attr/colorSecondary"
+        app:cpb_colorIndicatorBackground="?attr/colorSecondaryVariant"
+        app:cpb_cornerRadius="@dimen/button_corner_size"
+        app:cpb_selectorIdle="@drawable/progress_button_state"
+        app:cpb_textIdle="Generate"
+        app:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/bottom_barrier" />
+
     <com.google.android.material.button.MaterialButton
         style="@style/Widget.App.Button"
-        android:id="@+id/btn_next"
+        android:id="@+id/btn_next_old"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:insetBottom="@dimen/inset_large"
@@ -288,7 +313,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
-        android:visibility="visible"/>
+        android:visibility="gone"/>
 
     <FrameLayout android:id="@+id/fullscreen_loader"
         android:layout_width="match_parent"
