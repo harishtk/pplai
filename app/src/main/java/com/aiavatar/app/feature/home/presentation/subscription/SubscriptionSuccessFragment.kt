@@ -103,7 +103,7 @@ class SubscriptionSuccessFragment : Fragment() {
             }
         }
 
-        val loadStateFlow = uiState.map { it.loadState }
+        /*val loadStateFlow = uiState.map { it.loadState }
             .distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
@@ -116,12 +116,14 @@ class SubscriptionSuccessFragment : Fragment() {
                     }
                 }
             }
-        }
+        }*/
 
         /*nextButton.setOnClickListener {
             viewModel.generateAvatarRequest(planId)
         }*/
 
+        nextButton.isVisible = true
+        nextButton.setSpinning()
         val delta = System.currentTimeMillis() - pagePresentedAt
         viewLifecycleOwner.lifecycleScope.launch {
             delay((UI_PRESENTATION_TIME - delta).coerceAtLeast(0))

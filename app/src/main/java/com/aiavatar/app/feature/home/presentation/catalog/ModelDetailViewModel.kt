@@ -2,14 +2,14 @@ package com.aiavatar.app.feature.home.presentation.catalog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
-import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
-import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
+import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
@@ -26,15 +26,15 @@ class ModelDetailViewModel @Inject constructor(
     private val homeRepository: HomeRepository
 ): ViewModel() {
 
-    private val _uiState = MutableStateFlow<CatalogDetailState>(CatalogDetailState())
-    val uiState: StateFlow<CatalogDetailState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<ModelDetailState>(ModelDetailState())
+    val uiState: StateFlow<ModelDetailState> = _uiState.asStateFlow()
 
     private var selectedAvatarPosition: Int = 0
     private val selectedToggleFlow = MutableStateFlow(false)
 
-    val accept: (CatalogDetailUiAction) -> Unit
+    val accept: (ModelDetailUiAction) -> Unit
 
-    private var catalogDetailFetchJob: Job? = null
+    private var avatarsFetchJob: Job? = null
 
     init {
         val selectableAvatarUiModelListFlow = uiState.map { it.avatarList }
@@ -64,9 +64,9 @@ class ModelDetailViewModel @Inject constructor(
         accept = { uiAction -> onUiAction(uiAction) }
     }
 
-    private fun onUiAction(action: CatalogDetailUiAction) {
+    private fun onUiAction(action: ModelDetailUiAction) {
         when (action) {
-            is CatalogDetailUiAction.ErrorShown -> {
+            is ModelDetailUiAction.ErrorShown -> {
                 _uiState.update { state ->
                     state.copy(
                         exception = null,
@@ -77,19 +77,19 @@ class ModelDetailViewModel @Inject constructor(
         }
     }
 
-    fun retry() {
-        uiState.value.category?.let {
-            getCatalogDetailInternal(it.categoryName!!)
+    fun refresh() {
+        uiState.value.modelId?.let {
+            val request = GetAvatarsRequest(it)
+            getAvatarsForModel(request)
         }
     }
 
-    fun setCategory(category: Category) {
+    fun setModelId(modelId: String) {
         _uiState.update { state ->
             state.copy(
-                category = category
+                modelId = modelId
             )
         }
-        getCatalogDetailInternal(category.categoryName!!)
     }
 
     fun toggleSelection(position: Int) {
@@ -98,20 +98,18 @@ class ModelDetailViewModel @Inject constructor(
         selectedToggleFlow.update { selectedToggleFlow.value.not() }
     }
 
-    private fun getCatalogDetailInternal(category: String) {
-        val request = CatalogDetailRequest(category)
-        getCatalogDetail(request)
-    }
-
-    private fun getCatalogDetail(request: CatalogDetailRequest) {
-        if (catalogDetailFetchJob?.isActive == true) {
+    private fun getAvatarsForModel(request: GetAvatarsRequest) {
+        if (avatarsFetchJob?.isActive == true) {
             val t = IllegalStateException("A fetch job is already active. Ignoring request")
-            Timber.e(t)
+            if (BuildConfig.DEBUG) {
+                Timber.w(t)
+            }
             return
         }
-        catalogDetailFetchJob?.cancel(CancellationException("New request")) // just in case
-        catalogDetailFetchJob = viewModelScope.launch {
-            homeRepository.getCatalogDetail(request).collectLatest { result ->
+
+        avatarsFetchJob?.cancel(CancellationException("New request")) // just in case
+        avatarsFetchJob = viewModelScope.launch {
+            homeRepository.getAvatars(request).collectLatest { result ->
                 when (result) {
                     is Result.Loading -> setLoading(LoadType.REFRESH, LoadState.Loading())
                     is Result.Error -> {
@@ -139,7 +137,7 @@ class ModelDetailViewModel @Inject constructor(
                         setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
                         _uiState.update { state ->
                             state.copy(
-                                avatarList = result.data.avatars.map { SelectableAvatarUiModel.Item(it, false) }
+                                avatarList = result.data.map { SelectableAvatarUiModel.Item(it, false) }
                             )
                         }
                     }
@@ -159,16 +157,16 @@ class ModelDetailViewModel @Inject constructor(
 
 }
 
-data class CatalogDetailState(
+data class ModelDetailState(
     val loadState: LoadStates = LoadStates.IDLE,
-    val category: Category? = null,
+    val modelId: String? = null,
     val avatarList: List<SelectableAvatarUiModel> = emptyList(),
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
 
-interface CatalogDetailUiAction {
-    data class ErrorShown(val e: Exception) : CatalogDetailUiAction
+interface ModelDetailUiAction {
+    data class ErrorShown(val e: Exception) : ModelDetailUiAction
 }
 
 interface SelectableAvatarUiModel {

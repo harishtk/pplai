@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
-import androidx.core.view.get
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -21,10 +20,8 @@ import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.aiavatar.app.Constant
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
-import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
-import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
 import com.bumptech.glide.Glide
@@ -32,8 +29,12 @@ import com.pepulnow.app.data.LoadState
 import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.abs
 
 @AndroidEntryPoint
@@ -45,15 +46,24 @@ class ModelDetailFragment : Fragment() {
 
     private val viewModel: ModelDetailViewModel by viewModels()
 
+    private lateinit var from: String
     private var jumpToPosition = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val category = arguments?.getParcelable<Category?>(Constant.EXTRA_DATA)
-        jumpToPosition = arguments?.getInt("click_position", -1) ?: -1
-        if (category != null) {
-            viewModel.setCategory(category)
+        arguments?.apply {
+            from = getString(Constant.EXTRA_FROM, "unknown")
+            when (from) {
+                "result_preview" -> {
+                    val modelId = getString(ARG_MODEL_ID, "")
+                    jumpToPosition = getInt(ARG_JUMP_TO_POSITION, -1)
+                    viewModel.setModelId(modelId)
+                }
+                "my_models" -> {
+
+                }
+            }
         }
     }
 
@@ -72,10 +82,11 @@ class ModelDetailFragment : Fragment() {
         binding.bindState(
             uiState = viewModel.uiState
         )
+        viewModel.refresh()
     }
 
     private fun FragmentModelDetailBinding.bindState(
-        uiState: StateFlow<CatalogDetailState>
+        uiState: StateFlow<ModelDetailState>
     ) {
         val catalogPresetAdapter = CatalogPagerAdapter(requireContext())
 
@@ -120,8 +131,9 @@ class ModelDetailFragment : Fragment() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 // setUpCurrentIndicator(position)
-                binding.indicatorView.onPageSelected(position)
+                indicatorView.onPageSelected(position)
                 viewModel.toggleSelection(position)
+                avatarScrollerList.smoothScrollToPosition(position)
             }
 
             override fun onPageScrolled(
@@ -130,12 +142,12 @@ class ModelDetailFragment : Fragment() {
                 positionOffsetPixels: Int
             ) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
-                binding.indicatorView.onPageScrolled(position, positionOffset, positionOffsetPixels)
+                indicatorView.onPageScrolled(position, positionOffset, positionOffsetPixels)
             }
 
             override fun onPageScrollStateChanged(state: Int) {
                 super.onPageScrollStateChanged(state)
-                binding.indicatorView.onPageScrollStateChanged(state)
+                indicatorView.onPageScrollStateChanged(state)
             }
         })
 
@@ -159,6 +171,17 @@ class ModelDetailFragment : Fragment() {
                 catalogPresetAdapter.submitList(avatarList)
                 scrollerAdapter.submitList(avatarList)
                 setUpIndicator(avatarList.size)
+
+                if (jumpToPosition != -1) {
+                    catalogPreviewPager.post {
+                        try {
+                            catalogPreviewPager.setCurrentItem(jumpToPosition, false)
+                            jumpToPosition = -1
+                        } catch (e: Exception) {
+                            Timber.d(e)
+                        }
+                    }
+                }
             }
         }
 
@@ -169,13 +192,13 @@ class ModelDetailFragment : Fragment() {
         )
     }
 
-    private fun FragmentModelDetailBinding.bindToolbar(uiState: StateFlow<CatalogDetailState>) {
-        val catalogTitleFlow = uiState.mapNotNull { it.category?.categoryName }
+    private fun FragmentModelDetailBinding.bindToolbar(uiState: StateFlow<ModelDetailState>) {
+        /*val catalogTitleFlow = uiState.mapNotNull { it.category?.categoryName }
         viewLifecycleOwner.lifecycleScope.launch {
             catalogTitleFlow.collectLatest { catalogTitle ->
                 toolbarIncluded.toolbarTitle.text = catalogTitle
             }
-        }
+        }*/
 
         toolbarIncluded.toolbarNavigationIcon.setOnClickListener {
             try { findNavController().navigateUp() }
@@ -221,30 +244,11 @@ class ModelDetailFragment : Fragment() {
         }*/
     }
 
-    private fun setUpCurrentIndicator(index: Int) {
-        // Log.d(TAG, "setUpCurrentIndicator() called with: index = $index")
-        val indicatorSizePx = resources.getDimensionPixelSize(R.dimen.tab_indicator_size)
-        for (i in 0 until binding.pagerIndicators.childCount) {
-            // Log.d(TAG, "setUpCurrentIndicator() called with: index = $index i = $i")
-            val current = binding.pagerIndicators[i] as? View?
-            /*current?.let {
-                val lp = it.layoutParams
-                if (index == i) {
-                    lp.width = indicatorSizePx * 2
-                } else {
-                    lp.width = indicatorSizePx
-                }
-                it.layoutParams = lp
-                Log.d(TAG, "setUpCurrentIndicator() called with: index = $index i = $i w=${lp.width}")
-
-            }*/
-            (binding.pagerIndicators[i] as? View?)
-                ?.isSelected = index == i
-        }
-    }
-
     companion object {
         val TAG = ModelDetailFragment::class.java.simpleName
+
+        const val ARG_MODEL_ID = "com.aiavatar.app.args.MODEL_ID"
+        const val ARG_JUMP_TO_POSITION = "com.aiavatar.app.args.JUMP_TO_POSITION"
     }
 }
 
@@ -294,10 +298,10 @@ class AvatarScrollAdapter(
         private val binding: ItemScrollerListBinding
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(preset: ListAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
-            title.text = preset.imageName
+        fun bind(listAvatar: ListAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
+            title.text = listAvatar.imageName
             Glide.with(previewImage)
-                .load(URLProvider.avatarUrl(preset.imageName))
+                .load(listAvatar.imageName)
                 .placeholder(R.color.transparent_black)
                 .error(R.color.white)
                 .into(previewImage)

@@ -61,7 +61,7 @@ class MoreCatalogFragment : Fragment() {
 
     private fun FragmentMoreCatalogBinding.bindState(
         uiState: StateFlow<MoreCatalogState>,
-        uiAction: (CatalogDetailUiAction) -> Unit
+        uiAction: (MoreCatalogUiAction) -> Unit
     ) {
 
         val adapter = MoreCatalogScrollAdapter { clickedPosition ->

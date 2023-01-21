@@ -13,18 +13,15 @@ import com.aiavatar.app.feature.home.data.source.remote.dto.toSubscriptionPlan
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toCatalogDetailData
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelList
 import com.aiavatar.app.feature.home.data.source.remote.model.toCategory
-import com.aiavatar.app.feature.home.domain.model.CatalogDetailData
-import com.aiavatar.app.feature.home.domain.model.Category
-import com.aiavatar.app.feature.home.domain.model.ModelList
-import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
+import com.aiavatar.app.feature.home.data.source.remote.model.toListAvatar
+import com.aiavatar.app.feature.home.domain.model.*
 import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
 import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
+import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.aiavatar.app.feature.home.presentation.create.AvatarResultUiEvent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
 import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
@@ -167,6 +164,29 @@ class HomeRepositoryImpl @Inject constructor(
                         val modelList = networkResult.data.data?.models?.map { it.toModelList() }
                         if (modelList != null) {
                             Result.Success(modelList)
+                        } else {
+                            val cause = EmptyResponseException("No data")
+                            Result.Error(ApiException(cause))
+                        }
+                    } else {
+                        val cause = BadResponseException("Unexpected response code ${networkResult.code}")
+                        Result.Error(ApiException(cause))
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
+    }
+
+    override fun getAvatars(getAvatarsRequest: GetAvatarsRequest): Flow<Result<List<ListAvatar>>> {
+        return remoteDataSource.getAvatars(getAvatarsRequest.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val avatarList = networkResult.data.data?.avatars?.map { it.toListAvatar() }
+                        if (avatarList != null) {
+                            Result.Success(avatarList)
                         } else {
                             val cause = EmptyResponseException("No data")
                             Result.Error(ApiException(cause))

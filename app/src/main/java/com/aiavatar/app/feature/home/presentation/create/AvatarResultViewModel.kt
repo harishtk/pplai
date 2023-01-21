@@ -84,6 +84,10 @@ class AvatarResultViewModel @Inject constructor(
         }
     }
 
+    fun getModelId(): String? {
+        return uiState.value.avatarStatusWithFiles?.avatarStatus?.modelId
+    }
+
     private fun refreshInternal() {
         // TODO: get data from server
     }

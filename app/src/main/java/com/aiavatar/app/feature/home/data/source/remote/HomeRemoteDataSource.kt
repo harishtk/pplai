@@ -6,9 +6,9 @@ import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.di.IoDispatcher
 import com.aiavatar.app.feature.home.data.source.remote.dto.CatalogDetailRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.GenerateAvatarRequestDto
+import com.aiavatar.app.feature.home.data.source.remote.dto.GetAvatarsRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPurchaseRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.model.*
-import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -54,6 +54,11 @@ class HomeRemoteDataSource @Inject constructor(
     fun getMyModels(): Flow<NetworkResult<MyModelsResponse>> = flow {
         emit(NetworkResult.Loading())
         emit(safeApiCall { apiService.getMyModels() })
+    }.flowOn(dispatcher)
+
+    fun getAvatars(getAvatarsRequestDto: GetAvatarsRequestDto): Flow<NetworkResult<GetAvatarsResponse>> = flow {
+        emit(NetworkResult.Loading())
+        emit(safeApiCall { apiService.getAvatars(getAvatarsRequestDto) })
     }.flowOn(dispatcher)
 
 }

@@ -31,7 +31,7 @@ class MoreCatalogViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<MoreCatalogState>(MoreCatalogState())
     val uiState: StateFlow<MoreCatalogState> = _uiState.asStateFlow()
 
-    val accept: (CatalogDetailUiAction) -> Unit
+    val accept: (MoreCatalogUiAction) -> Unit
 
     private var catalogDetailFetchJob: Job? = null
 
@@ -39,9 +39,9 @@ class MoreCatalogViewModel @Inject constructor(
         accept = { uiAction -> onUiAction(uiAction) }
     }
 
-    private fun onUiAction(action: CatalogDetailUiAction) {
+    private fun onUiAction(action: MoreCatalogUiAction) {
         when (action) {
-            is CatalogDetailUiAction.ErrorShown -> {
+            is MoreCatalogUiAction.ErrorShown -> {
                 _uiState.update { state ->
                     state.copy(
                         exception = null,

@@ -119,27 +119,6 @@
                     app:layout_constraintTop_toBottomOf="@id/title2"
                     app:layout_constraintVertical_chainStyle="packed" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/next_button_old"
-                    style="@style/Widget.App.Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:contentDescription="@string/content_description_action_button"
-                    android:elevation="@dimen/default_fab_elevation"
-                    android:insetLeft="@dimen/inset_large"
-                    android:insetTop="@dimen/inset_large"
-                    android:insetRight="@dimen/inset_large"
-                    android:insetBottom="@dimen/inset_large"
-                    android:src="@drawable/ic_baseline_chevron_right_24"
-                    android:text="Generate"
-                    android:visibility="gone"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/title2"
-                    app:layout_constraintVertical_chainStyle="packed" />
-
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </com.google.android.material.card.MaterialCardView>

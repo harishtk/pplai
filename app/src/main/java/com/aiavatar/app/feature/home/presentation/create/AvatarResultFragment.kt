@@ -15,9 +15,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.aiavatar.app.Constant
-import com.aiavatar.app.R
-import com.aiavatar.app.SharedViewModel
+import com.aiavatar.app.*
 import com.aiavatar.app.databinding.FragmentAvatarResultBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
 import com.aiavatar.app.di.ApplicationDependencies
@@ -79,7 +77,13 @@ class AvatarResultFragment : Fragment() {
             }
         }
 
-        val adapter = AvatarResultAdapter()
+        val callback = object : AvatarResultAdapter.Callback {
+            override fun onItemClick(position: Int, data: AvatarResultUiModel.AvatarItem) {
+                gotoModelDetail(position, data)
+            }
+        }
+
+        val adapter = AvatarResultAdapter(callback)
 
         val avatarResultListFlow = uiState.map { it.avatarResultList }
             .distinctUntilChanged()
@@ -146,7 +150,9 @@ class AvatarResultFragment : Fragment() {
     }
 }
 
-class AvatarResultAdapter : ListAdapter<AvatarResultUiModel, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+class AvatarResultAdapter(
+    private val callback: Callback
+) : ListAdapter<AvatarResultUiModel, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return ItemViewHolder.from(parent)
     }
@@ -155,7 +161,7 @@ class AvatarResultAdapter : ListAdapter<AvatarResultUiModel, RecyclerView.ViewHo
         val model = getItem(position)
         if (holder is ItemViewHolder) {
             model as AvatarResultUiModel.AvatarItem
-            holder.bind(model)
+            holder.bind(model, callback)
         }
     }
 
@@ -163,11 +169,13 @@ class AvatarResultAdapter : ListAdapter<AvatarResultUiModel, RecyclerView.ViewHo
         private val binding: ItemSquareImageBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(data: AvatarResultUiModel.AvatarItem) = with(binding) {
+        fun bind(data: AvatarResultUiModel.AvatarItem, callback: Callback) = with(binding) {
             Glide.with(view1)
                 .load(data.avatar.remoteFile)
                 .placeholder(R.color.grey_900)
                 .into(view1)
+
+            root.setOnClickListener { callback.onItemClick(adapterPosition, data) }
         }
 
         companion object {
@@ -182,6 +190,10 @@ class AvatarResultAdapter : ListAdapter<AvatarResultUiModel, RecyclerView.ViewHo
             }
         }
 
+    }
+
+    interface Callback {
+        fun onItemClick(position: Int, data: AvatarResultUiModel.AvatarItem)
     }
 
     companion object {

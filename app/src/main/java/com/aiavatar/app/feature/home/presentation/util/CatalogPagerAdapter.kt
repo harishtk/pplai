@@ -4,13 +4,11 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
-import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.LargePresetPreviewBinding
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.feature.home.presentation.catalog.SelectableAvatarUiModel
@@ -64,10 +62,10 @@ class CatalogPagerAdapter(
         private val binding: LargePresetPreviewBinding
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(preset: ListAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
-            title.text = preset.imageName
+        fun bind(listAvatar: ListAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
+            title.text = listAvatar.imageName
             Glide.with(previewImage)
-                .load(URLProvider.avatarUrl(preset.imageName))
+                .load(listAvatar.imageName)
                 .placeholder(R.color.transparent_black)
                 .error(R.color.white)
                 .into(previewImage)

@@ -2,6 +2,7 @@ package com.aiavatar.app.feature.home.data.source.remote
 
 import com.aiavatar.app.feature.home.data.source.remote.dto.CatalogDetailRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.GenerateAvatarRequestDto
+import com.aiavatar.app.feature.home.data.source.remote.dto.GetAvatarsRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPurchaseRequestDto
 import com.aiavatar.app.feature.home.data.source.remote.model.*
 import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
@@ -22,6 +23,9 @@ interface HomeApi {
 
     @POST("user/models")
     suspend fun getMyModels(): Response<MyModelsResponse>
+
+    @POST("user/avatars")
+    suspend fun getAvatars(@Body requestDto: GetAvatarsRequestDto): Response<GetAvatarsResponse>
 
     @POST("subscription/plans")
     suspend fun subscriptionPlans(): Response<SubscriptionPlanResponse>
