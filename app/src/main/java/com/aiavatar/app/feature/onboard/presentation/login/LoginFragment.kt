@@ -26,9 +26,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
-import com.aiavatar.app.Constant
-import com.aiavatar.app.MainActivity
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
@@ -38,9 +36,6 @@ import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentLoginBinding
 import com.aiavatar.app.di.ApplicationDependencies
-import com.aiavatar.app.hideKeyboard
-import com.aiavatar.app.showSoftInputMode
-import com.aiavatar.app.showToast
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -152,7 +147,16 @@ class LoginFragment : Fragment() {
                                 }
                             }
                             else -> {
-                                gotoHome()
+                                safeCall {
+                                    findNavController().apply {
+                                        val navOpts = NavOptions.Builder()
+                                            .setEnterAnim(R.anim.fade_scale_in)
+                                            .setExitAnim(R.anim.fade_scale_out)
+                                            .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                                            .build()
+                                        navigate(R.id.catalog_list, null, navOpts)
+                                    }
+                                }
                             }
                         }
                     }

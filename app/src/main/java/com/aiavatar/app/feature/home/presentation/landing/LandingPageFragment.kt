@@ -58,11 +58,7 @@ class LandingPageFragment : Fragment() {
         btnCreateMasterPiece.setOnClickListener {
             ApplicationDependencies.getPersistentStore().apply {
                 try {
-                    if (isLogged) {
-                        gotoUpload()
-                    } else {
-                        gotoLogin("create_masterpiece")
-                    }
+                    gotoUpload()
                 } catch (e: Exception) {
                     if (BuildConfig.DEBUG) {
                         Timber.e(e)

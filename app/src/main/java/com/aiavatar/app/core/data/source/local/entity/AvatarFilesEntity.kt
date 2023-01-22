@@ -37,7 +37,7 @@ data class AvatarFilesEntity(
     @ColumnInfo("downloaded")
     val downloaded: Int = 0,
     @ColumnInfo("progress")
-    val progress: Int = 0,
+    val progress: Int = 0
 ) {
     @ColumnInfo("id")
     @PrimaryKey(autoGenerate = true)

@@ -9,6 +9,7 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import android.util.Size
 import androidx.annotation.WorkerThread
+import com.aiavatar.app.commons.util.storage.SavedFileResult
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -28,13 +29,13 @@ object StorageUtil {
     }
 
     @WorkerThread
-    fun saveFilesToFolder(context: Context, folderName: String = getTempFolderName(), uris: List<Uri>): Pair<String?, List<File>> {
+    fun saveFilesToFolder(context: Context, folderName: String = getTempFolderName(), uris: List<Uri>): SavedFileResult? {
         val targetDir = File(context.filesDir, "$DIR_UPLOADS/$folderName")
         if (!targetDir.exists()) {
             if (!targetDir.mkdirs()) {
                 val t = IllegalStateException("Failed to create upload dir")
                 Log.w(TAG, "saveFilesToFolder", t)
-                return null to emptyList()
+                return null
             }
         }
 
@@ -73,7 +74,11 @@ object StorageUtil {
 
         Timber.d("Saved Files: $savedFiles")
 
-        return targetDir.name to savedFiles
+        return SavedFileResult(
+            folderName = targetDir.name,
+            savedFiles = savedFiles,
+            originalFiles = uris
+        )
     }
 
     fun checkIfFolderExists(context: Context, name: String): Boolean {

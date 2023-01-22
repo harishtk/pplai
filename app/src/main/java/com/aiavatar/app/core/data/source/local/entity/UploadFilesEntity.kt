@@ -1,6 +1,7 @@
 package com.aiavatar.app.core.data.source.local.entity
 
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -26,6 +27,8 @@ data class UploadFilesEntity(
     val sessionId: Long,
     @ColumnInfo("file_uri_string")
     val fileUriString: String,
+    @ColumnInfo("local_uri_string")
+    val localUriString: String,
     @ColumnInfo("status")
     val status: Int,
     @ColumnInfo("progress")
@@ -50,6 +53,7 @@ object UploadFilesTable {
         const val ID                = "id"
         const val SESSION_ID        = "session_id"
         const val FILE_URI_STRING   = "file_uri_string"
+        const val LOCAL_URI_STRING  = "local_uri_string"
         const val STATUS            = "status"
         const val PROGRESS          = "progress"
         const val UPLOADED_FILENAME = "uploaded_filename"
@@ -61,7 +65,8 @@ fun UploadFilesEntity.toUploadFile(): UploadFile {
     return UploadFile(
         id = _id,
         sessionId = sessionId,
-        fileUri = Uri.parse(fileUriString),
+        fileUri = fileUriString.toUri(),
+        localUri = localUriString.toUri(),
         status = UploadFileStatus.fromRawValue(status),
         progress = progress,
         uploadedFileName = uploadedFileName,

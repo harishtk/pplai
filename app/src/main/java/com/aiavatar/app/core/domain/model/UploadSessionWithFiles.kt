@@ -21,6 +21,7 @@ data class UploadFile(
     val id: Long?,
     val sessionId: Long,
     val fileUri: Uri,
+    val localUri: Uri,
     val status: UploadFileStatus = UploadFileStatus.UNKNOWN,
     val progress: Int,
     val uploadedFileName: String?,

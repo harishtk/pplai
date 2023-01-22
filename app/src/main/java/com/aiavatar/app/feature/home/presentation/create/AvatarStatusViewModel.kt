@@ -347,13 +347,17 @@ class AvatarStatusViewModel @Inject constructor(
     private fun restoreFromSavedStateInternal(savedStateHandle: SavedStateHandle) {
         _uiState.update { state ->
             state.copy(
-                toggleStateNotifyMe = savedStateHandle[TOGGLE_STATE_NOTIFY_ME] ?: DEFAULT_TOGGLE_STATE
+                toggleStateNotifyMe = savedStateHandle[TOGGLE_STATE_NOTIFY_ME] ?: getPreferredToggleState()
             )
         }
     }
 
     private fun sendEvent(newEvent: AvatarStatusUiEvent) = viewModelScope.launch {
         _uiEvent.emit(newEvent)
+    }
+
+    private fun getPreferredToggleState(): Boolean {
+        return ApplicationDependencies.getPersistentStore().notifyMe
     }
 
     override fun onCleared() {

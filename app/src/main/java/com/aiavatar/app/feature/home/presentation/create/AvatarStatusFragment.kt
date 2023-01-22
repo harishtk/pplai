@@ -15,14 +15,14 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.R
 import com.aiavatar.app.SharedViewModel
-import com.aiavatar.app.commons.util.CircularProgressButtonUtil
-import com.aiavatar.app.commons.util.cancelSpinning
-import com.aiavatar.app.commons.util.setSpinning
+import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.setOnSingleClickListener
 import com.aiavatar.app.showToast
+import com.aiavatar.app.work.UploadWorker
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
@@ -31,12 +31,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
-import okhttp3.internal.notify
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
-import kotlin.math.log
 
 @AndroidEntryPoint
 class AvatarStatusFragment : Fragment() {
@@ -285,7 +282,6 @@ class AvatarStatusFragment : Fragment() {
         }
 
         btnCreateAvatar.setOnClickListener {
-            // btnCreateAvatar.setOnClickListener(null)
             val modelStatus = uiState.value.avatarStatusWithFiles?.avatarStatus?.modelStatus
             if (modelStatus == "completed") {
                 // TODO: View results
@@ -298,6 +294,8 @@ class AvatarStatusFragment : Fragment() {
                     navigate(R.id.avatar_result, null, navOpts)
                 }
             } else {
+                ServiceUtil.getNotificationManager(requireContext())
+                    .cancel(UploadWorker.STATUS_NOTIFICATION_ID)
                 uiAction(AvatarStatusUiAction.CreateModel)
             }
         }

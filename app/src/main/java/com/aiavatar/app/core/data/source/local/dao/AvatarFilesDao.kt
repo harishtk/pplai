@@ -6,7 +6,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.aiavatar.app.core.data.source.local.entity.AvatarFilesEntity
 import com.aiavatar.app.core.data.source.local.entity.AvatarFilesTable
-import com.aiavatar.app.core.domain.model.AvatarFile
 
 @Dao
 interface AvatarFilesDao {

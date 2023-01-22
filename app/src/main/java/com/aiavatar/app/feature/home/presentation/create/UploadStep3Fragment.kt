@@ -125,7 +125,7 @@ class UploadStep3Fragment : Fragment() {
                 val navOpts = NavOptions.Builder()
                     .setEnterAnim(R.anim.slide_in_right)
                     .setExitAnim(R.anim.slide_out_right)
-                    .setPopUpTo(R.id.catalog_list, inclusive = true, saveState = false)
+                    .setPopUpTo(R.id.upload_step_1, inclusive = true, saveState = false)
                     .build()
                 navigate(R.id.avatar_status, null, navOpts)
             }

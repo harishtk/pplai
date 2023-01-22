@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
+    id 'androidx.navigation.safeargs'
     id 'com.google.dagger.hilt.android'
     id 'kotlin-parcelize'
     id 'com.google.gms.google-services'
@@ -153,6 +154,7 @@ dependencies {
 
     /* Hilt */
     implementation "com.google.dagger:hilt-android:$hilt_version"
+    testImplementation 'org.junit.jupiter:junit-jupiter'
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 
     // Room
@@ -199,11 +201,12 @@ dependencies {
     androidTestImplementation 'junit:junit:4.12'*/
 
     /* Navigation Components */
-    def nav_version = "2.5.3"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
     implementation("androidx.hilt:hilt-navigation:1.0.0")
     implementation("androidx.hilt:hilt-navigation-fragment:1.0.0")
+
+    androidTestImplementation "androidx.navigation:navigation-testing:$nav_version"
 
     /* Lifecycle */
     def lifecycle_version = "2.5.1"
@@ -239,9 +242,48 @@ dependencies {
     /*implementation 'me.relex:circleindicator:2.1.6'*/
     implementation 'com.github.zhpanvip:viewpagerindicator:1.2.1'
 
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    // Core library
+    def  androidXTestVersion = '1.5.0'
+    androidTestImplementation("androidx.test:core:$androidXTestVersion")
+    androidTestImplementation("androidx.arch.core:core-testing:2.1.0")
+    androidTestImplementation("androidx.fragment:fragment-testing:1.5.5")
+
+    // AndroidJUnitRunner and JUnit Rules
+    def testRunnerVersion = '1.5.2'
+    def testRulesVersion = '1.4.0'
+    androidTestImplementation("androidx.test:runner:$testRunnerVersion")
+    androidTestImplementation("androidx.test:rules:$testRulesVersion")
+
+    // Assertions
+    def testJunitVersion = '1.1.5'
+    def truthVersion = '1.5.0'
+    androidTestImplementation("androidx.test.ext:junit:$testJunitVersion")
+    androidTestImplementation("androidx.test.ext:truth:$truthVersion")
+    testImplementation("com.google.truth:truth:1.1.3")
+
+    // Espresso dependencies
+    def espressoVersion = '3.5.1'
+    androidTestImplementation( "androidx.test.espresso:espresso-core:$espressoVersion")
+    androidTestImplementation( "androidx.test.espresso:espresso-contrib:$espressoVersion")
+    androidTestImplementation( "androidx.test.espresso:espresso-intents:$espressoVersion")
+    androidTestImplementation( "androidx.test.espresso:espresso-accessibility:$espressoVersion")
+    androidTestImplementation( "androidx.test.espresso:espresso-web:$espressoVersion")
+    androidTestImplementation( "androidx.test.espresso.idling:idling-concurrent:$espressoVersion")
+
+    // The following Espresso dependency can be either "implementation",
+    // or "androidTestImplementation", depending on whether you want the
+    // dependency to appear on your APK"s compile classpath or the test APK
+    // classpath.
+    androidTestImplementation( "androidx.test.espresso:espresso-idling-resource:$espressoVersion")
+
+    androidTestImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
+    kaptAndroidTest "com.google.dagger:hilt-android-compiler:$hilt_version"
+
+    androidTestImplementation("junit:junit:4.13.2")
+
+    testImplementation ('org.threeten:threetenbp:1.6.0'){
+        exclude group:'com.jakewharton.threetenabp', module:'threetenabp'
+    }
 }
 
 @SuppressWarnings("GrMethodMayBeStatic")

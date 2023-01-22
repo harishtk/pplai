@@ -2,7 +2,8 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main_nav_graph">
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/catalog_list">
 
     <action android:id="@+id/action_home_nav_graph_to_self"
         app:destination="@id/main_nav_graph"
@@ -92,6 +93,7 @@
 
         <action android:id="@+id/action_upload_step_2_to_upload_step_3"
             app:destination="@id/upload_step_3"
+            app:restoreState="true"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_right"
             app:popEnterAnim="@anim/slide_in_left"
@@ -148,7 +150,16 @@
     <fragment android:id="@+id/walkthrough_fragment"
         android:name="com.aiavatar.app.feature.onboard.presentation.walkthrough.WalkThroughFragment"
         android:label="Walk Through"
-        tools:layout="@layout/fragment_walthrough_1" />
+        tools:layout="@layout/fragment_walthrough_1">
+
+        <action android:id="@+id/actionWalkThroughToUploadStep"
+            app:destination="@id/upload_step_1"
+            app:popUpTo="@id/walkthrough_fragment"
+            app:popUpToInclusive="true"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left" />
+
+    </fragment>
 
     <fragment android:id="@+id/login_fragment"
         android:name="com.aiavatar.app.feature.onboard.presentation.login.LoginFragment"

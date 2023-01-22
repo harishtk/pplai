@@ -1,22 +1,18 @@
 package com.aiavatar.app.feature.onboard.presentation.walkthrough
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
+import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
-import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
-import com.aiavatar.app.ApplicationContext
-import com.aiavatar.app.Constant
-import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentWalkThroughBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.utils.FragmentPagerAdapter
+import com.aiavatar.app.safeCall
 import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
 
@@ -44,7 +40,7 @@ class WalkThroughFragment : Fragment() {
     }
 
     private fun FragmentWalkThroughBinding.bindState() {
-        // TODO: setup adapter
+        // TODO: -done- setup adapter
         val adapter = FragmentPagerAdapter(childFragmentManager, viewLifecycleOwner.lifecycle)
         adapter.addFragment(WalkThroughContent1())
         adapter.addFragment(WalkThroughContent2())
@@ -107,7 +103,7 @@ class WalkThroughFragment : Fragment() {
                 try {
                     ApplicationDependencies.getPersistentStore()
                         .setOnboardPresented(true)
-                    gotoHome()
+                    gotoUploadSteps()
                     /*findNavController().apply {
                         val args = bundleOf(
                             Constant.EXTRA_FROM to "walk_through"
@@ -124,12 +120,10 @@ class WalkThroughFragment : Fragment() {
         }
     }
 
-    private fun gotoHome() {
-        activity?.apply {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            intent.putExtra("restart_hint", "from_onboard")
-            startActivity(intent)
+    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
+    private fun gotoUploadSteps() = safeCall {
+        findNavController().apply {
+            navigate(WalkThroughFragmentDirections.actionWalkThroughToUploadStep())
         }
     }
 }

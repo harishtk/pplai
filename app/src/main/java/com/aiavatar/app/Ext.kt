@@ -4,10 +4,12 @@ import android.content.Context
 import android.text.InputFilter
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.TimePicker
 import android.widget.Toast
 import androidx.annotation.IdRes
 import androidx.navigation.NavController
 import com.aiavatar.app.commons.util.ServiceUtil
+import timber.log.Timber
 
 fun <T> List<T>.mapButReplace(targetItem: T, newItem: T) = map {
     if (it == targetItem) {
@@ -105,6 +107,14 @@ object Log {
         } else {
             simpleName
         }
+    }
+}
+
+inline fun <R> safeCall(block: () -> R): R? {
+    return try { block() }
+    catch (e: Exception) {
+        if (BuildConfig.DEBUG) { Timber.e(e) }
+        null
     }
 }
 

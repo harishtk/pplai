@@ -28,12 +28,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import com.aiavatar.app.BuildConfig
-import com.aiavatar.app.Constant
+import com.aiavatar.app.*
 import com.aiavatar.app.Constant.MIME_TYPE_JPEG
-import com.aiavatar.app.Continuation
-import com.aiavatar.app.R
-import com.aiavatar.app.SharedViewModel
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.HapticUtil
@@ -43,7 +39,6 @@ import com.aiavatar.app.databinding.FragmentUploadStep2Binding
 import com.aiavatar.app.databinding.ItemExamplePhotoBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewPlaceholderBinding
-import com.aiavatar.app.showToast
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.google.android.gms.tasks.Task
@@ -53,12 +48,14 @@ import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
 
 @AndroidEntryPoint
 class UploadStep2Fragment : Fragment() {
@@ -341,7 +338,7 @@ class UploadStep2Fragment : Fragment() {
         viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
         val result = HashMap<String, Boolean>()
         val faceDetectorOpts = FaceDetectorOptions.Builder()
-            .setMinFaceSize(0.3F)
+            .setMinFaceSize(0.5F)
             .build()
         val faceDetector = FaceDetection.getClient(faceDetectorOpts)
         val countDownLatch = CountDownLatch(pickedUris.size)
