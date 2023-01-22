@@ -9,8 +9,8 @@ import androidx.navigation.fragment.findNavController
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-fun Fragment.getNavigationResultFlow(key: String = "result") =
-    findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Bundle?>(key)?.asFlow()
+fun <R> Fragment.getNavigationResultFlow(key: String = "result") =
+    findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<R?>(key)?.asFlow()
 
 fun Fragment.setNavigationResult(result: Bundle?, key: String = "result") {
     findNavController().previousBackStackEntry?.savedStateHandle?.set(key, result)

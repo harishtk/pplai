@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.home.presentation.create
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,6 +21,7 @@ import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.setOnSingleClickListener
 import com.aiavatar.app.showToast
 import com.aiavatar.app.work.UploadWorker
@@ -32,6 +34,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
@@ -309,6 +313,43 @@ class AvatarStatusFragment : Fragment() {
                     viewModel.setSessionId(sessionId)
                 }
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (Build.VERSION.SDK_INT > 23) {
+            EventBus.getDefault().register(this)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (Build.VERSION.SDK_INT <= 23) {
+            if (!EventBus.getDefault().isRegistered(this)) {
+                EventBus.getDefault().register(this)
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (Build.VERSION.SDK_INT <= 23) {
+            EventBus.getDefault().unregister(this)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (Build.VERSION.SDK_INT > 23) {
+            EventBus.getDefault().unregister(this)
+        }
+    }
+
+    @Subscribe
+    public fun onNewNotificationEvent(event: NewNotificationEvent) {
+        if (event.hint == "avatar_status") {
+            viewModel.refresh()
         }
     }
 

@@ -23,6 +23,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
@@ -61,6 +62,8 @@ class LoginFragment : Fragment() {
 
     private val viewModel: LoginViewModel by viewModels()
 
+    private var savedStateHandle: SavedStateHandle? = null
+
     private lateinit var googleSignInClient: GoogleSignInClient
     private val googleSignInResultLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -84,6 +87,12 @@ class LoginFragment : Fragment() {
 
         from = arguments?.getString(Constant.EXTRA_FROM)
         Timber.d("From: $from")
+
+        savedStateHandle = when (from) {
+            "landing" -> findNavController().getBackStackEntry(R.id.landingPage)?.savedStateHandle
+            else -> null
+        }
+        savedStateHandle?.set(LOGIN_RESULT, false)
     }
 
     override fun onCreateView(
@@ -119,6 +128,7 @@ class LoginFragment : Fragment() {
 
                     is LoginUiEvent.NextScreen -> {
                         // animateAndEnd(nextButton)
+
                         when (from) {
                             "avatar_result" -> {
                                 findNavController().apply {
@@ -146,6 +156,10 @@ class LoginFragment : Fragment() {
                                     navigate(R.id.upload_step_1, args, navOpts)
                                 }
                             }
+                            /*"landing" -> {
+                                savedStateHandle?.set(LOGIN_RESULT, true)
+                                findNavController().popBackStack()
+                            }*/
                             else -> {
                                 safeCall {
                                     findNavController().apply {
@@ -517,6 +531,8 @@ class LoginFragment : Fragment() {
     companion object {
         private val TAG = LoginFragment::class.java.simpleName
         const val RC_SIGN_IN = 100
+
+        const val LOGIN_RESULT = "login_result"
     }
 
 }

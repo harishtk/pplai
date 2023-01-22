@@ -13,14 +13,18 @@ import android.widget.TextView
 import android.widget.TimePicker
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
-import com.aiavatar.app.BuildConfig
-import com.aiavatar.app.Constant
-import com.aiavatar.app.MainActivity
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.databinding.FragmentLandingPageBinding
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
+import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment.Companion.LOGIN_RESULT
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class LandingPageFragment : Fragment() {
@@ -38,6 +42,7 @@ class LandingPageFragment : Fragment() {
         val binding = FragmentLandingPageBinding.bind(view)
 
         binding.bindState()
+        // setupObservers()
     }
 
     private fun FragmentLandingPageBinding.bindState() {
@@ -67,9 +72,21 @@ class LandingPageFragment : Fragment() {
             }
         }
 
-        btnAlreadyHaveAccount.setOnClickListener { gotoLogin() }
+        btnAlreadyHaveAccount.setOnClickListener { gotoLogin("landing") }
         profileContainer.setOnClickListener { gotoLogin() }
 
+    }
+
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                getNavigationResultFlow<Boolean>(LoginFragment.LOGIN_RESULT)?.collectLatest { isLoggedIn ->
+                    if (isLoggedIn != null && isLoggedIn == true) {
+                        findNavController().navigateUp()
+                    }
+                }
+            }
+        }
     }
 
     private fun gotoUpload() {

@@ -121,6 +121,10 @@ class AvatarStatusViewModel @Inject constructor(
         }
     }
 
+    fun refresh() {
+        getAvatarStatusInternal()
+    }
+
     fun setSessionId(sessionId: Long) {
         _uiState.update { state ->
             state.copy(

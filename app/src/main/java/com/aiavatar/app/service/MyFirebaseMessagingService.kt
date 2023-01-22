@@ -20,6 +20,7 @@ import com.aiavatar.app.core.domain.model.request.SendFcmTokenRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.core.domain.util.JsonParser
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.service.model.SimplePushMessage
 import com.aiavatar.app.work.UploadWorker
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -30,6 +31,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
 import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
@@ -65,6 +67,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 if (dataArr.length() > 0) {
                     val dataJson = dataArr.getJSONObject(0)
                     Timber.tag(TAG).d("onMessageReceived: notification $dataJson")
+                    EventBus.getDefault().post(NewNotificationEvent("avatar_status", System.currentTimeMillis()))
                     if (ApplicationDependencies.getPersistentStore().notifyMe) {
                         runBlocking { handleNotification(dataJson) }
                     }
@@ -107,7 +110,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .build()
         ServiceUtil.getNotificationManager(this)
             .notify(AVATAR_STATUS_NOTIFICATION_ID, notification)
-
     }
 
     override fun onNewToken(token: String) {

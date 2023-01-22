@@ -30,6 +30,7 @@ class UploadStep1Fragment : Fragment() {
         val binding = FragmentUploadStep1Binding.bind(view)
 
         binding.bindState()
+        setupObservers()
     }
 
     private fun FragmentUploadStep1Binding.bindState() {
@@ -68,7 +69,7 @@ class UploadStep1Fragment : Fragment() {
         tvSkip.setOnClickListener {
             findNavController().apply {
                 val navOpts = NavOptions.Builder()
-                    .setPopUpTo(R.id.upload_step_1, inclusive = true, saveState = false)
+                    .setPopUpTo(R.id.upload_step_1, inclusive = false, saveState = false)
                     .setEnterAnim(R.anim.slide_in_left)
                     .setExitAnim(R.anim.slide_out_left)
                     .build()
@@ -76,6 +77,10 @@ class UploadStep1Fragment : Fragment() {
             }
         }
         tvSkip.isVisible = !ApplicationDependencies.getPersistentStore().isLogged
+    }
+
+    private fun setupObservers() {
+
     }
 }
 
