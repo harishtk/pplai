@@ -1,16 +1,20 @@
 package com.aiavatar.app.commons.util
 
 import androidx.annotation.WorkerThread
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.io.ProgressResponseBody
+import com.aiavatar.app.commons.util.net.UserAgentInterceptor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okio.buffer
 import okio.sink
+import timber.log.Timber
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class ImageDownloader(
     private val url: String,
@@ -40,6 +44,10 @@ class ImageDownloader(
         }
         client = OkHttpClient.Builder()
             .addNetworkInterceptor(progressInterceptor)
+            .addInterceptor(UserAgentInterceptor())
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(2, TimeUnit.MINUTES)
+            .followRedirects(true)
             .build()
     }
 
@@ -48,9 +56,12 @@ class ImageDownloader(
     suspend fun download() = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url(url = url)
-            .cacheControl(CacheControl.FORCE_CACHE)
+            .cacheControl(CacheControl.FORCE_NETWORK)
             .build()
 
+        if (BuildConfig.DEBUG) {
+            Timber.d("Downloading: $url")
+        }
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 throw IOException("Unexpected response code ${response.code}")

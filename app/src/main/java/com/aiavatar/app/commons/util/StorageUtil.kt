@@ -124,6 +124,7 @@ object StorageUtil {
         return file
     }
 
+    @Throws(IOException::class)
     @WorkerThread
     public suspend fun saveFile(
         context: Context,
@@ -139,10 +140,18 @@ object StorageUtil {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val cr = context.contentResolver
 
+            val relativePathForUri = java.lang.StringBuilder()
+                .append(Environment.DIRECTORY_PICTURES)
+                .append(File.separator)
+                .append(relativePath)
+                .toString()
+
+            Timber.d("Relative path: uri $relativePathForUri")
+
             val values = ContentValues()
             values.put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
             values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-            values.put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, relativePathForUri)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 values.put(MediaStore.MediaColumns.IS_PENDING, true)
@@ -170,7 +179,7 @@ object StorageUtil {
                 return null
             }
         } else {
-            val targetDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), relativePath)
+            val targetDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), relativePath)
             if (!targetDir.exists()) {
                 if (!targetDir.mkdirs()) {
                     val t = IOException("Failed to create download directory")
@@ -236,9 +245,14 @@ object StorageUtil {
     fun getTempDownloadFile(context: Context): File? {
         val dir = File(context.cacheDir, DIR_DOWNLOAD_CACHE)
         return try {
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    throw IOException("Failed to create download cache dir")
+                }
+            }
             File.createTempFile(TEMP_FILE_PREFIX, System.currentTimeMillis().toString(), dir)
         } catch (e: IOException) {
-            Timber.e("Failed to create temp file")
+            Timber.e(e, "Failed to create temp file")
             null
         }
     }

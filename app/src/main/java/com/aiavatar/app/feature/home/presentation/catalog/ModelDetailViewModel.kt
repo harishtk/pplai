@@ -3,14 +3,21 @@ package com.aiavatar.app.feature.home.presentation.catalog
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.BuildConfig
+import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.toAvatarFile
+import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import com.aiavatar.app.feature.home.presentation.create.AvatarResultUiEvent
+import com.aiavatar.app.feature.home.presentation.create.AvatarResultUiModel
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,11 +30,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ModelDetailViewModel @Inject constructor(
-    private val homeRepository: HomeRepository
+    private val homeRepository: HomeRepository,
+    private val appDatabase: AppDatabase,
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow<ModelDetailState>(ModelDetailState())
     val uiState: StateFlow<ModelDetailState> = _uiState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<ModelDetailUiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     private var selectedAvatarPosition: Int = 0
     private val selectedToggleFlow = MutableStateFlow(false)
@@ -61,6 +72,20 @@ class ModelDetailViewModel @Inject constructor(
             }
         }.launchIn(viewModelScope)
 
+        uiState.mapNotNull { it.modelId }
+            .flatMapLatest { modelId ->
+                appDatabase.avatarStatusDao().getAvatarStatusForModelId(modelId = modelId)
+            }.onEach { avatarStatusWithFilesEntity ->
+                if (avatarStatusWithFilesEntity != null) {
+                    _uiState.update { state ->
+                        state.copy(
+                            avatarStatusWithFiles = avatarStatusWithFilesEntity.toAvatarStatusWithFiles(),
+                        )
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+
         accept = { uiAction -> onUiAction(uiAction) }
     }
 
@@ -90,6 +115,27 @@ class ModelDetailViewModel @Inject constructor(
                 modelId = modelId
             )
         }
+    }
+
+    fun saveModelName(modelName: String) = viewModelScope.launch {
+        val modelId = getModelId()
+        if (modelId != null) {
+            val affectedRows = appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
+            Timber.d("Update model name: affected $affectedRows rows")
+            sendEvent(ModelDetailUiEvent.StartDownload(modelId))
+        } else {
+            val t = IllegalStateException("Failed to get model id")
+            _uiState.update { state ->
+                state.copy(
+                    exception = ResolvableException(t),
+                    uiErrorText =  UiText.somethingWentWrong
+                )
+            }
+        }
+    }
+
+    fun getModelId(): String? {
+        return uiState.value.avatarStatusWithFiles?.avatarStatus?.modelId
     }
 
     fun toggleSelection(position: Int) {
@@ -155,11 +201,16 @@ class ModelDetailViewModel @Inject constructor(
         _uiState.update { it.copy(loadState = newLoadState) }
     }
 
+    private fun sendEvent(newEvent: ModelDetailUiEvent) = viewModelScope.launch {
+        _uiEvent.emit(newEvent)
+    }
+
 }
 
 data class ModelDetailState(
     val loadState: LoadStates = LoadStates.IDLE,
     val modelId: String? = null,
+    val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val avatarList: List<SelectableAvatarUiModel> = emptyList(),
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
@@ -167,6 +218,11 @@ data class ModelDetailState(
 
 interface ModelDetailUiAction {
     data class ErrorShown(val e: Exception) : ModelDetailUiAction
+}
+
+interface ModelDetailUiEvent {
+    data class ShowToast(val message: UiText) : ModelDetailUiEvent
+    data class StartDownload(val modelId: String) : ModelDetailUiEvent
 }
 
 interface SelectableAvatarUiModel {

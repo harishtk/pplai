@@ -85,10 +85,8 @@ class AvatarStatusViewModel @Inject constructor(
 
         uiState.mapNotNull { it.avatarStatusId }
             .flatMapLatest { statusId ->
-                Timber.d("flatMapLatest: $statusId")
                 appDatabase.avatarStatusDao().getAvatarStatus(id = statusId.toLong())
             }.onEach { avatarStatusWithFilesEntity ->
-                Timber.d("flatMapLatest: 2 $avatarStatusWithFilesEntity")
                 if (avatarStatusWithFilesEntity != null) {
                     _uiState.update { state ->
                         state.copy(

@@ -24,12 +24,14 @@ import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AndroidEntryPoint
 class AvatarResultFragment : Fragment() {
@@ -170,6 +172,27 @@ class AvatarResultFragment : Fragment() {
 
     private fun checkFolderName(name: String) {
 
+    }
+
+    private fun checkPermissionAndScheduleWorker(modelId: String) {
+        WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
+        val cont: Continuation = {
+            ApplicationDependencies.getPersistentStore().apply {
+                setCurrentAvatarStatusId(null)
+                setUploadingPhotos(false)
+                setProcessingModel(false)
+            }
+            WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
+            Timber.d("Download scheduled: $modelId")
+            (activity as? MainActivity)?.restart()
+        }
+
+        if (checkStoragePermission()) {
+            cont()
+        } else {
+            mStoragePermissionContinuation = cont
+            askStoragePermission()
+        }
     }
 
     private fun gotoModelDetail(position: Int, data: AvatarResultUiModel.AvatarItem) {

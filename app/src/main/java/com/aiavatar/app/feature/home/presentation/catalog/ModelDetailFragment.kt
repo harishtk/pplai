@@ -17,22 +17,19 @@ import androidx.viewpager2.widget.CompositePageTransformer
 import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
-import com.aiavatar.app.Constant
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
+import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
 import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.abs
@@ -80,14 +77,31 @@ class ModelDetailFragment : Fragment() {
         _binding = FragmentModelDetailBinding.bind(view)
 
         binding.bindState(
-            uiState = viewModel.uiState
+            uiState = viewModel.uiState,
+            uiAction = viewModel.accept,
+            uiEvent = viewModel.uiEvent
         )
         viewModel.refresh()
     }
 
     private fun FragmentModelDetailBinding.bindState(
-        uiState: StateFlow<ModelDetailState>
+        uiState: StateFlow<ModelDetailState>,
+        uiAction: (ModelDetailUiAction) -> Unit,
+        uiEvent: SharedFlow<ModelDetailUiEvent>
     ) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            uiEvent.collectLatest { event ->
+                when (event) {
+                    is ModelDetailUiEvent.ShowToast -> {
+                        context?.showToast(event.message.asString(requireContext()))
+                    }
+                    is ModelDetailUiEvent.StartDownload -> {
+                        checkPermissionAndScheduleWorker(event.modelId)
+                    }
+                }
+            }
+        }
+
         val catalogPresetAdapter = CatalogPagerAdapter(requireContext())
 
         val pageTransformer = CompositePageTransformer().apply {

@@ -68,46 +68,54 @@ class DownloadWorker @AssistedInject constructor(
         // TODO: prepare for download
         val relativeDownloadPath = StringBuilder()
             .append(context.getString(R.string.app_name))
-            .append(File.pathSeparator)
+            .append(File.separator)
             .append(avatarStatusWithFiles.avatarStatusEntity.modelName)
             .toString()
+        Timber.d("Relative path: $relativeDownloadPath")
 
+        var failedCount: Int = 0
         val jobs = avatarStatusWithFiles.avatarFilesEntity.map { avatarFilesEntity ->
             workerScope.launch {
-                val savedUri = StorageUtil.saveFile(
-                    context = context,
-                    url = avatarFilesEntity.remoteFile,
-                    relativePath = relativeDownloadPath,
-                    mimeType = Constant.MIME_TYPE_JPEG,
-                    displayName = Commons.getFileNameFromUrl(avatarFilesEntity.remoteFile),
-                ) { progress, bytesDownloaded ->
-                    workerScope.launch {
-                        appDatabase.avatarFilesDao().updateDownloadProgress(
-                            id = avatarFilesEntity._id!!,
-                            progress
-                        )
-                        if (progress == 100) {
-                            appDatabase.avatarFilesDao().updateDownloadStatus(
+                kotlin.runCatching {
+                    val savedUri = StorageUtil.saveFile(
+                        context = context,
+                        url = avatarFilesEntity.remoteFile,
+                        relativePath = relativeDownloadPath,
+                        mimeType = Constant.MIME_TYPE_JPEG,
+                        displayName = Commons.getFileNameFromUrl(avatarFilesEntity.remoteFile),
+                    ) { progress, bytesDownloaded ->
+                        workerScope.launch {
+                            appDatabase.avatarFilesDao().updateDownloadProgress(
                                 id = avatarFilesEntity._id!!,
-                                downloaded = 1,
-                                downloadedAt = System.currentTimeMillis(),
-                                downloadSize = bytesDownloaded
+                                progress
+                            )
+                            if (progress == 100) {
+                                appDatabase.avatarFilesDao().updateDownloadStatus(
+                                    id = avatarFilesEntity._id!!,
+                                    downloaded = true,
+                                    downloadedAt = System.currentTimeMillis(),
+                                    downloadSize = bytesDownloaded
+                                )
+                            }
+                        }
+                    }
+
+                    appDatabase.avatarFilesDao().apply {
+                        if (savedUri != null) {
+                            updateLocalUri(avatarFilesEntity._id!!, savedUri.toString())
+                        } else {
+                            failedCount++
+                            updateDownloadStatus(
+                                id = avatarFilesEntity._id!!,
+                                downloaded = false,
+                                downloadedAt = 0L,
+                                downloadSize = 0L
                             )
                         }
                     }
-                }
+                }.onFailure { t ->
+                    Timber.e(t)
 
-                appDatabase.avatarFilesDao().apply {
-                    if (savedUri != null) {
-                        updateLocalUri(avatarFilesEntity._id!!, savedUri)
-                    } else {
-                        updateDownloadStatus(
-                            id = avatarFilesEntity._id!!,
-                            downloaded = 0,
-                            downloadedAt = 0L,
-                            downloadSize = 0L
-                        )
-                    }
                 }
             }
         }
