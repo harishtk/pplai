@@ -1,9 +1,14 @@
 package com.aiavatar.app.feature.home.presentation.profile
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -13,11 +18,12 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.databinding.FragmentProfileBinding
 import com.aiavatar.app.databinding.ItemModelListBinding
 import com.aiavatar.app.di.ApplicationDependencies
-import com.aiavatar.app.showToast
+import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
+import com.aiavatar.app.feature.home.presentation.create.AvatarResultUiModel
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,6 +35,47 @@ import timber.log.Timber
 class ProfileFragment : Fragment() {
 
     private val viewModel: ProfileViewModel by viewModels()
+
+    private val storagePermissions: Array<String> = arrayOf(
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+
+    private lateinit var storagePermissionLauncher: ActivityResultLauncher<Array<String>>
+    private var mStoragePermissionContinuation: Continuation? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        storagePermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result: Map<String, Boolean> ->
+                val deniedList: List<String> = result.filter { !it.value }.map { it.key }
+                when {
+                    deniedList.isNotEmpty() -> {
+                        val map = deniedList.groupBy { permission ->
+                            if (shouldShowRequestPermissionRationale(permission)) {
+                                Constant.PERMISSION_DENIED
+                            } else {
+                                Constant.PERMISSION_PERMANENTLY_DENIED
+                            }
+                        }
+                        map[Constant.PERMISSION_DENIED]?.let {
+                            requireContext().showToast("Storage permission is required to upload photos")
+                            // TODO: show storage rationale
+                        }
+                        map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
+                            requireContext().showToast("Storage permission is required to upload photos")
+                            // TODO: show storage rationale permanent
+                        }
+                    }
+
+                    else -> {
+                        mStoragePermissionContinuation?.invoke()
+                        mStoragePermissionContinuation = null
+                    }
+                }
+            }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -91,7 +138,8 @@ class ProfileFragment : Fragment() {
 
         val callback = object : ModelListAdapter.Callback {
             override fun onItemClick(position: Int, data: ModelListUiModel.Item) {
-                // Noop
+                // TODO: goto model detail
+                gotoModelDetail(position, data)
             }
         }
 
@@ -174,6 +222,32 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private fun gotoModelDetail(position: Int, data: ModelListUiModel.Item) {
+        val modelId = data.modelList.modelData?.id!!
+        try {
+            findNavController().apply {
+                val navOpts = defaultNavOptsBuilder().build()
+                val args = Bundle().apply {
+                    putString(Constant.EXTRA_FROM, "my_models")
+                    putString(ModelDetailFragment.ARG_MODEL_ID, modelId)
+                    // putInt(ModelDetailFragment.ARG_JUMP_TO_POSITION, position)
+                }
+                navigate(R.id.model_detail, args, navOpts)
+            }
+        } catch (ignore: Exception) {}
+    }
+
+    private fun checkStoragePermission(): Boolean {
+        return storagePermissions.all {
+            ContextCompat.checkSelfPermission(requireContext(), it) ==
+                    PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun askStoragePermission() {
+        storagePermissionLauncher.launch(storagePermissions)
+    }
+
     companion object {
         private const val UI_RENDER_WAIT_TIME = 50L
     }
@@ -218,6 +292,7 @@ class ModelListAdapter(
         fun bind(data: ModelListUiModel.Item, callback: Callback) = with(binding) {
             // TODO: bind data
             title.text = data.modelList.modelData?.name
+            description.text = "${data.modelList.modelData?.totalCount} creations"
             Glide.with(imageView)
                 .load(data.modelList.modelData?.latestImage)
                 .placeholder(R.color.transparent_black)

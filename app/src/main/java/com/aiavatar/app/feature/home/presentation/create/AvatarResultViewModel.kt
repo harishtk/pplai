@@ -3,6 +3,7 @@ package com.aiavatar.app.feature.home.presentation.create
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.core.data.source.local.AppDatabase
@@ -74,6 +75,22 @@ class AvatarResultViewModel @Inject constructor(
         }
     }
 
+    fun saveModelName(modelName: String) = viewModelScope.launch {
+        val modelId = getModelId()
+        if (modelId != null) {
+            appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
+            sendEvent(AvatarResultUiEvent.StartDownload(modelId))
+        } else {
+            val t = IllegalStateException("Failed to get model id")
+            _uiState.update { state ->
+                state.copy(
+                   exception = ResolvableException(t),
+                   uiErrorText =  UiText.somethingWentWrong
+                )
+            }
+        }
+    }
+
     fun setAvatarStatusId(statusId: String) {
         _uiState.update { state ->
             state.copy(
@@ -122,6 +139,7 @@ interface AvatarResultUiAction {
 
 interface AvatarResultUiEvent {
     data class ShowToast(val message: UiText) : AvatarResultUiEvent
+    data class StartDownload(val modelId: String) : AvatarResultUiEvent
 }
 
 interface AvatarResultUiModel {

@@ -1,9 +1,14 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -24,6 +29,7 @@ import com.aiavatar.app.databinding.ItemScrollerListBinding
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
+import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
 import com.zhpan.indicator.enums.IndicatorSlideMode
@@ -43,11 +49,48 @@ class ModelDetailFragment : Fragment() {
 
     private val viewModel: ModelDetailViewModel by viewModels()
 
+    private val storagePermissions: Array<String> = arrayOf(
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+
+    private lateinit var storagePermissionLauncher: ActivityResultLauncher<Array<String>>
+    private var mStoragePermissionContinuation: Continuation? = null
+
     private lateinit var from: String
     private var jumpToPosition = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        storagePermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result: Map<String, Boolean> ->
+                val deniedList: List<String> = result.filter { !it.value }.map { it.key }
+                when {
+                    deniedList.isNotEmpty() -> {
+                        val map = deniedList.groupBy { permission ->
+                            if (shouldShowRequestPermissionRationale(permission)) {
+                                Constant.PERMISSION_DENIED
+                            } else {
+                                Constant.PERMISSION_PERMANENTLY_DENIED
+                            }
+                        }
+                        map[Constant.PERMISSION_DENIED]?.let {
+                            requireContext().showToast("Storage permission is required to upload photos")
+                            // TODO: show storage rationale
+                        }
+                        map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
+                            requireContext().showToast("Storage permission is required to upload photos")
+                            // TODO: show storage rationale permanent
+                        }
+                    }
+
+                    else -> {
+                        mStoragePermissionContinuation?.invoke()
+                        mStoragePermissionContinuation = null
+                    }
+                }
+            }
 
         arguments?.apply {
             from = getString(Constant.EXTRA_FROM, "unknown")
@@ -58,7 +101,8 @@ class ModelDetailFragment : Fragment() {
                     viewModel.setModelId(modelId)
                 }
                 "my_models" -> {
-
+                    val modelId = getString(ARG_MODEL_ID, "")
+                    viewModel.setModelId(modelId)
                 }
             }
         }
@@ -75,6 +119,10 @@ class ModelDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentModelDetailBinding.bind(view)
+
+        if (savedInstanceState?.containsKey(Constant.EXTRA_FROM) == true) {
+            from = savedInstanceState.getString(Constant.EXTRA_FROM, "unknown")
+        }
 
         binding.bindState(
             uiState = viewModel.uiState,
@@ -201,9 +249,60 @@ class ModelDetailFragment : Fragment() {
 
         avatarScrollerList.adapter = scrollerAdapter
 
+        when (from) {
+            "result_preview" -> {
+                btnNext.text = getString(R.string.label_download)
+                icDownload.isVisible = false
+                icShare.isVisible = true
+            }
+            "my_models" -> {
+                btnNext.text = getString(R.string.label_recreate)
+                icDownload.isVisible = true
+                icShare.isVisible = true
+            }
+        }
+
+        bindClick(
+            uiState = uiState
+        )
+
         bindToolbar(
             uiState = uiState
         )
+    }
+
+    private fun FragmentModelDetailBinding.bindClick(uiState: StateFlow<ModelDetailState>) {
+        icShare.setOnClickListener {
+            context?.showToast("Coming soon!")
+        }
+
+        icDownload.setOnClickListener {
+            val avatarStatus = uiState.value.avatarStatusWithFiles?.avatarStatus
+                ?: return@setOnClickListener
+            if (avatarStatus.modelRenamedByUser) {
+                // TODO: if model is renamed directly save the photos
+                checkPermissionAndScheduleWorker(avatarStatus.modelId)
+            } else {
+                context?.showToast("Getting folder name")
+                EditFolderNameDialog { typedName ->
+                    if (typedName.isBlank()) {
+                        return@EditFolderNameDialog "Name cannot be empty!"
+                    }
+                    if (typedName.length < 4) {
+                        return@EditFolderNameDialog "Name too short"
+                    }
+                    // TODO: move 'save to gallery' to a foreground service
+                    context?.showToast("Saving to $typedName")
+                    viewModel.saveModelName(typedName)
+                    null
+                }.show(childFragmentManager, "folder-name-dialog")
+            }
+            checkPermissionAndScheduleWorker(uiState.value.modelId!!)
+        }
+
+        btnNext.setOnClickListener {
+            context?.showToast("Coming soon!")
+        }
     }
 
     private fun FragmentModelDetailBinding.bindToolbar(uiState: StateFlow<ModelDetailState>) {
@@ -256,6 +355,36 @@ class ModelDetailFragment : Fragment() {
             }
             binding.pagerIndicators.addView(indicators[i])
         }*/
+    }
+
+    private fun checkPermissionAndScheduleWorker(modelId: String) {
+        val cont: Continuation = {
+            WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
+            context?.showToast("Downloading")
+        }
+
+        if (checkStoragePermission()) {
+            cont()
+        } else {
+            mStoragePermissionContinuation = cont
+            askStoragePermission()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(Constant.EXTRA_FROM, from)
+    }
+
+    private fun checkStoragePermission(): Boolean {
+        return storagePermissions.all {
+            ContextCompat.checkSelfPermission(requireContext(), it) ==
+                    PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun askStoragePermission() {
+        storagePermissionLauncher.launch(storagePermissions)
     }
 
     companion object {

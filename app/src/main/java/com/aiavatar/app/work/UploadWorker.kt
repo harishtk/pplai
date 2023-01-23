@@ -76,7 +76,9 @@ class UploadWorker @AssistedInject constructor(
             UploadSessionStatus.PARTIALLY_DONE.status
         )
         val uploadResultList: List<Deferred<com.aiavatar.app.commons.util.Result<UploadImageData>>> =
-            uploadSessionWithFiles.uploadFilesEntity.map { uploadFilesEntity ->
+            uploadSessionWithFiles.uploadFilesEntity
+                .filter { it.uploadedFileName == null }
+                .map { uploadFilesEntity ->
                 val task = workerScope.async {
                     Timber.d("Preparing upload ${uploadFilesEntity.fileUriString}")
                     val file = Uri.parse(uploadFilesEntity.fileUriString).toFile()

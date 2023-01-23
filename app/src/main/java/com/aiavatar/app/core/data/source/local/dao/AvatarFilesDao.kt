@@ -15,15 +15,15 @@ interface AvatarFilesDao {
             "WHERE ${AvatarFilesTable.Columns.ID} = :id")
     suspend fun updateDownloadProgress(id: Long, progress: Int): Int
 
-    @Query("UPDATE ${AvatarFilesTable.name} SET ${AvatarFilesTable.Columns.DOWNLOADED} = :downloaded " +
-            "${AvatarFilesTable.Columns.DOWNLOADED_AT} = :downloadedAt " +
-            "${AvatarFilesTable.Columns.DOWNLOAD_SIZE} = :downloadSize" +
+    @Query("UPDATE ${AvatarFilesTable.name} SET ${AvatarFilesTable.Columns.DOWNLOADED} = :downloaded, " +
+            "${AvatarFilesTable.Columns.DOWNLOADED_AT} = :downloadedAt, " +
+            "${AvatarFilesTable.Columns.DOWNLOADED_SIZE} = :downloadSize " +
             "WHERE ${AvatarFilesTable.Columns.ID} = :id")
-    suspend fun updateDownloadStatus(id: Long, downloaded: Int, downloadedAt: Long, downloadSize: Long): Int
+    suspend fun updateDownloadStatus(id: Long, downloaded: Boolean, downloadedAt: Long, downloadSize: Long): Int
 
-    @Query("UPDATE ${AvatarFilesTable.name} SET ${AvatarFilesTable.Columns.LOCAL_URI} = :localUri " +
+    @Query("UPDATE ${AvatarFilesTable.name} SET ${AvatarFilesTable.Columns.LOCAL_URI} = :localUriString " +
             "WHERE ${AvatarFilesTable.Columns.ID} = :id")
-    suspend fun updateLocalUri(id: Long, localUri: Uri)
+    suspend fun updateLocalUri(id: Long, localUriString: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(avatarFileEntities: List<AvatarFilesEntity>)

@@ -147,7 +147,7 @@ class UploadStep3ViewModel @Inject constructor(
         if (uploadSessionWithFilesEntity != null) {
             val request = CreateModelRequest(
                 folderName = uploadSessionWithFilesEntity.uploadSessionEntity.folderName,
-                trainingType = uploadSessionWithFilesEntity.uploadSessionEntity.trainingType,
+                trainingType = uploadSessionWithFilesEntity.uploadSessionEntity.trainingType.lowercase(),
                 files = fileNameArray,
                 fcm = ApplicationDependencies.getPersistentStore().fcmToken
             )

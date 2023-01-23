@@ -4,10 +4,8 @@ import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
@@ -120,6 +118,10 @@ class DownloadWorker @AssistedInject constructor(
             }
         }
         jobs.map { it.join() }
+
+        Timber.d("Download failed for $failedCount files")
+
+        notifyDownloadComplete(context)
         return Result.success()
     }
 
@@ -140,7 +142,7 @@ class DownloadWorker @AssistedInject constructor(
         }
     }
 
-    private fun notifyUploadComplete(context: Context, photosCount: Int) {
+    private fun notifyDownloadComplete(context: Context) {
 
         val channelId = context.getString(R.string.download_notification_channel_id)
 
@@ -152,14 +154,14 @@ class DownloadWorker @AssistedInject constructor(
             .createPendingIntent()
 
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
-        val notification = notificationBuilder.setOngoing(true)
+        val notification = notificationBuilder
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationManager.IMPORTANCE_HIGH)
             .setCategory(Notification.CATEGORY_STATUS)
             .setOngoing(false)
             .setAutoCancel(true)
-            .setContentTitle("Upload Complete!")
-            .setContentText("$photosCount Photos uploaded. Tap here to create your avatar!")
+            .setContentTitle("Download Complete!")
+            .setContentText("Tap here to view your downloaded avatars")
             .setContentIntent(contentIntent)
             .build()
         ServiceUtil.getNotificationManager(context)

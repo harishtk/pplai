@@ -24,7 +24,8 @@ interface AvatarStatusDao {
     @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.ID} = :id")
     suspend fun getAvatarStatusSync(id: Long): AvatarStatusWithFilesEntity?
 
-    @Query("UPDATE ${AvatarStatusTable.name} SET ${AvatarStatusTable.Columns.MODEL_NAME} = :modelName " +
+    @Query("UPDATE ${AvatarStatusTable.name} SET ${AvatarStatusTable.Columns.MODEL_NAME} = :modelName, " +
+            "${AvatarStatusTable.Columns.MODEL_RENAMED} = :renamed " +
             "WHERE ${AvatarStatusTable.Columns.MODEL_ID} = :modelId")
     suspend fun updateModelNameForModelId(modelId: String, modelName: String, renamed: Boolean)
 

@@ -89,7 +89,7 @@ object AvatarFilesTable {
         const val DOWNLOADED = "downloaded"
         const val PROGRESS = "progress"
         const val DOWNLOADED_AT = "downloaded_at"
-        const val DOWNLOAD_SIZE = "download_size"
+        const val DOWNLOADED_SIZE = "downloaded_size"
     }
 
 }
