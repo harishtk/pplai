@@ -1,6 +1,9 @@
 package com.aiavatar.app.core.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.aiavatar.app.core.data.repository.AppRepositoryImpl
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.remote.AppApi
@@ -16,6 +19,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import javax.inject.Qualifier
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -42,6 +46,11 @@ object AppModule {
     @Provides
     fun provideGsonParser(gson: Gson): JsonParser
             = com.aiavatar.app.core.data.util.GsonParser(gson)
+
+    @Singleton
+    @Provides
+    fun dataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        preferencesDataStore(name = "data-store").getValue(context, String::javaClass)
 
 }
 

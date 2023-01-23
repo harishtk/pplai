@@ -59,6 +59,7 @@
     <string name="subscription_description">%1$d variations in %2$d styles</string>
     <string name="content_description_selected_photo">Selected Photo Indicator</string>
 
+    <!-- Notification channel based -->
     <string name="general_notifications_channel_id">ai_avatar_general_alerts</string>
     <string name="title_general_notifications">General Alerts</string>
     <string name="desc_general_notifications">All alerts from AI Avatar</string>
@@ -66,6 +67,12 @@
     <string name="upload_notification_channel_id">ai_avatar_upload_alerts</string>
     <string name="title_upload_notifications">Photos Upload</string>
     <string name="desc_upload_notifications">Current status of the photos upload</string>
+
+    <string name="download_notification_channel_id">ai_avatar_download_alerts</string>
+    <string name="title_download_notifications">Photos Download</string>
+    <string name="desc_download_notifications">Current status of the photos download</string>
+    <!-- END - Notification channel based -->
+
     <string name="cancel_upload">Cancel Upload</string>
     <string name="label_download">Download</string>
     <string name="content_description_backdrop">Backdrop</string>

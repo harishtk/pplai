@@ -38,6 +38,18 @@ object WorkUtil {
         return opr
     }
 
+    fun scheduleDownloadWorker(context: Context, modelId: String) {
+        DownloadWorker.Builder()
+            .setModelId(modelId)
+            .buildOneTimeRequest().apply {
+                WorkManager.getInstance(context).enqueueUniqueWork(
+                    DownloadWorker.WORKER_NAME,
+                    ExistingWorkPolicy.REPLACE,
+                    this
+                )
+            }
+    }
+
     fun clearScheduledUploadWorker(applicationContext: Context) {
         WorkManager.getInstance(applicationContext).cancelAllWorkByTag(UploadWorker.WORKER_NAME)
     }

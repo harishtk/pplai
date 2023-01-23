@@ -8,10 +8,11 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
+import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
-import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.databinding.FragmentSubscriptionSuccessBinding
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
@@ -72,7 +73,7 @@ class SubscriptionSuccessFragment : Fragment() {
                         val delta = System.currentTimeMillis() - pagePresentedAt
                         viewLifecycleOwner.lifecycleScope.launch {
                             delay(UI_PRESENTATION_TIME)
-                            (activity as? MainActivity)?.restart()
+                            gotoAvatarStatus()
                         }
                     }
                 }
@@ -123,18 +124,33 @@ class SubscriptionSuccessFragment : Fragment() {
             viewModel.generateAvatarRequest(planId)
         }*/
 
-        nextButton.isVisible = true
-        nextButton.setSpinning()
-        val delta = System.currentTimeMillis() - pagePresentedAt
+        nextButton.postDelayed({
+            nextButton.isVisible = true
+            nextButton.setSpinning()
+        }, UI_RENDER_WAIT_TIME)
+
         viewLifecycleOwner.lifecycleScope.launch {
             delay(UI_PRESENTATION_TIME)
             nextButton.cancelSpinning()
-            (activity as? MainActivity)?.restart()
+            gotoAvatarStatus()
+        }
+    }
+
+    private fun gotoAvatarStatus() = safeCall {
+        findNavController().apply {
+            val navOpts = NavOptions.Builder()
+                .setLaunchSingleTop(true)
+                /*.setEnterAnim(R.anim.slide_from_top)
+                .setExitAnim(R.anim.slide_to_top)*/
+                .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                .build()
+            navigate(R.id.avatar_status, null, navOpts)
         }
     }
 
     companion object {
         private const val UI_PRESENTATION_TIME = 5000L
+        private const val UI_RENDER_WAIT_TIME = 100L
     }
 
 }

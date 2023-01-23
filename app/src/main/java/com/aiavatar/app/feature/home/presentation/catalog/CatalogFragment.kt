@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
 import android.os.Bundle
+import android.provider.Contacts.Intents.UI
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -135,7 +136,9 @@ class CatalogFragment : Fragment() {
         adapter: AvatarsAdapter,
         uiState: StateFlow<CatalogState>
     ) {
-        catalogList.adapter = adapter
+        catalogList.postDelayed({
+            catalogList.adapter = adapter
+        }, UI_RENDER_WAIT_TIME)
 
         val catalogListFlow = uiState.map { it.catalogList }
             .distinctUntilChanged()
@@ -219,5 +222,9 @@ class CatalogFragment : Fragment() {
             args.putParcelable(Constant.EXTRA_DATA, category)
             navigate(R.id.action_catalog_list_to_more_catalog, args)
         }
+    }
+
+    companion object {
+        private const val UI_RENDER_WAIT_TIME = 50L
     }
 }

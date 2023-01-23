@@ -1,25 +1,36 @@
 package com.aiavatar.app.commons.util
 
+import android.R
+import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Rect
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
 import android.os.ParcelFileDescriptor
+import android.provider.MediaStore
+import android.provider.MediaStore.Audio.Media
 import android.util.Log
 import android.util.Size
 import androidx.annotation.WorkerThread
+import androidx.core.content.FileProvider
+import com.aiavatar.app.BuildConfig
+import com.aiavatar.app.Commons
+import com.aiavatar.app.Constant
+import com.aiavatar.app.commons.util.io.FileUtils
 import com.aiavatar.app.commons.util.storage.SavedFileResult
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
-import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+
 
 object StorageUtil {
 
@@ -113,6 +124,90 @@ object StorageUtil {
         return file
     }
 
+    @WorkerThread
+    public suspend fun saveFile(
+        context: Context,
+        url: String,
+        relativePath: String,
+        mimeType: String,
+        displayName: String,
+        downloadProgress: (progress: Int, bytes: Long) -> Unit,
+    ): Uri? {
+        val outFile = getTempDownloadFile(context) ?: return null
+        ImageDownloader(url, outFile, downloadProgress).download()
+        val tempUri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.provider", outFile, displayName)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val cr = context.contentResolver
+
+            val values = ContentValues()
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+            values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                values.put(MediaStore.MediaColumns.IS_PENDING, true)
+            }
+
+            var savedUri: Uri? = null
+            try {
+                val contentUri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                savedUri = cr.insert(contentUri, values) ?: throw IOException("Failed to create media store record")
+
+                cr.openOutputStream(savedUri)?.use { outStream ->
+                    cr.openInputStream(tempUri).use { inputStream ->
+                        FileUtils.copy(inputStream, outStream)
+                    }
+                } ?: throw IOException("Failed to open output stream")
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    values.clear()
+                    values.put(MediaStore.MediaColumns.IS_PENDING, false)
+                    cr.update(savedUri, values, null)
+                }
+                return savedUri
+            } catch (e: IOException) {
+                savedUri?.let { orphan -> cr.delete(orphan, null, null) }
+                return null
+            }
+        } else {
+            val targetDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), relativePath)
+            if (!targetDir.exists()) {
+                if (!targetDir.mkdirs()) {
+                    val t = IOException("Failed to create download directory")
+                    Timber.e(t)
+                    return null
+                }
+            }
+            val targetFile = File(targetDir, Commons.getFileNameFromUrl(url))
+            FileUtils.copyFile(outFile, targetFile)
+            return getImageContentUri(context, targetFile)
+        }
+    }
+
+    @SuppressLint("Range")
+    fun getImageContentUri(context: Context, imageFile: File): Uri? {
+        val filePath = imageFile.absolutePath
+        val cursor: Cursor? = context.contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, arrayOf(MediaStore.Images.Media._ID),
+            MediaStore.Images.Media.DATA + "=? ", arrayOf(filePath), null
+        )
+        return if (cursor != null && cursor.moveToFirst()) {
+            val id: Int = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID))
+            cursor.close()
+            Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "" + id)
+        } else {
+            if (imageFile.exists()) {
+                val values = ContentValues()
+                values.put(MediaStore.Images.Media.DATA, filePath)
+                context.contentResolver.insert(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values
+                )
+            } else {
+                null
+            }
+        }
+    }
+
     @Suppress("SameParameterValue")
     private fun rotateThumbnails(dir: File, maxKeep: Int = 5) {
         val files: Array<File> = dir.listFiles { _, name ->
@@ -136,6 +231,16 @@ object StorageUtil {
         val dir = File(context.filesDir, DIR_UPLOADS)
         dir.deleteRecursively()
         Log.d(TAG, "cleanUploadDirs: success")
+    }
+
+    fun getTempDownloadFile(context: Context): File? {
+        val dir = File(context.cacheDir, DIR_DOWNLOAD_CACHE)
+        return try {
+            File.createTempFile(TEMP_FILE_PREFIX, System.currentTimeMillis().toString(), dir)
+        } catch (e: IOException) {
+            Timber.e("Failed to create temp file")
+            null
+        }
     }
 
     fun getTempFolderName(): String {
@@ -202,9 +307,11 @@ object StorageUtil {
     private val TAG = StorageUtil::class.java.simpleName
     private const val DIR_THUMBNAILS = "thumbnails"
     private const val DIR_UPLOADS    = "uploads"
+    private const val DIR_DOWNLOAD_CACHE = "download_cache"
 
     private const val UPLOAD_DIR_PREFIX = "Avatar_"
     private const val PHOTO_FILE_PREFIX = "photo_"
+    private const val TEMP_FILE_PREFIX = "Temp_"
 
     private const val PARENT_EXPORT_DIR_NAME = "AI Avatar"
 }

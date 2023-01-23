@@ -159,5 +159,6 @@ interface SubscriptionSuccessUiAction {
 
 interface SubscriptionSuccessUiEvent {
     data class ShowToast(val message: UiText) : SubscriptionSuccessUiEvent
+    @Deprecated("event will never be triggered")
     object NextScreen : SubscriptionSuccessUiEvent
 }

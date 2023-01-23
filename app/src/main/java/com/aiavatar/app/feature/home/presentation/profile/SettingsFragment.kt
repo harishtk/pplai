@@ -9,17 +9,21 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentSettingsBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.presentation.util.SettingsAdapter
 import com.aiavatar.app.feature.home.presentation.util.SettingsItem
 import com.aiavatar.app.feature.home.presentation.util.SettingsListType
+import com.aiavatar.app.safeCall
 import com.aiavatar.app.showToast
+import timber.log.Timber
 
 class SettingsFragment : Fragment() {
 
@@ -64,7 +68,22 @@ class SettingsFragment : Fragment() {
                     5 -> {
                         ApplicationDependencies.getPersistentStore().logout()
                         context?.showToast("Logged out!")
-                        (activity as? MainActivity)?.restart()
+                        try {
+                            findNavController().apply {
+                                val navOpts = NavOptions.Builder()
+                                    .setLaunchSingleTop(true)
+                                    /*.setEnterAnim(R.anim.slide_to_top)
+                                    .setExitAnim(R.anim.slide_from_top)
+                                    .setPopEnterAnim(R.anim.slide_to_top)
+                                    .setPopExitAnim(R.anim.slide_from_top)*/
+                                    .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                                    .build()
+                                navigate(R.id.walkthrough_fragment, null, navOpts)
+                            }
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            (activity as? MainActivity)?.restart()
+                        }
                     }
                 }
             }

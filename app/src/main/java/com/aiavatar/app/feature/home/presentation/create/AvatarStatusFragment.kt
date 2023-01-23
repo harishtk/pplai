@@ -15,14 +15,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.R
-import com.aiavatar.app.SharedViewModel
+import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
-import com.aiavatar.app.setOnSingleClickListener
 import com.aiavatar.app.showToast
 import com.aiavatar.app.work.UploadWorker
 import com.pepulnow.app.data.LoadState

@@ -151,6 +151,8 @@ dependencies {
 
     /* Kotlinx Coroutines */
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    /* Kotlinx Serialization */
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1")
 
     /* Hilt */
     implementation "com.google.dagger:hilt-android:$hilt_version"

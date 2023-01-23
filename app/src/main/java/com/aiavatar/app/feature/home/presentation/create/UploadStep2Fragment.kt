@@ -39,6 +39,7 @@ import com.aiavatar.app.databinding.FragmentUploadStep2Binding
 import com.aiavatar.app.databinding.ItemExamplePhotoBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewPlaceholderBinding
+import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.google.android.gms.tasks.Task

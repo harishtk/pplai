@@ -1,4 +1,4 @@
-package com.aiavatar.app
+package com.aiavatar.app.viewmodels
 
 import androidx.annotation.IdRes
 import androidx.lifecycle.ViewModel
@@ -34,18 +34,6 @@ class SharedViewModel @Inject constructor(
             val currentSession = appDatabase.uploadSessionDao().getCurrentUploadSessionSync()
             if (currentSession.isNotEmpty()) {
                 setCurrentUploadSessionId(currentSession[0].uploadSessionEntity._id!!)
-            }
-        }
-    }
-
-    private var autoLoginJob: Job? = null
-
-    fun autoLogin() {
-        autoLoginJob?.cancel(CancellationException("New Request"))
-        val autoLoginRequest = AutoLoginRequest(System.currentTimeMillis())
-        autoLoginJob = viewModelScope.launch {
-            accountsRepository.autoLogin(autoLoginRequest).collectLatest { result ->
-                Timber.d("Auto Login: $result")
             }
         }
     }

@@ -129,7 +129,9 @@ class ProfileFragment : Fragment() {
         adapter: ModelListAdapter,
         uiState: StateFlow<ProfileState>
     ) {
-        modelListView.adapter = adapter
+        modelListView.postDelayed({
+            modelListView.adapter = adapter
+        }, UI_RENDER_WAIT_TIME)
 
         val modelListUiModelsFlow = uiState.map { it.modelListUiModels }
             .distinctUntilChanged()
@@ -170,6 +172,10 @@ class ProfileFragment : Fragment() {
                 .build()
             navigate(R.id.action_profile_to_settings, null, navOpts)
         }
+    }
+
+    companion object {
+        private const val UI_RENDER_WAIT_TIME = 50L
     }
 }
 

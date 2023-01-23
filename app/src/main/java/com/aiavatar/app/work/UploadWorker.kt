@@ -241,7 +241,6 @@ class UploadWorker @AssistedInject constructor(
         notificationManager.createNotificationChannel(channel)
     }
 
-
     companion object {
         const val WORKER_NAME = "upload_worker"
         const val STATUS_NOTIFICATION_ID = 101

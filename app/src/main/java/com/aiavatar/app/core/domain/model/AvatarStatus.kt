@@ -10,6 +10,7 @@ data class AvatarStatus(
     val eta: Int,
 ) {
     var id: Long? = null
+    var modelName: String? = null
 
     internal companion object {
         fun emptyStatus(id: Long): AvatarStatus =

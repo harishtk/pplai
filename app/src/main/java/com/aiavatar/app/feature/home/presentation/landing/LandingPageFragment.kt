@@ -2,7 +2,6 @@ package com.aiavatar.app.feature.home.presentation.landing
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.SpannedString
 import android.text.style.UnderlineSpan
@@ -10,19 +9,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.TimePicker
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.ActionOnlyNavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
 import com.aiavatar.app.databinding.FragmentLandingPageBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
-import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment.Companion.LOGIN_RESULT
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -42,7 +40,7 @@ class LandingPageFragment : Fragment() {
         val binding = FragmentLandingPageBinding.bind(view)
 
         binding.bindState()
-        // setupObservers()
+        setupObservers()
     }
 
     private fun FragmentLandingPageBinding.bindState() {
@@ -72,7 +70,7 @@ class LandingPageFragment : Fragment() {
             }
         }
 
-        btnAlreadyHaveAccount.setOnClickListener { gotoLogin("landing") }
+        btnAlreadyHaveAccount.setOnClickListener { gotoLogin() }
         profileContainer.setOnClickListener { gotoLogin() }
 
     }
@@ -82,7 +80,7 @@ class LandingPageFragment : Fragment() {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 getNavigationResultFlow<Boolean>(LoginFragment.LOGIN_RESULT)?.collectLatest { isLoggedIn ->
                     if (isLoggedIn != null && isLoggedIn == true) {
-                        findNavController().navigateUp()
+                        safeCall { findNavController().navigateUp() }
                     }
                 }
             }
@@ -114,12 +112,12 @@ class LandingPageFragment : Fragment() {
         }
     }
 
-    private fun gotoHome() {
-        activity?.apply {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-            intent.putExtra("restart_hint", "from_landing")
-            startActivity(intent)
+    private fun gotoHome() = safeCall {
+        findNavController().apply {
+            val navOptions = NavOptions.Builder()
+                .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                .build()
+            navigate(R.id.catalog_list, null, navOptions)
         }
     }
 }

@@ -26,6 +26,9 @@ data class AvatarStatusEntity(
     @ColumnInfo("id")
     @PrimaryKey(autoGenerate = false)
     var _id: Long? = null
+
+    @ColumnInfo("model_name")
+    var modelName: String? = null
 }
 
 fun AvatarStatusEntity.toAvatarStatus(): AvatarStatus {
@@ -39,6 +42,7 @@ fun AvatarStatusEntity.toAvatarStatus(): AvatarStatus {
         eta = eta
     ).also {
         it.id = _id
+        it.modelName = modelName
     }
 }
 
@@ -53,6 +57,7 @@ fun AvatarStatus.toEntity(): AvatarStatusEntity {
         eta = eta
     ).also {
         it._id = id
+        it.modelName = modelName
     }
 }
 
@@ -62,6 +67,7 @@ object AvatarStatusTable {
     object Columns {
         const val ID                    = "id"
         const val MODEL_STATUS          = "model_status"
+        const val MODEL_NAME            = "model_name"
         const val TOTAL_AI_COUNT        = "total_ai_count"
         const val GENERATED_AI_COUNT    = "generated_ai_count"
         const val PAID                  = "paid"

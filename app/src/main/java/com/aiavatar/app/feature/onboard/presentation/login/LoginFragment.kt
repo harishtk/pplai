@@ -56,7 +56,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.sign
 
-
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
 
@@ -156,10 +155,10 @@ class LoginFragment : Fragment() {
                                     navigate(R.id.upload_step_1, args, navOpts)
                                 }
                             }
-                            /*"landing" -> {
+                            "landing" -> {
                                 savedStateHandle?.set(LOGIN_RESULT, true)
                                 findNavController().popBackStack()
-                            }*/
+                            }
                             else -> {
                                 safeCall {
                                     findNavController().apply {
