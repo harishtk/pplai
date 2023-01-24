@@ -89,10 +89,8 @@ class LandingPageFragment : Fragment() {
 
     private fun gotoUpload() {
         findNavController().apply {
-            val navOpts = NavOptions.Builder()
+            val navOpts = defaultNavOptsBuilder()
                 .setPopUpTo(R.id.landingPage, inclusive = false, saveState = false)
-                .setEnterAnim(R.anim.fade_scale_in)
-                .setExitAnim(R.anim.fade_scale_out)
                 .build()
             navigate(R.id.upload_step_1, null, navOpts)
         }
@@ -103,10 +101,8 @@ class LandingPageFragment : Fragment() {
             val args = bundleOf(
                 Constant.EXTRA_FROM to from
             )
-            val navOpts = NavOptions.Builder()
+            val navOpts = defaultNavOptsBuilder()
                 .setPopUpTo(R.id.landingPage, inclusive = false, saveState = false)
-                .setEnterAnim(R.anim.fade_scale_in)
-                .setExitAnim(R.anim.fade_scale_out)
                 .build()
             navigate(R.id.login_fragment, args, navOpts)
         }

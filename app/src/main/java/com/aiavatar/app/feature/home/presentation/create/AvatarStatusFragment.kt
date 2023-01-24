@@ -20,6 +20,7 @@ import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
+import com.aiavatar.app.defaultNavOptsBuilder
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.showToast
@@ -289,9 +290,7 @@ class AvatarStatusFragment : Fragment() {
             if (modelStatus == "completed") {
                 // TODO: View results
                 findNavController().apply {
-                    val navOpts = NavOptions.Builder()
-                        .setEnterAnim(R.anim.fade_scale_in)
-                        .setExitAnim(R.anim.fade_scale_out)
+                    val navOpts = defaultNavOptsBuilder()
                         .build()
 
                     navigate(R.id.avatar_result, null, navOpts)

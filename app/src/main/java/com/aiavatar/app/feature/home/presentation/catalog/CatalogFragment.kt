@@ -11,14 +11,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
-import com.aiavatar.app.Constant
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.databinding.FragmentCatalogBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
-import com.aiavatar.app.showToast
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
@@ -151,20 +149,20 @@ class CatalogFragment : Fragment() {
 
     private fun FragmentCatalogBinding.bindClick() {
         btnCreateMasterPiece.setOnClickListener {
-            try {
+            safeCall {
                 findNavController().apply {
-                    navigate(R.id.action_catalog_list_to_upload_step_1)
+                    navigate(CatalogFragmentDirections.actionCatalogListToUploadStep1())
                 }
-            } catch (ignore: Exception) {}
+            }
         }
 
         toolbarTitle.setOnClickListener {
             toolbarTitle.touchInteractFeedback()
-            try {
+            safeCall {
                 findNavController().apply {
-                    navigate(R.id.action_catalog_list_to_subscription_plans)
+                    navigate(CatalogFragmentDirections.actionCatalogListToUploadStep1())
                 }
-            } catch (ignore: Exception) {}
+            }
         }
 
         retryButton.setOnClickListener { viewModel.refresh() }
@@ -197,10 +195,7 @@ class CatalogFragment : Fragment() {
 
     private fun gotoLogin() {
         findNavController().apply {
-            val navOpts = NavOptions.Builder()
-                .setEnterAnim(R.anim.fade_scale_in)
-                .setExitAnim(R.anim.fade_scale_out)
-                .build()
+            val navOpts = defaultNavOptsBuilder().build()
             navigate(R.id.login_fragment, null, navOpts)
         }
     }

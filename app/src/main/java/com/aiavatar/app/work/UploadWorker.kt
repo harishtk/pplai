@@ -15,6 +15,7 @@ import androidx.work.Data
 import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.aiavatar.app.Commons
 import com.aiavatar.app.Constant
 import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
@@ -108,15 +109,25 @@ class UploadWorker @AssistedInject constructor(
                         )
                     val folderNamePart: MultipartBody.Part =
                         MultipartBody.Part.createFormData(
-                            "foldername",
+                            "folderName",
                             uploadSessionWithFiles.uploadSessionEntity.folderName
+                        )
+                    val fileNamePart: MultipartBody.Part =
+                        MultipartBody.Part.createFormData(
+                            "fileName",
+                            file.name
                         )
                     val typePart = MultipartBody.Part.createFormData(
                         "type",
                         "photo_sample"
                     )
 
-                    val result = appRepository.uploadFileSync(folderNamePart, typePart, filePart)
+                    val result = appRepository.uploadFileSync(
+                        folderName = folderNamePart,
+                        type = typePart,
+                        fileName = fileNamePart,
+                        files = filePart
+                    )
                     when (result) {
                         is com.aiavatar.app.commons.util.Result.Loading -> {
                             appDatabase.uploadFilesDao().updateFileStatus(

@@ -72,9 +72,15 @@ class AppRepositoryImpl @Inject constructor(
     override suspend fun uploadFileSync(
         folderName: MultipartBody.Part,
         type: MultipartBody.Part,
+        fileName: MultipartBody.Part,
         files: MultipartBody.Part
     ): Result<UploadImageData> {
-        val networkResult = remoteDataSource.uploadFileSync(folderName, type, files)
+        val networkResult = remoteDataSource.uploadFileSync(
+            folderName = folderName,
+            type = type,
+            fileName = fileName,
+            files = files
+        )
         return when (networkResult) {
             is NetworkResult.Loading -> Result.Loading
             is NetworkResult.Success -> parseUploadResponse(networkResult)

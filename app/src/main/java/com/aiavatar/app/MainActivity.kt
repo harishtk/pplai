@@ -194,6 +194,8 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
     companion object {
 
+        const val DEFAULT_UI_RENDER_WAIT_TIME = 50L
+
         public fun getThumbnail(stream: String): String {
             return "${BuildConfig.THUMBNAIL_BASE_URL}${stream}/thumbnail_05.jpg".also {
                 Timber.d("Thumb: id=$stream url=$it")

@@ -18,6 +18,7 @@ import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.databinding.FragmentSubscriptionBinding
+import com.aiavatar.app.defaultNavOptsBuilder
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
 import com.aiavatar.app.showToast
@@ -74,9 +75,7 @@ class SubscriptionFragment : Fragment() {
                                 Constant.EXTRA_FROM to "login",
                                 Constant.ARG_PLAN_ID to event.planId
                             )
-                            val navOpts = NavOptions.Builder()
-                                .setEnterAnim(R.anim.fade_scale_in)
-                                .setExitAnim(R.anim.fade_scale_out)
+                            val navOpts = defaultNavOptsBuilder()
                                 .setPopUpTo(R.id.subscription_plans, inclusive = true, saveState = false)
                                 .build()
                             navigate(R.id.subscriptionSuccess, args, navOpts)

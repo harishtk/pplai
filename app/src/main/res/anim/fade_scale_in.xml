@@ -4,14 +4,14 @@
     android:ordering="together">
     <scale
         android:duration="150"
-        android:fromXScale="0.85"
-        android:fromYScale="0.85"
+        android:fromXScale="0.90"
+        android:fromYScale="0.90"
         android:toXScale="1.0"
         android:toYScale="1.0"
         android:pivotX="50%"
         android:pivotY="50%" />
     <alpha
         android:duration="150"
-        android:fromAlpha="0.6"
+        android:fromAlpha="0.0"
         android:toAlpha="1.0" />
 </set>

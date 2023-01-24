@@ -36,8 +36,14 @@ class AppRemoteDataSource @Inject constructor(
     suspend fun uploadFileSync(
         @Part folderName: MultipartBody.Part,
         @Part type: MultipartBody.Part,
+        @Part fileName: MultipartBody.Part,
         @Part files: MultipartBody.Part,
-    ): NetworkResult<UploaderResponse> = safeApiCall { apiService.uploadFile(folderName, type, files) }
+    ): NetworkResult<UploaderResponse> = safeApiCall { apiService.uploadFile(
+        folderName = folderName,
+        type = type,
+        fileName = fileName,
+        file = files
+    ) }
 
     fun createModel(createModelRequestDto: CreateModelRequestDto): Flow<NetworkResult<CreateModelResponse>> = flow<NetworkResult<CreateModelResponse>> {
         emit(NetworkResult.Loading())

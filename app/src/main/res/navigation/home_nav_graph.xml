@@ -17,18 +17,18 @@
 
         <action android:id="@+id/action_catalog_list_to_more_catalog"
             app:destination="@id/more_catalog"
-            app:enterAnim="@anim/fast_fade_in"
-            app:exitAnim="@anim/fast_fade_out"
+            app:enterAnim="@anim/fragment_open_enter"
+            app:exitAnim="@anim/fragment_open_exit"
             app:popUpTo="@id/catalog_list"
-            app:popEnterAnim="@anim/fast_fade_in"
-            app:popExitAnim="@anim/fast_fade_out" />
+            app:popEnterAnim="@anim/fragment_close_enter"
+            app:popExitAnim="@anim/fragment_close_exit" />
 
         <action android:id="@+id/action_catalog_list_to_profile"
             app:destination="@id/profile"
-            app:enterAnim="@anim/fast_fade_in"
-            app:exitAnim="@anim/fast_fade_out"
-            app:popEnterAnim="@anim/fast_fade_in"
-            app:popExitAnim="@anim/fast_fade_out" />
+            app:enterAnim="@anim/fragment_open_enter"
+            app:exitAnim="@anim/fragment_open_exit"
+            app:popEnterAnim="@anim/fragment_close_enter"
+            app:popExitAnim="@anim/fragment_close_exit" />
 
         <action android:id="@+id/action_catalog_list_to_upload_step_1"
             app:destination="@id/upload_step_1"
@@ -39,17 +39,27 @@
 
         <action android:id="@+id/action_catalog_list_to_subscription_plans"
             app:destination="@id/subscription_plans"
-            app:enterAnim="@anim/fast_fade_in"
-            app:exitAnim="@anim/fast_fade_out"
-            app:popEnterAnim="@anim/fast_fade_in"
-            app:popExitAnim="@anim/fast_fade_out" />
+            app:enterAnim="@anim/fragment_open_enter"
+            app:exitAnim="@anim/fragment_open_exit"
+            app:popEnterAnim="@anim/fragment_close_enter"
+            app:popExitAnim="@anim/fragment_close_exit" />
 
     </fragment>
 
     <fragment android:id="@+id/more_catalog"
         android:name="com.aiavatar.app.feature.home.presentation.catalog.MoreCatalogFragment"
         android:label="More Catalog"
-        tools:layout="@layout/fragment_more_catalog" />
+        tools:layout="@layout/fragment_more_catalog">
+
+        <action android:id="@+id/actionMoreCatalogToUploadStep1"
+            app:destination="@id/upload_step_1"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/catalog_list"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+
+    </fragment>
 
     <fragment android:id="@+id/model_detail"
         android:name="com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment"
@@ -63,10 +73,10 @@
 
         <action android:id="@+id/action_profile_to_settings"
             app:destination="@id/settings"
-            app:enterAnim="@anim/fast_fade_in"
-            app:exitAnim="@anim/fast_fade_out"
-            app:popEnterAnim="@anim/fast_fade_in"
-            app:popExitAnim="@anim/fast_fade_out" />
+            app:enterAnim="@anim/fragment_open_enter"
+            app:exitAnim="@anim/fragment_open_exit"
+            app:popEnterAnim="@anim/fragment_close_enter"
+            app:popExitAnim="@anim/fragment_close_exit" />
     </fragment>
 
     <fragment android:id="@+id/settings"
@@ -83,8 +93,8 @@
             app:destination="@id/upload_step_2"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_right"
-            app:popEnterAnim="@anim/fast_fade_in"
-            app:popExitAnim="@anim/fast_fade_out" />
+            app:popEnterAnim="@anim/fragment_close_enter"
+            app:popExitAnim="@anim/fragment_close_exit" />
     </fragment>
 
     <fragment android:id="@+id/upload_step_2"

@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -12,20 +11,23 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import androidx.transition.Transition
+import androidx.transition.TransitionManager
 import com.aiavatar.app.Constant
+import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.core.URLProvider
-import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.databinding.FragmentMoreCatalogBinding
 import com.aiavatar.app.databinding.ItemMoreCatalogBinding
-import com.aiavatar.app.databinding.ItemScrollerListBinding
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
+import com.aiavatar.app.safeCall
 import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MoreCatalogFragment : Fragment() {
@@ -34,6 +36,8 @@ class MoreCatalogFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        postponeEnterTransition(MainActivity.DEFAULT_UI_RENDER_WAIT_TIME, TimeUnit.MILLISECONDS)
 
         val category = arguments?.getParcelable<Category?>(Constant.EXTRA_DATA)
         if (category != null) {
@@ -77,9 +81,19 @@ class MoreCatalogFragment : Fragment() {
             }
         }
 
+        bindClick(
+            uiState = uiState
+        )
+
         bindToolbar(
             uiState = uiState
         )
+    }
+
+    private fun FragmentMoreCatalogBinding.bindClick(uiState: StateFlow<MoreCatalogState>) {
+        btnNext.setOnClickListener {
+            gotoUploadSteps()
+        }
     }
 
     private fun FragmentMoreCatalogBinding.bindToolbar(uiState: StateFlow<MoreCatalogState>) {
@@ -93,6 +107,12 @@ class MoreCatalogFragment : Fragment() {
         toolbarIncluded.toolbarNavigationIcon.setOnClickListener {
             try { findNavController().navigateUp() }
             catch (ignore: Exception) {}
+        }
+    }
+
+    private fun gotoUploadSteps() = safeCall {
+        findNavController().apply {
+            navigate(MoreCatalogFragmentDirections.actionMoreCatalogToUploadStep1())
         }
     }
 }

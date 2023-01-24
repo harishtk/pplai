@@ -29,6 +29,7 @@ interface AppApi {
     suspend fun uploadFile(
         @Part folderName: MultipartBody.Part,
         @Part type: MultipartBody.Part,
+        @Part fileName: MultipartBody.Part,
         @Part file: MultipartBody.Part,
     ): Response<UploaderResponse>
 

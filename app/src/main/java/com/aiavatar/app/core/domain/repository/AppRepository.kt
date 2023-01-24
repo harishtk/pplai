@@ -23,6 +23,7 @@ interface AppRepository {
     suspend fun uploadFileSync(
         @Part folderName: MultipartBody.Part,
         @Part type: MultipartBody.Part,
+        @Part fileName: MultipartBody.Part,
         @Part files: MultipartBody.Part,
     ): Result<UploadImageData>
 

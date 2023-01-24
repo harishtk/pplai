@@ -59,8 +59,10 @@ public fun parseViews(viewCount: Int): String = when {
 
 fun defaultNavOptsBuilder(): NavOptions.Builder {
     return NavOptions.Builder()
-        .setEnterAnim(R.anim.fade_scale_in)
-        .setExitAnim(R.anim.fade_scale_out)
+        .setEnterAnim(R.anim.fragment_open_enter)
+        .setExitAnim(R.anim.fragment_open_exit)
+        .setPopEnterAnim(R.anim.fragment_close_enter)
+        .setPopExitAnim(R.anim.fragment_close_exit)
 }
 
 /**
