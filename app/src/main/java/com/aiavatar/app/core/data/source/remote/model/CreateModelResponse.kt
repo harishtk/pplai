@@ -18,12 +18,15 @@ data class CreateModelDataDto(
     @SerializedName("userId")
     val guestUserId: String?,
     @SerializedName("eta")
-    val eta: Long
+    val eta: Long,
+    @SerializedName("modelId")
+    val modelId: String,
 )
 
 fun CreateModelDataDto.toCreateModelData(): CreateModelData {
     return CreateModelData(
         statusId = id,
+        modelId = modelId,
         guestUserId = guestUserId,
         eta = eta
     )

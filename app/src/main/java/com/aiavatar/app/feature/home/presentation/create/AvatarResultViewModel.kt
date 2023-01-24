@@ -45,7 +45,7 @@ class AvatarResultViewModel @Inject constructor(
 
         uiState.mapNotNull { it.avatarStatusId }
             .flatMapLatest { statusId ->
-                appDatabase.avatarStatusDao().getAvatarStatus(id = statusId.toLong())
+                appDatabase.avatarStatusDao().getAvatarStatus(statusId = statusId.toLong())
             }.onEach { avatarStatusWithFilesEntity ->
                 if (avatarStatusWithFilesEntity != null) {
                     val avatarResultList = avatarStatusWithFilesEntity.avatarFilesEntity.map {

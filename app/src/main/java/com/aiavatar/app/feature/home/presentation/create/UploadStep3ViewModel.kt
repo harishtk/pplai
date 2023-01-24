@@ -203,7 +203,9 @@ class UploadStep3ViewModel @Inject constructor(
                             setCurrentAvatarStatusId(result.data.statusId.toString())
                         }
                         appDatabase.avatarStatusDao().apply {
-                            val newAvatarStatus = AvatarStatus.emptyStatus(result.data.statusId)
+                            val newAvatarStatus = AvatarStatus.emptyStatus(result.data.modelId).apply {
+                                avatarStatusId = result.data.statusId
+                            }
                             insert(newAvatarStatus.toEntity())
                         }
                         sendEvent(Step3UiEvent.NextScreen(true))

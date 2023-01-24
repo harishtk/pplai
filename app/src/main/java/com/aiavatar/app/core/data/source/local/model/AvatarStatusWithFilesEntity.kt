@@ -14,8 +14,8 @@ data class AvatarStatusWithFilesEntity(
     @Embedded
     val avatarStatusEntity: AvatarStatusEntity,
     @Relation(
-        parentColumn = AvatarStatusTable.Columns.ID,
-        entityColumn = AvatarFilesTable.Columns.AVATAR_STATUS_ID
+        parentColumn = AvatarStatusTable.Columns.MODEL_ID,
+        entityColumn = AvatarFilesTable.Columns.MODEL_ID
     )
     val avatarFilesEntity: List<AvatarFilesEntity>
 )

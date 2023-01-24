@@ -245,7 +245,7 @@ object StorageUtil {
         return try {
             if (!dir.exists()) {
                 if (!dir.mkdirs()) {
-                    throw IOException("Failed to create download cache dir")
+                    Timber.w("Download cache dir already exists")
                 }
             }
             File.createTempFile(TEMP_FILE_PREFIX, System.currentTimeMillis().toString(), dir)

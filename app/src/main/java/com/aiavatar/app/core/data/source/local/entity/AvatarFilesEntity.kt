@@ -11,7 +11,7 @@ import com.aiavatar.app.core.domain.model.AvatarFile
 @Entity(
     tableName = AvatarFilesTable.name,
     indices = [
-        Index(name = "status_id_index", value = [AvatarFilesTable.Columns.AVATAR_STATUS_ID]),
+        Index(name = "avatar_files_model_id", value = [AvatarFilesTable.Columns.MODEL_ID]),
         Index(
             name = "remote_uri_index",
             value = [AvatarFilesTable.Columns.REMOTE_FILE],
@@ -21,15 +21,15 @@ import com.aiavatar.app.core.domain.model.AvatarFile
     foreignKeys = [
         ForeignKey(
             entity = AvatarStatusEntity::class,
-            parentColumns = [AvatarStatusTable.Columns.ID],
-            childColumns = [AvatarFilesTable.Columns.AVATAR_STATUS_ID],
+            parentColumns = [AvatarStatusTable.Columns.MODEL_ID],
+            childColumns = [AvatarFilesTable.Columns.MODEL_ID],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class AvatarFilesEntity(
-    @ColumnInfo("avatar_status_id")
-    val avatarStatusId: Long,
+    @ColumnInfo("model_id")
+    val modelId: String,
     @ColumnInfo("remote_file")
     val remoteFile: String,
     @ColumnInfo("local_uri")
@@ -52,7 +52,7 @@ data class AvatarFilesEntity(
 
 fun AvatarFilesEntity.toAvatarFile(): AvatarFile {
     return AvatarFile(
-        avatarStatusId = avatarStatusId,
+        modelId = modelId,
         remoteFile = remoteFile,
         localUri = localUri,
         downloaded = downloaded,
@@ -66,7 +66,7 @@ fun AvatarFilesEntity.toAvatarFile(): AvatarFile {
 
 fun AvatarFile.toEntity(): AvatarFilesEntity {
     return AvatarFilesEntity(
-        avatarStatusId = avatarStatusId,
+        modelId = modelId,
         remoteFile = remoteFile,
         localUri = localUri,
         downloaded = downloaded,
@@ -83,7 +83,7 @@ object AvatarFilesTable {
 
     object Columns {
         const val ID = "id"
-        const val AVATAR_STATUS_ID = "avatar_status_id"
+        const val MODEL_ID = "model_id"
         const val REMOTE_FILE = "remote_file"
         const val LOCAL_URI = "local_uri"
         const val DOWNLOADED = "downloaded"

@@ -11,10 +11,18 @@ data class AvatarStatus(
 ) {
     var id: Long? = null
     var modelName: String? = null
+    var avatarStatusId: Long? = null
 
     internal companion object {
-        fun emptyStatus(id: Long): AvatarStatus =
-            AvatarStatus("unknown", 0, 0, false, false,
-            "", 300)
+        fun emptyStatus(modelId: String): AvatarStatus =
+            AvatarStatus(
+                modelStatus = "unknown",
+                totalAiCount = 0,
+                generatedAiCount = 0,
+                paid = false,
+                modelRenamedByUser = false,
+                modelId = modelId,
+                eta = 300
+            )
     }
 }

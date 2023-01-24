@@ -45,14 +45,14 @@ fun AvatarStatusDto.toAvatarStatus(): AvatarStatus {
         modelId = modelId,
         eta = eta
     ).also {
-        it.id = id
+        it.avatarStatusId = id
     }
 }
 
 fun AvatarStatusDto.toAvatarFiles(): List<AvatarFile> {
     return generatedImages.map { remoteImage ->
         AvatarFile(
-            avatarStatusId = id,
+            modelId = modelId,
             remoteFile = remoteImage,
             localUri = "",
         )

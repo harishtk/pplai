@@ -85,7 +85,7 @@ class AvatarStatusViewModel @Inject constructor(
 
         uiState.mapNotNull { it.avatarStatusId }
             .flatMapLatest { statusId ->
-                appDatabase.avatarStatusDao().getAvatarStatus(id = statusId.toLong())
+                appDatabase.avatarStatusDao().getAvatarStatus(statusId = statusId.toLong())
             }.onEach { avatarStatusWithFilesEntity ->
                 if (avatarStatusWithFilesEntity != null) {
                     _uiState.update { state ->
@@ -216,7 +216,9 @@ class AvatarStatusViewModel @Inject constructor(
                         }
                         appDatabase.uploadSessionDao().apply {
                             appDatabase.avatarStatusDao().apply {
-                                val newAvatarStatus = AvatarStatus.emptyStatus(result.data.statusId)
+                                val newAvatarStatus = AvatarStatus.emptyStatus(result.data.modelId).apply {
+                                    avatarStatusId = result.data.statusId
+                                }
                                 insert(newAvatarStatus.toEntity())
                             }
                         }

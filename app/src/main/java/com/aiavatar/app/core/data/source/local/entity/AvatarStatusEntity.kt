@@ -2,12 +2,18 @@ package com.aiavatar.app.core.data.source.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.domain.model.AvatarStatus
 
-@Entity(tableName = AvatarStatusTable.name)
+@Entity(
+    tableName = AvatarStatusTable.name,
+    indices = [Index(name = "avatar_status_model_id", value = [AvatarStatusTable.Columns.MODEL_ID], unique = true)]
+)
 data class AvatarStatusEntity(
+    @ColumnInfo("model_id")
+    var modelId: String,
     @ColumnInfo("model_status")
     val modelStatus: String,
     @ColumnInfo("total_ai_count")
@@ -18,31 +24,33 @@ data class AvatarStatusEntity(
     val paid: Boolean,
     @ColumnInfo("model_renamed")
     val modelRenamed: Boolean,
-    @ColumnInfo("model_id")
-    val modelId: String,
     @ColumnInfo("eta")
     val eta: Int
 ) {
     @ColumnInfo("id")
-    @PrimaryKey(autoGenerate = false)
+    @PrimaryKey(autoGenerate = true)
     var _id: Long? = null
 
     @ColumnInfo("model_name")
     var modelName: String? = null
+
+    @ColumnInfo("avatar_status_id")
+    var avatarStatusId: Long? = null
 }
 
 fun AvatarStatusEntity.toAvatarStatus(): AvatarStatus {
     return AvatarStatus(
+        modelId = modelId,
         modelStatus = modelStatus,
         totalAiCount = totalAiCount,
         generatedAiCount = generatedAiCount,
         paid = paid,
         modelRenamedByUser = modelRenamed,
-        modelId = modelId,
         eta = eta
     ).also {
         it.id = _id
         it.modelName = modelName
+        it.avatarStatusId = avatarStatusId
     }
 }
 
@@ -58,6 +66,7 @@ fun AvatarStatus.toEntity(): AvatarStatusEntity {
     ).also {
         it._id = id
         it.modelName = modelName
+        it.avatarStatusId = avatarStatusId
     }
 }
 
@@ -73,5 +82,6 @@ object AvatarStatusTable {
         const val PAID                  = "paid"
         const val MODEL_RENAMED         = "model_renamed"
         const val MODEL_ID              = "model_id"
+        const val AVATAR_STATUS_ID      = "avatar_status_id"
     }
 }

@@ -1,7 +1,7 @@
 package com.aiavatar.app.core.domain.model
 
 data class AvatarFile(
-    val avatarStatusId: Long,
+    val modelId: String,
     val remoteFile: String,
     val localUri: String,
     val downloaded: Int = 0,

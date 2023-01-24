@@ -66,7 +66,7 @@ class DownloadWorker @AssistedInject constructor(
         val avatarStatusWithFiles = appDatabase.avatarStatusDao().getAvatarStatusForModelIdSync(modelId)
             ?: return abortWork("No download session data found for model $modelId")
 
-        createForegroundInfo(0)
+        setForegroundAsync(createForegroundInfo(0))
         // TODO: prepare for download
         val relativeDownloadPath = StringBuilder()
             .append(context.getString(R.string.app_name))

@@ -66,7 +66,7 @@ class SubscriptionSuccessViewModel @Inject constructor(
     private fun generateAvatarRequestInternal(planId: String) = viewModelScope.launch {
         val avatarStatusId = ApplicationDependencies.getPersistentStore().currentAvatarStatusId
         if (avatarStatusId != null) {
-            val avatarStatus = appDatabase.avatarStatusDao().getAvatarStatusSync(id = avatarStatusId.toLong())
+            val avatarStatus = appDatabase.avatarStatusDao().getAvatarStatusSync(statusId = avatarStatusId.toLong())
                 ?.avatarStatusEntity
 
             if (avatarStatus != null) {

@@ -8,8 +8,8 @@ import com.aiavatar.app.core.data.source.local.entity.AvatarFilesTable
 @Dao
 interface AvatarFilesDao {
 
-    @Query("SELECT * FROM ${AvatarFilesTable.name} WHERE ${AvatarFilesTable.Columns.AVATAR_STATUS_ID} = :statusId")
-    suspend fun getAllAvatarFilesForStatusIdSync(statusId: Long): List<AvatarFilesEntity>
+    @Query("SELECT * FROM ${AvatarFilesTable.name} WHERE ${AvatarFilesTable.Columns.MODEL_ID} = :modelId")
+    suspend fun getAllAvatarFilesForModelIdSync(modelId: Long): List<AvatarFilesEntity>
 
     @Query("UPDATE ${AvatarFilesTable.name} SET ${AvatarFilesTable.Columns.PROGRESS} = :progress " +
             "WHERE ${AvatarFilesTable.Columns.ID} = :id")

@@ -1,6 +1,5 @@
 package com.aiavatar.app.core.data.source.local.dao
 
-import android.app.AppOpsManager.OnOpNotedCallback
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -10,19 +9,18 @@ import androidx.room.Update
 import com.aiavatar.app.core.data.source.local.entity.AvatarStatusEntity
 import com.aiavatar.app.core.data.source.local.entity.AvatarStatusTable
 import com.aiavatar.app.core.data.source.local.model.AvatarStatusWithFilesEntity
-import com.aiavatar.app.core.domain.model.AvatarStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AvatarStatusDao {
 
     @Transaction
-    @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.ID} = :id")
-    fun getAvatarStatus(id: Long): Flow<AvatarStatusWithFilesEntity?>
+    @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.AVATAR_STATUS_ID} = :statusId")
+    fun getAvatarStatus(statusId: Long): Flow<AvatarStatusWithFilesEntity?>
 
     @Transaction
-    @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.ID} = :id")
-    suspend fun getAvatarStatusSync(id: Long): AvatarStatusWithFilesEntity?
+    @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.AVATAR_STATUS_ID} = :statusId")
+    suspend fun getAvatarStatusSync(statusId: Long): AvatarStatusWithFilesEntity?
 
     @Query("UPDATE ${AvatarStatusTable.name} SET ${AvatarStatusTable.Columns.MODEL_NAME} = :modelName, " +
             "${AvatarStatusTable.Columns.MODEL_RENAMED} = :renamed " +
