@@ -92,7 +92,7 @@ android {
             // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
             buildConfigField "String", "BASE_URL", '"https://ai.hifrds.com/api/v1/"'
             // buildConfigField "String", "BASE_URL", '"http://3.6.31.96/api/v1/"'
-            buildConfigField "String", "THUMBNAIL_BASE_URL", '"http://43.205.53.52/thumbnail/"'
+            buildConfigField "String", "THUMBNAIL_BASE_URL", '"https://ai.hifrds.com/thumbnail/"'
             // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52"'
             buildConfigField "String", "ENV", '"dev"'
@@ -105,7 +105,7 @@ android {
             dimension "default"
 
             // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
-            buildConfigField "String", "BASE_URL", '"http://43.205.53.52/api/v1/"'
+            buildConfigField "String", "BASE_URL", '"https://ai.hifrds.com/api/v1/"'
             buildConfigField "String", "THUMBNAIL_BASE_URL", '"http://43.205.53.52/thumbnail/"'
             // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
@@ -128,7 +128,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.7.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
-
+    implementation("androidx.security:security-crypto-ktx:1.1.0-alpha04")
     implementation("androidx.core:core-splashscreen:1.0.0")
 
     /* Google Services */

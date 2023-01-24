@@ -85,7 +85,7 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
     override fun onForeground() {
         Timber.d("App is foregrounded")
         socketKeepAliveJob?.cancel(CancellationException("App is now visible."))
-        initializeSocketIfRequired()
+        // initializeSocketIfRequired()
         // TODO: send user engage
         userEngageStartTime = System.currentTimeMillis()
     }
@@ -98,11 +98,11 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
             Constant.EXTRA_ENGAGED_TIME to engagedTime
         )
         // TODO: send user away
-        socketKeepAliveJob = applicationScope.launch {
+        /*socketKeepAliveJob = applicationScope.launch {
             delay(SOCKET_KEEP_ALIVE_TIMEOUT)
             ApplicationDependencies.getAppWebSocket().disconnect()
             Log.d(TAG, "Socket is destroyed. Reason: App is in background for so long.")
-        }
+        }*/
     }
 
     override fun getWorkManagerConfiguration(): Configuration {
@@ -113,7 +113,7 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
     }
 
     companion object {
-        const val TAG = "PepulLiv.App"
+        const val TAG = "AiAvatar"
         const val SOCKET_KEEP_ALIVE_TIMEOUT = 5000L
     }
 }

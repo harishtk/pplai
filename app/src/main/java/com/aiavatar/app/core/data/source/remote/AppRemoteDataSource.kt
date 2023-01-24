@@ -5,6 +5,7 @@ import com.aiavatar.app.commons.util.NetWorkHelper
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.core.data.source.remote.dto.AvatarStatusRequestDto
 import com.aiavatar.app.core.data.source.remote.dto.CreateModelRequestDto
+import com.aiavatar.app.core.data.source.remote.dto.RenameModelRequestDto
 import com.aiavatar.app.core.data.source.remote.dto.SendFcmTokenRequestDto
 import com.aiavatar.app.core.data.source.remote.model.AvatarStatusDto
 import com.aiavatar.app.core.data.source.remote.model.AvatarStatusResponse
@@ -46,6 +47,11 @@ class AppRemoteDataSource @Inject constructor(
     fun avatarStatus(avatarStatusRequestDto: AvatarStatusRequestDto): Flow<NetworkResult<AvatarStatusResponse>> = flow<NetworkResult<AvatarStatusResponse>> {
         emit(NetworkResult.Loading())
         emit(safeApiCall { apiService.avatarStatus(avatarStatusRequestDto) })
+    }.flowOn(dispatcher)
+
+    fun renameModel(renameModelRequestDto: RenameModelRequestDto): Flow<NetworkResult<BaseResponse>> = flow {
+        emit(NetworkResult.Loading())
+        emit(safeApiCall { apiService.renameModel(renameModelRequestDto) })
     }.flowOn(dispatcher)
 
 }

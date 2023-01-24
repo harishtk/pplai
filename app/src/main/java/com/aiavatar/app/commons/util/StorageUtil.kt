@@ -146,8 +146,6 @@ object StorageUtil {
                 .append(relativePath)
                 .toString()
 
-            Timber.d("Relative path: uri $relativePathForUri")
-
             val values = ContentValues()
             values.put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
             values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType)

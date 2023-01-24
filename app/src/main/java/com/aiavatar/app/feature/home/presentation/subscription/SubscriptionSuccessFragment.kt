@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -55,6 +56,7 @@ class SubscriptionSuccessFragment : Fragment() {
         )
         pagePresentedAt = System.currentTimeMillis()
         // viewModel.generateAvatarRequest(planId)
+        handleBackPressed()
     }
 
     private fun FragmentSubscriptionSuccessBinding.bindState(
@@ -146,6 +148,15 @@ class SubscriptionSuccessFragment : Fragment() {
                 .build()
             navigate(R.id.avatar_status, null, navOpts)
         }
+    }
+
+    private fun handleBackPressed() {
+        activity?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Do nothing. The page automatically closes
+                }
+            })
     }
 
     companion object {

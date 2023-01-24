@@ -21,6 +21,10 @@ import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.cancelSpinning
+import com.aiavatar.app.commons.util.setSpinning
+import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.databinding.FragmentAvatarResultBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
 import com.aiavatar.app.di.ApplicationDependencies
@@ -29,13 +33,10 @@ import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
+import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -130,6 +131,30 @@ class AvatarResultFragment : Fragment() {
             }
         }
 
+        val notLoadingFlow = uiState.map { it.loadState }
+            .distinctUntilChanged { old, new ->
+                old.refresh == new.refresh && old.action == new.action
+            }
+            .map { it.refresh !is LoadState.Loading && it.action !is LoadState.Loading }
+        val hasErrorsFlow = uiState.map { it.exception != null }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            combine(
+                notLoadingFlow,
+                hasErrorsFlow,
+                Boolean::and
+            ).collectLatest { hasError ->
+                if (hasError) {
+                    val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorText
+                    if (e != null) {
+                        Timber.e(e)
+                        uiErr?.let { uiText -> context?.showToast(uiText.asString(requireContext())) }
+                        uiAction(AvatarResultUiAction.ErrorShown(e))
+                    }
+                }
+            }
+        }
+
         val callback = object : AvatarResultAdapter.Callback {
             override fun onItemClick(position: Int, data: AvatarResultUiModel.AvatarItem) {
                 gotoModelDetail(position, data)
@@ -147,6 +172,24 @@ class AvatarResultFragment : Fragment() {
         }
 
         avatarPreviewList.adapter = adapter
+
+        val loadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChanged { old, new ->
+                old.refresh == new.refresh && old.action == new.action
+            }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                if (loadState.action is LoadState.Loading) {
+                    btnNext.setSpinning()
+                } else {
+                    btnNext.cancelSpinning()
+                    if (loadState.action is LoadState.Error) {
+                        btnNext.shakeNow()
+                        HapticUtil.createError(requireContext())
+                    }
+                }
+            }
+        }
 
         bindClick(
             uiState = uiState,

@@ -17,6 +17,7 @@ import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.StorageUtil
+import com.aiavatar.app.commons.util.concurrent.ThreadSafeCounter
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.domain.repository.AppRepository
 import dagger.assisted.Assisted
@@ -50,6 +51,9 @@ class DownloadWorker @AssistedInject constructor(
         Manifest.permission.WRITE_EXTERNAL_STORAGE
     )
 
+    private var downloadCounter: ThreadSafeCounter = ThreadSafeCounter()
+    private var totalDownloads: Int = 0
+
     override suspend fun doWork(): Result {
         if (!checkStoragePermission(context)) {
             // Nothing to do much.
@@ -69,10 +73,11 @@ class DownloadWorker @AssistedInject constructor(
             .append(File.separator)
             .append(avatarStatusWithFiles.avatarStatusEntity.modelName)
             .toString()
-        Timber.d("Relative path: $relativeDownloadPath")
 
         var failedCount: Int = 0
-        val jobs = avatarStatusWithFiles.avatarFilesEntity.map { avatarFilesEntity ->
+        val jobs = avatarStatusWithFiles.avatarFilesEntity
+            .filter { entity -> entity.downloaded == 0 }
+            .map { avatarFilesEntity ->
             workerScope.launch {
                 kotlin.runCatching {
                     val savedUri = StorageUtil.saveFile(
@@ -117,12 +122,28 @@ class DownloadWorker @AssistedInject constructor(
                 }
             }
         }
-        jobs.map { it.join() }
+
+        totalDownloads = jobs.count()
+
+        jobs.map {
+            it.join()
+            updateDownloadCounter()
+        }
 
         Timber.d("Download failed for $failedCount files")
 
         notifyDownloadComplete(context)
         return Result.success()
+    }
+
+    private fun updateDownloadCounter() {
+        val current = downloadCounter.increment()
+        val progress = if (totalDownloads != 0) {
+            (current * 100) / totalDownloads
+        } else {
+            100
+        }
+        createForegroundInfo(progress)
     }
 
     private fun abortWork(message: String): Result {
@@ -165,7 +186,7 @@ class DownloadWorker @AssistedInject constructor(
             .setContentIntent(contentIntent)
             .build()
         ServiceUtil.getNotificationManager(context)
-            .notify(UploadWorker.STATUS_NOTIFICATION_ID, notification)
+            .notify(STATUS_NOTIFICATION_ID, notification)
     }
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {
@@ -177,12 +198,12 @@ class DownloadWorker @AssistedInject constructor(
 
         // TODO: show notification
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
-        val notification = notificationBuilder.setOngoing(true)
+        val notification = notificationBuilder
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationManager.IMPORTANCE_DEFAULT)
             .setCategory(Notification.CATEGORY_PROGRESS)
             .setContentTitle("Downloading photos")
-            .setProgress(100, progress, true)
+            .setProgress(100, progress, false)
             .setOngoing(true)
             .build()
         return ForegroundInfo(ONGOING_NOTIFICATION_ID, notification)

@@ -11,14 +11,13 @@ import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.toEntity
 import com.aiavatar.app.core.data.source.remote.AppRemoteDataSource
 import com.aiavatar.app.core.data.source.remote.dto.asDto
-import com.aiavatar.app.core.data.source.remote.model.toAvatarStatus
 import com.aiavatar.app.core.data.source.remote.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.data.source.remote.model.toCreateModelData
-import com.aiavatar.app.core.domain.model.AvatarStatus
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.CreateModelData
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.CreateModelRequest
+import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.model.request.SendFcmTokenRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.asUploadImageData
@@ -63,8 +62,7 @@ class AppRepositoryImpl @Inject constructor(
                     val message = networkResult.message ?: "Success."
                     Result.Success(message)
                 } else {
-                    val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                    Result.Error(ApiException(cause))
+                    badResponse(networkResult)
                 }
             }
             else -> parseErrorNetworkResult(networkResult)
@@ -136,9 +134,26 @@ class AppRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun renameModel(renameModelRequest: RenameModelRequest): Flow<Result<String>> {
+        return remoteDataSource.renameModel(renameModelRequest.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val message = networkResult.data?.message ?: "Success. No message"
+                        Result.Success(message)
+                    } else {
+                        badResponse(networkResult)
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
+    }
+
     private fun parseUploadResponse(networkResult: NetworkResult.Success<UploaderResponse>): Result<UploadImageData> {
         return if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-            val data = networkResult.data?.data?.asUploadImageData()
+            val data = networkResult.data.data?.asUploadImageData()
             if (data != null) {
                 Result.Success(data)
             } else {

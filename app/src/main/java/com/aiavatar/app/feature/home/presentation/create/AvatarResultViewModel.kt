@@ -3,33 +3,30 @@ package com.aiavatar.app.feature.home.presentation.create
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
+import com.aiavatar.app.commons.util.net.ApiException
+import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.toAvatarFile
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarFile
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.request.RenameModelRequest
+import com.aiavatar.app.core.domain.repository.AppRepository
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
 class AvatarResultViewModel @Inject constructor(
+    private val appRepository: AppRepository,
     @Deprecated("move to repo")
     private val appDatabase: AppDatabase,
     private val savedStateHandle: SavedStateHandle
@@ -70,7 +67,12 @@ class AvatarResultViewModel @Inject constructor(
     private fun onUiAction(uiAction: AvatarResultUiAction) {
         when (uiAction) {
             is AvatarResultUiAction.ErrorShown -> {
-
+                _uiState.update { state ->
+                    state.copy(
+                        exception = null,
+                        uiErrorText = null
+                    )
+                }
             }
         }
     }
@@ -78,8 +80,41 @@ class AvatarResultViewModel @Inject constructor(
     fun saveModelName(modelName: String) = viewModelScope.launch {
         val modelId = getModelId()
         if (modelId != null) {
-            appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
-            sendEvent(AvatarResultUiEvent.StartDownload(modelId))
+            val request = RenameModelRequest(
+                modelId = modelId, modelName = modelName
+            )
+            appRepository.renameModel(request).collectLatest { result ->
+                when (result) {
+                    is Result.Loading -> { setLoading(LoadType.ACTION, LoadState.Loading()) }
+                    is Result.Error -> {
+                        when (result.exception) {
+                            is ApiException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
+                                    )
+                                }
+                            }
+                            is NoInternetException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.noInternet
+                                    )
+                                }
+                            }
+                        }
+                        setLoading(LoadType.ACTION, LoadState.Error(result.exception))
+                    }
+                    is Result.Success -> {
+                        val affectedRows = appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
+                        Timber.d("Update model name: affected $affectedRows rows")
+                        setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
+                        sendEvent(AvatarResultUiEvent.StartDownload(modelId))
+                    }
+                }
+            }
         } else {
             val t = IllegalStateException("Failed to get model id")
             _uiState.update { state ->

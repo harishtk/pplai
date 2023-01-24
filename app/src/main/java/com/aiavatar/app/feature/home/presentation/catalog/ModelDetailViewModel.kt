@@ -13,6 +13,8 @@ import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.toAvatarFile
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.request.RenameModelRequest
+import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
@@ -30,6 +32,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ModelDetailViewModel @Inject constructor(
+    private val appRepository: AppRepository,
     private val homeRepository: HomeRepository,
     private val appDatabase: AppDatabase,
 ): ViewModel() {
@@ -120,9 +123,41 @@ class ModelDetailViewModel @Inject constructor(
     fun saveModelName(modelName: String) = viewModelScope.launch {
         val modelId = getModelId()
         if (modelId != null) {
-            val affectedRows = appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
-            Timber.d("Update model name: affected $affectedRows rows")
-            sendEvent(ModelDetailUiEvent.StartDownload(modelId))
+            val request = RenameModelRequest(
+                modelId = modelId, modelName = modelName
+            )
+            appRepository.renameModel(request).collectLatest { result ->
+                when (result) {
+                    is Result.Loading -> { setLoading(LoadType.ACTION, LoadState.Loading()) }
+                    is Result.Error -> {
+                        when (result.exception) {
+                            is ApiException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
+                                    )
+                                }
+                            }
+                            is NoInternetException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.noInternet
+                                    )
+                                }
+                            }
+                        }
+                        setLoading(LoadType.ACTION, LoadState.Error(result.exception))
+                    }
+                    is Result.Success -> {
+                        val affectedRows = appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
+                        Timber.d("Update model name: affected $affectedRows rows")
+                        setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
+                        sendEvent(ModelDetailUiEvent.StartDownload(modelId))
+                    }
+                }
+            }
         } else {
             val t = IllegalStateException("Failed to get model id")
             _uiState.update { state ->

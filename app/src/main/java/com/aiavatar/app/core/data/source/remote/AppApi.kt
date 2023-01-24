@@ -2,6 +2,7 @@ package com.aiavatar.app.core.data.source.remote
 
 import com.aiavatar.app.core.data.source.remote.dto.AvatarStatusRequestDto
 import com.aiavatar.app.core.data.source.remote.dto.CreateModelRequestDto
+import com.aiavatar.app.core.data.source.remote.dto.RenameModelRequestDto
 import com.aiavatar.app.core.data.source.remote.dto.SendFcmTokenRequestDto
 import com.aiavatar.app.core.data.source.remote.model.AvatarStatusResponse
 import com.aiavatar.app.core.data.source.remote.model.CreateModelResponse
@@ -36,4 +37,7 @@ interface AppApi {
 
     @POST("ai/status")
     suspend fun avatarStatus(@Body avatarStatusRequestDto: AvatarStatusRequestDto): Response<AvatarStatusResponse>
+
+    @POST("ai/rename")
+    suspend fun renameModel(@Body renameModelRequestDto: RenameModelRequestDto): Response<BaseResponse>
 }

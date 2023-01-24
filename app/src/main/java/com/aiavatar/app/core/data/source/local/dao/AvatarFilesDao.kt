@@ -25,6 +25,12 @@ interface AvatarFilesDao {
             "WHERE ${AvatarFilesTable.Columns.ID} = :id")
     suspend fun updateLocalUri(id: Long, localUriString: String)
 
+    @Query("SELECT ${AvatarFilesTable.Columns.ID} FROM ${AvatarFilesTable.name} " +
+            "WHERE ${AvatarFilesTable.Columns.MODEL_ID} = :modelId AND " +
+            "${AvatarFilesTable.Columns.REMOTE_FILE} = :remoteUriString " +
+            "LIMIT 1")
+    suspend fun checkIfRemoteUrlExists(modelId: String, remoteUriString: String): List<Long>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(avatarFileEntities: List<AvatarFilesEntity>)
 

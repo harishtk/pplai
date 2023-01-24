@@ -27,7 +27,7 @@ interface AvatarStatusDao {
     @Query("UPDATE ${AvatarStatusTable.name} SET ${AvatarStatusTable.Columns.MODEL_NAME} = :modelName, " +
             "${AvatarStatusTable.Columns.MODEL_RENAMED} = :renamed " +
             "WHERE ${AvatarStatusTable.Columns.MODEL_ID} = :modelId")
-    suspend fun updateModelNameForModelId(modelId: String, modelName: String, renamed: Boolean)
+    suspend fun updateModelNameForModelId(modelId: String, modelName: String, renamed: Boolean): Int
 
     @Transaction
     @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.MODEL_ID} = :modelId")

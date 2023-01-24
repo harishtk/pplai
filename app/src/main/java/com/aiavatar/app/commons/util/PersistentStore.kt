@@ -2,8 +2,13 @@ package com.aiavatar.app.commons.util
 
 import android.content.Context
 import android.content.SharedPreferences
-import java.util.UUID
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
+import java.util.*
 
+/**
+ * TODO: 1. Encrypted prefs has a caveat of performance, migrate to Signal KV Store
+ */
 class PersistentStore private constructor(
     private val appPreferences: SharedPreferences,
 ) {
@@ -165,14 +170,30 @@ class PersistentStore private constructor(
 
         @Synchronized
         fun getInstance(application: Context): PersistentStore =
-            INSTANCE ?: synchronized(this) { INSTANCE ?: createInstance(application) }
+            INSTANCE ?: synchronized(this) { INSTANCE ?: createSecureInstance(application) }
 
         private fun createInstance(application: Context): PersistentStore {
             return PersistentStore(application.getSharedPreferences(APP_PREFERENCES_NAME, Context.MODE_PRIVATE))
                 .also { INSTANCE = it }
         }
 
+        private fun createSecureInstance(application: Context): PersistentStore {
+            val masterKey = MasterKey.Builder(application, SECURED_KEY_ALIAS)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+            return PersistentStore(
+                EncryptedSharedPreferences(
+                    context = application,
+                    "ai_avatar_secured_prefs",
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+            )
+        }
+
         private const val APP_PREFERENCES_NAME = "ai_avatar_preferences"
+        private const val SECURED_KEY_ALIAS = "ai_avatar_secured_store"
 
         object UserPreferenceKeys {
             const val DEVICE_TOKEN: String = "device_token"
