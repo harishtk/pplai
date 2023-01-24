@@ -70,7 +70,7 @@ class DownloadWorker @AssistedInject constructor(
             ?: return abortWork("No download session data found for model $modelId")
 
         setForegroundAsync(createForegroundInfo(0))
-        // TODO: prepare for download
+
         val relativeDownloadPath = StringBuilder()
             .append(context.getString(R.string.app_name))
             .append(File.separator)
@@ -170,10 +170,10 @@ class DownloadWorker @AssistedInject constructor(
 
         val channelId = context.getString(R.string.download_notification_channel_id)
 
-        // TODO: add pending intent to create avatar
+        // TODO: add pending intent to view the downloads
         val contentIntent = NavDeepLinkBuilder(context)
             .setGraph(R.navigation.home_nav_graph)
-            .setDestination(R.id.avatar_status)
+            .setDestination(R.id.catalog_list)
             .setComponentName(MainActivity::class.java)
             .createPendingIntent()
 
@@ -199,7 +199,6 @@ class DownloadWorker @AssistedInject constructor(
         val context = applicationContext
         val channelId = context.getString(R.string.download_notification_channel_id)
 
-        // TODO: show notification
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
         val notification = notificationBuilder
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -250,8 +249,8 @@ class DownloadWorker @AssistedInject constructor(
 
         const val WORKER_NAME = "download_worker"
 
-        const val STATUS_NOTIFICATION_ID = 101
-        private const val ONGOING_NOTIFICATION_ID = 100
+        const val STATUS_NOTIFICATION_ID = 102
+        private const val ONGOING_NOTIFICATION_ID = 103
 
         const val EXTRA_ERROR_MESSAGE = "com.aiavatar.app.extras.ERROR_MESSAGE"
     }

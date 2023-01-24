@@ -51,7 +51,7 @@ class UserViewModel @Inject constructor(
                         /* TODO: Retry */
                     }
                     is Result.Success -> {
-                        // TODO: parse result
+                        // TODO: -partially_done- parse result
                         _forceUpdate.update { result.data.forceUpdate }
                     }
                 }

@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
 data class ModelListDto(
     @SerializedName("statusId")
     val statusId: String,
-    @SerializedName("modeldata")
+    @SerializedName("data")
     val modelDataDto: ModelDataDto?
 )
 

@@ -42,6 +42,10 @@ import timber.log.Timber
 import kotlin.math.abs
 import kotlin.random.Random
 
+/**
+ * TODO: 1. Handle pending intent continuation before selecting gender
+ * TODO: 2. Handle upload failure and revert back the user to select missing photos
+ */
 @HiltWorker
 class UploadWorker @AssistedInject constructor(
     @Assisted private val context: Context,
@@ -191,7 +195,6 @@ class UploadWorker @AssistedInject constructor(
     private fun notifyUploadComplete(context: Context, photosCount: Int) {
         val channelId = context.getString(R.string.upload_notification_channel_id)
 
-        // TODO: add pending intent to create avatar
         val contentIntent = NavDeepLinkBuilder(context)
             .setGraph(R.navigation.home_nav_graph)
             .setDestination(R.id.avatar_status)
@@ -229,7 +232,6 @@ class UploadWorker @AssistedInject constructor(
             .setComponentName(MainActivity::class.java)
             .createPendingIntent()
 
-        // TODO: show notification
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
         val notification = notificationBuilder.setOngoing(true)
             .setSmallIcon(R.mipmap.ic_launcher)
