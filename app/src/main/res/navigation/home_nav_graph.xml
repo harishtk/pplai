@@ -176,4 +176,9 @@
         android:name="com.aiavatar.app.feature.onboard.presentation.login.LoginFragment"
         android:label="Login"
         tools:layout="@layout/fragment_login" />
+
+    <fragment android:id="@+id/forceUpdate"
+        android:name="com.aiavatar.app.feature.home.presentation.forceupdate.ForceUpdateFragment"
+        android:label="Fore Update"
+        tools:layout="@layout/fragment_force_update" />
 </navigation>

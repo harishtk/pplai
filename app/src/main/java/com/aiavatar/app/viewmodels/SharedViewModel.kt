@@ -8,15 +8,7 @@ import com.aiavatar.app.feature.onboard.domain.model.request.AutoLoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.CancellationException
@@ -39,6 +31,7 @@ class SharedViewModel @Inject constructor(
     }
 
     /* Currently uploading session id */
+    @Deprecated("not used")
     private var _currentUploadSessionId: MutableStateFlow<Long?> = MutableStateFlow(null)
     val currentUploadSessionId = _currentUploadSessionId
         .shareIn(

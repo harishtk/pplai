@@ -17,6 +17,7 @@ import com.aiavatar.app.databinding.FragmentCatalogBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
+import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
@@ -177,7 +178,11 @@ class CatalogFragment : Fragment() {
                 /*val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
                 profileName.setText(initialLetter)*/
                 profileName.setText(null)
-                profileImage.setImageResource(R.drawable.profile_placeholder)
+                Glide.with(profileImage)
+                    .load(socialImage)
+                    .placeholder(R.drawable.profile_placeholder)
+                    .error(R.drawable.profile_placeholder)
+                    .into(profileImage)
             } else {
                 profileName.setText(null)
                 profileImage.setImageResource(R.drawable.ic_account_outline)

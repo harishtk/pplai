@@ -52,9 +52,18 @@ class UserViewModel @Inject constructor(
                     }
                     is Result.Success -> {
                         // TODO: parse result
+                        _forceUpdate.update { result.data.forceUpdate }
                     }
                 }
             }
         }
     }
+
+    private var _forceUpdate: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val forceUpdate = _forceUpdate
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
 }

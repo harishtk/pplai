@@ -6,6 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
@@ -55,9 +56,11 @@ class DownloadWorker @AssistedInject constructor(
     private var totalDownloads: Int = 0
 
     override suspend fun doWork(): Result {
-        if (!checkStoragePermission(context)) {
-            // Nothing to do much.
-            return abortWork("No Storage permission granted, aborting photos download.")
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (!checkStoragePermission(context)) {
+                // Nothing to do much.
+                return abortWork("No Storage permission granted, aborting photos download.")
+            }
         }
 
         val modelId = workerParameters.inputData.getString(MODEL_ID)

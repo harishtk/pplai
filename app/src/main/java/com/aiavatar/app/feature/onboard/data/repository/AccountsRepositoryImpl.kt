@@ -10,8 +10,10 @@ import com.aiavatar.app.commons.util.net.EmptyResponseException
 import com.aiavatar.app.commons.util.net.HttpResponse
 import com.aiavatar.app.feature.onboard.data.source.remote.AccountsRemoteDataSource
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.asDto
+import com.aiavatar.app.feature.onboard.data.source.remote.dto.toAutoLoginData
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.toLoginData
 import com.aiavatar.app.feature.onboard.data.source.remote.model.LoginResponse
+import com.aiavatar.app.feature.onboard.domain.model.AutoLoginData
 import com.aiavatar.app.feature.onboard.domain.model.LoginData
 import com.aiavatar.app.feature.onboard.domain.model.request.AutoLoginRequest
 import com.aiavatar.app.feature.onboard.domain.model.request.LoginRequest
@@ -37,14 +39,18 @@ class AccountsRepositoryImpl constructor(
         return remoteDataSource.socialLogin(socialLoginRequest.asDto()).map(this::parseLoginResult)
     }
 
-    override fun autoLogin(autoLoginRequest: AutoLoginRequest): Flow<Result<String>> {
+    override fun autoLogin(autoLoginRequest: AutoLoginRequest): Flow<Result<AutoLoginData>> {
         return remoteDataSource.autoLogin(autoLoginRequest.asDto()).map { networkResult ->
             when (networkResult) {
                 is NetworkResult.Loading -> Result.Loading
                 is NetworkResult.Success -> {
                     if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                        val data = networkResult.data?.message ?: "Login Successful. No message"
-                        Result.Success(data)
+                        val data = networkResult.data.data
+                        if (data != null) {
+                            Result.Success(data.toAutoLoginData())
+                        } else {
+                            emptyResponse(networkResult)
+                        }
                     } else {
                         val cause = BadResponseException("Unexpected response code ${networkResult.code}")
                         Result.Error(ApiException(cause))
@@ -61,7 +67,7 @@ class AccountsRepositoryImpl constructor(
                 is NetworkResult.Loading -> Result.Loading
                 is NetworkResult.Success -> {
                     if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                        val data = networkResult.data?.message ?: "Logout Successful. No message"
+                        val data = networkResult.data.message ?: "Logout Successful. No message"
                         Result.Success(data)
                     } else {
                         val cause = BadResponseException("Unexpected response code ${networkResult.code}")
@@ -78,7 +84,7 @@ class AccountsRepositoryImpl constructor(
             is NetworkResult.Loading -> Result.Loading
             is NetworkResult.Success -> {
                 if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                    val data = networkResult.data?.loginDataDto
+                    val data = networkResult.data.loginDataDto
                     if (data != null) {
                         Result.Success(data.toLoginData())
                     } else {

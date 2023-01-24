@@ -209,6 +209,17 @@ class ProfileFragment : Fragment() {
         }
         textUsernameExpanded.text = getString(R.string.username_with_prefix,
             ApplicationDependencies.getPersistentStore().username)
+        ApplicationDependencies.getPersistentStore().apply {
+            if (isLogged) {
+                Glide.with(profileImageExpanded)
+                    .load(socialImage)
+                    .placeholder(R.drawable.profile_placeholder)
+                    .error(R.drawable.profile_placeholder)
+                    .into(profileImageExpanded)
+            } else {
+                profileImageExpanded.setImageResource(R.drawable.profile_placeholder)
+            }
+        }
     }
 
     private fun gotoSettings() {

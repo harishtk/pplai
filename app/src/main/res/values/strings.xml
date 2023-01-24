@@ -51,8 +51,8 @@
     <string name="upload_step_3_des1">Let us know which gender best describes you</string>
 
     <string name="permissions_required">Permissions Required</string>
-    <string name="files_permission_des">To use this feature, we request you to allow pepul to access your media files. We assure you that this will be safe.</string>
-    <string name="files_permission_rationale_des">To use this feature, we request you to allow pepul to access your media files. We assure you that this will be safe.</string>
+    <string name="files_permission_des">To use this feature, we request you to allow AI Avatar to access your media files. We assure you that this will be safe.</string>
+    <string name="files_permission_rationale_des">To use this feature, we request you to allow AI Avatar to access your media files. We assure you that this will be safe.</string>
     <string name="create_your_masterpiece">Create Your Masterpiece</string>
     <string name="content_description_download">Download</string>
     <string name="num_photos">%1$d Photos</string>

@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
@@ -126,10 +127,12 @@ class UploadStep2Fragment : Fragment() {
                         map[Constant.PERMISSION_DENIED]?.let {
                             requireContext().showToast("Storage permission is required to upload photos")
                             // TODO: show storage rationale
+                            showStoragePermissionRationale(false)
                         }
                         map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
                             requireContext().showToast("Storage permission is required to upload photos")
                             // TODO: show storage rationale permanent
+                            showStoragePermissionRationale(openSettings = true)
                         }
                     }
 
@@ -190,7 +193,8 @@ class UploadStep2Fragment : Fragment() {
                 try {
                     model as UploadPreviewUiModel.Item
                     // viewModel.toggleSelectionInternal(model.selectedMediaItem.uri)
-                } catch (ignore: Exception) {}
+                } catch (ignore: Exception) {
+                }
             }
 
             override fun onPlaceholerClick(position: Int) {
@@ -202,7 +206,7 @@ class UploadStep2Fragment : Fragment() {
         val adapter = UploadPreviewAdapter(
             callback = uploadPreviewAdapterCallback,
 
-        )
+            )
 
         previewList.adapter = adapter
 
@@ -225,18 +229,6 @@ class UploadStep2Fragment : Fragment() {
                 }
             }
         }
-
-        /* Simple permission rationale dialog */
-        /*SimpleDialog(
-            context = requireContext(),
-            popupIcon = R.drawable.ic_files_permission,
-            titleText = getString(R.string.permissions_required),
-            message = getString(R.string.files_permission_des),
-            positiveButtonText = "Settings",
-            positiveButtonAction = {  *//* go to settings *//*  openSettings() },
-            cancellable = true,
-            showCancelButton = true
-        ).show()*/
 
         bindExamplesAdapter()
 
@@ -334,35 +326,36 @@ class UploadStep2Fragment : Fragment() {
         }
     }
 
-    private fun detectFacesInternal(pickedUris: List<Uri>) = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-        isFaceDetectionRunning = true
-        viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
-        val result = HashMap<String, Boolean>()
-        val faceDetectorOpts = FaceDetectorOptions.Builder()
-            .setMinFaceSize(0.5F)
-            .build()
-        val faceDetector = FaceDetection.getClient(faceDetectorOpts)
-        val countDownLatch = CountDownLatch(pickedUris.size)
-        val taskList: List<Task<List<Face>>> = pickedUris.mapIndexed { index, uri ->
-            val ft = faceDetector.process(InputImage.fromFilePath(requireContext(), uri))
-                .addOnCompleteListener { countDownLatch.countDown() }
-                .addOnFailureListener { countDownLatch.countDown() }
-            ft
-        }
-        runBlocking(Dispatchers.IO) {
-            countDownLatch.await(1, TimeUnit.MINUTES)
-            taskList.onEachIndexed { index, task ->
-                val trackedIds = task.result.mapNotNull { it.trackingId }.distinct()
-                result[pickedUris[index].toString()] = task.result.isNotEmpty()/* &&
-                        trackedIds.size == 1*/
-                Timber.d("Detecting: id = $index faces $trackedIds")
+    private fun detectFacesInternal(pickedUris: List<Uri>) =
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            isFaceDetectionRunning = true
+            viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
+            val result = HashMap<String, Boolean>()
+            val faceDetectorOpts = FaceDetectorOptions.Builder()
+                .setMinFaceSize(0.5F)
+                .build()
+            val faceDetector = FaceDetection.getClient(faceDetectorOpts)
+            val countDownLatch = CountDownLatch(pickedUris.size)
+            val taskList: List<Task<List<Face>>> = pickedUris.mapIndexed { index, uri ->
+                val ft = faceDetector.process(InputImage.fromFilePath(requireContext(), uri))
+                    .addOnCompleteListener { countDownLatch.countDown() }
+                    .addOnFailureListener { countDownLatch.countDown() }
+                ft
             }
-            viewModel.setPickedUris(pickedUris, result)
-            Timber.d("Detected Faces: $result")
+            runBlocking(Dispatchers.IO) {
+                countDownLatch.await(1, TimeUnit.MINUTES)
+                taskList.onEachIndexed { index, task ->
+                    val trackedIds = task.result.mapNotNull { it.trackingId }.distinct()
+                    result[pickedUris[index].toString()] = task.result.isNotEmpty()/* &&
+                        trackedIds.size == 1*/
+                    Timber.d("Detecting: id = $index faces $trackedIds")
+                }
+                viewModel.setPickedUris(pickedUris, result)
+                Timber.d("Detected Faces: $result")
+            }
+            isFaceDetectionRunning = false
+            viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
         }
-        isFaceDetectionRunning = false
-        viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
-    }
 
     private fun launchPhotoPicker() {
         val maxPick = viewModel.getMaxImages()
@@ -373,20 +366,42 @@ class UploadStep2Fragment : Fragment() {
         if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable()) {
             photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         } else {
-            if (!checkStoragePermission()) {
-                askStoragePermission()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                if (!checkStoragePermission()) {
+                    askStoragePermission()
+                } else {
+                    photoPickerGenericLauncher.launch(MIME_TYPE_JPEG)
+                }
+            } else {
+                photoPickerGenericLauncher.launch(MIME_TYPE_JPEG)
             }
-            photoPickerGenericLauncher.launch(MIME_TYPE_JPEG)
         }
     }
 
-    private fun gotoNextScreen() {
-        try {
-            findNavController().apply {
-                navigate(R.id.action_upload_step_2_to_upload_step_3)
-            }
-        } catch (ignore: Exception) {
+    private fun gotoNextScreen() = safeCall {
+        findNavController().apply {
+            navigate(UploadStep2FragmentDirections.actionUploadStep2ToUploadStep3())
         }
+    }
+
+    private fun showStoragePermissionRationale(openSettings: Boolean) {
+        /* Simple permission rationale dialog */
+        SimpleDialog(
+            context = requireContext(),
+            popupIcon = R.drawable.ic_files_permission,
+            titleText = getString(R.string.permissions_required),
+            message = getString(R.string.files_permission_des),
+            positiveButtonText = "Settings",
+            positiveButtonAction = {
+                if (openSettings) {
+                    /* go to settings */ openSettings()
+                } else {
+                    askStoragePermission()
+                }
+            },
+            cancellable = true,
+            showCancelButton = true
+        ).show()
     }
 
     private fun openSettings() {
@@ -457,8 +472,11 @@ class UploadPreviewAdapter(
                 }
                 Timber.d("Chat Adapter: payloads ${bundle.keySet().joinToString()}")
                 if (bundle.containsKey(SELECTION_TOGGLE_PAYLOAD)) {
-                    (holder as? ItemViewHolder)?.toggleSelection(bundle.getBoolean(
-                        SELECTION_TOGGLE_PAYLOAD, false))
+                    (holder as? ItemViewHolder)?.toggleSelection(
+                        bundle.getBoolean(
+                            SELECTION_TOGGLE_PAYLOAD, false
+                        )
+                    )
                 }
             } else {
                 super.onBindViewHolder(holder, position, payloads)
@@ -470,26 +488,27 @@ class UploadPreviewAdapter(
 
     private fun isValidPayload(payloads: MutableList<Any>?): Boolean {
         return (payloads?.firstOrNull() as? Bundle)?.keySet()?.any {
-                    it == SELECTION_TOGGLE_PAYLOAD
+            it == SELECTION_TOGGLE_PAYLOAD
         } ?: false
     }
 
     class ItemViewHolder private constructor(
-        private val binding: ItemUploadPreviewBinding
+        private val binding: ItemUploadPreviewBinding,
     ) : ViewHolder(binding.root) {
 
-        fun bind(data: UploadPreviewUiModel.Item, selected: Boolean, callback: Callback) = with(binding) {
-            Glide.with(view1)
-                .load(data.selectedMediaItem.uri)
-                .placeholder(R.color.white_grey)
-                .into(view1)
-            view1.strokeColor = null
-            view1.strokeWidth = 0f
+        fun bind(data: UploadPreviewUiModel.Item, selected: Boolean, callback: Callback) =
+            with(binding) {
+                Glide.with(view1)
+                    .load(data.selectedMediaItem.uri)
+                    .placeholder(R.color.white_grey)
+                    .into(view1)
+                view1.strokeColor = null
+                view1.strokeWidth = 0f
 
-            toggleSelection(selected)
+                toggleSelection(selected)
 
-            view1.setOnClickListener { callback.onItemClick(adapterPosition, data) }
-        }
+                view1.setOnClickListener { callback.onItemClick(adapterPosition, data) }
+            }
 
         fun toggleSelection(selected: Boolean) = with(binding) {
             selectionIndicator.isVisible = true
@@ -536,7 +555,7 @@ class UploadPreviewAdapter(
     }
 
     class PlaceholderVH private constructor(
-        private val binding: ItemUploadPreviewPlaceholderBinding
+        private val binding: ItemUploadPreviewPlaceholderBinding,
     ) : ViewHolder(binding.root) {
 
         fun bind(data: UploadPreviewUiModel.Placeholder, callback: Callback) = with(binding) {
@@ -575,10 +594,10 @@ class UploadPreviewAdapter(
     }
 
     companion object {
-        private const val VIEW_TYPE_ITEM            = 0
-        private const val VIEW_TYPE_PLACEHOLDER     = 1
+        private const val VIEW_TYPE_ITEM = 0
+        private const val VIEW_TYPE_PLACEHOLDER = 1
 
-        const val SELECTION_TOGGLE_PAYLOAD  = "selection_toggle"
+        const val SELECTION_TOGGLE_PAYLOAD = "selection_toggle"
 
         val DIFF_CALLBACK = object : ItemCallback<UploadPreviewUiModel>() {
             override fun areItemsTheSame(
@@ -607,7 +626,7 @@ class UploadPreviewAdapter(
 
             override fun getChangePayload(
                 oldItem: UploadPreviewUiModel,
-                newItem: UploadPreviewUiModel
+                newItem: UploadPreviewUiModel,
             ): Any {
                 val updatePayload = bundleOf()
                 when {
@@ -625,7 +644,7 @@ class UploadPreviewAdapter(
 }
 
 class ExamplePhotoAdapter(
-    val examplePhotoType: ExamplePhotoType
+    val examplePhotoType: ExamplePhotoType,
 ) : ListAdapter<Int, ExamplePhotoAdapter.ItemViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
@@ -643,7 +662,7 @@ class ExamplePhotoAdapter(
     }
 
     inner class ItemViewHolder(
-        private val binding: ItemExamplePhotoBinding
+        private val binding: ItemExamplePhotoBinding,
     ) : ViewHolder(binding.root) {
 
         fun bind(@DrawableRes drawableRes: Int) = with(binding) {

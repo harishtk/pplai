@@ -20,12 +20,15 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.viewmodels.UserViewModel
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.UpdateAvailability
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -36,6 +39,10 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
     private val sharedViewModel: SharedViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels()
+
+    private val appUpdateManager by lazy {
+        AppUpdateManagerFactory.create(this)
+    }
 
     private lateinit var mainNavController: NavController
 
@@ -169,6 +176,40 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                     setNavGraph(destinationId)
                 }
             }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                userViewModel.forceUpdate.collectLatest { forceUpdate ->
+                    if (forceUpdate) {
+                        checkForUpdates()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun checkForUpdates() {
+        appUpdateManager.appUpdateInfo
+            .addOnSuccessListener { appUpdateInfo ->
+                if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                    || appUpdateInfo.availableVersionCode() > BuildConfig.VERSION_CODE
+                ) {
+                    gotoForceUpdate()
+                } else {
+                    // Nothing to do. Ignore the forceUpdate flag.
+                }
+            }.addOnFailureListener {
+                // Nothing to do. Ignore the forceUpdate flag.
+            }
+    }
+
+    private fun gotoForceUpdate() = safeCall {
+        mainNavController.apply {
+            val navOpts = defaultNavOptsBuilder()
+                .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                .build()
+            navigate(R.id.forceUpdate, null, navOpts)
         }
     }
 
