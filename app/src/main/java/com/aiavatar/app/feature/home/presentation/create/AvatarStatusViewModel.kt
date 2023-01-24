@@ -12,9 +12,11 @@ import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.core.data.source.local.entity.toEntity
+import com.aiavatar.app.core.data.source.local.model.UploadSessionWithFilesEntity
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarStatus
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.UploadSessionWithFiles
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
@@ -73,6 +75,7 @@ class AvatarStatusViewModel @Inject constructor(
                 if (uploadSessionWithFilesEntity != null) {
                     _uiState.update { state ->
                         state.copy(
+                            uploadSessionWithFilesEntity = uploadSessionWithFilesEntity,
                             sessionStatus = UploadSessionStatus.fromRawValue(
                                 uploadSessionWithFilesEntity
                                     .uploadSessionEntity.status
@@ -378,6 +381,7 @@ data class AvatarStatusState(
     val loadState: LoadStates = LoadStates.IDLE,
     val sessionId: Long? = null,
     val sessionStatus: UploadSessionStatus = UploadSessionStatus.UNKNOWN,
+    val uploadSessionWithFilesEntity: UploadSessionWithFilesEntity? = null,
     val avatarStatusId: String? = null,
     val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val toggleStateNotifyMe: Boolean = DEFAULT_TOGGLE_STATE,

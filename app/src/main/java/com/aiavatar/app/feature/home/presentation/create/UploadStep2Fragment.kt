@@ -112,6 +112,14 @@ class UploadStep2Fragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (arguments?.containsKey(ARG_CACHED_SESSION_ID) == true) {
+            val cachedSessionId = arguments?.getLong(ARG_CACHED_SESSION_ID)
+            if (cachedSessionId != null) {
+                viewModel.setCachedSessionId(cachedSessionId)
+                viewModel.restoreUploadSession()
+            }
+        }
+
         storagePermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result: Map<String, Boolean> ->
                 val deniedList: List<String> = result.filter { !it.value }.map { it.key }
@@ -126,12 +134,10 @@ class UploadStep2Fragment : Fragment() {
                         }
                         map[Constant.PERMISSION_DENIED]?.let {
                             requireContext().showToast("Storage permission is required to upload photos")
-                            // TODO: show storage rationale
                             showStoragePermissionRationale(false)
                         }
                         map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
                             requireContext().showToast("Storage permission is required to upload photos")
-                            // TODO: show storage rationale permanent
                             showStoragePermissionRationale(openSettings = true)
                         }
                     }
@@ -435,6 +441,8 @@ class UploadStep2Fragment : Fragment() {
     companion object {
         const val MAX_IMAGES = 20
         const val MIN_IMAGES = 10
+
+        const val ARG_CACHED_SESSION_ID = "cached_session_id"
     }
 }
 

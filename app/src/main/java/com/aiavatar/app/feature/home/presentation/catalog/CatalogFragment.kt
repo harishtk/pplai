@@ -62,7 +62,6 @@ class CatalogFragment : Fragment() {
         uiAction: (CatalogUiAction) -> Unit,
         uiEvent: SharedFlow<CatalogUiEvent>
     ) {
-        // TODO: bind state
         viewLifecycleOwner.lifecycleScope.launch {
             uiEvent.collectLatest { event ->
                 when (event) {

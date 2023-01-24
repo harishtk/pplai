@@ -23,6 +23,7 @@ import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
 import com.aiavatar.app.defaultNavOptsBuilder
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
+import com.aiavatar.app.safeCall
 import com.aiavatar.app.showToast
 import com.aiavatar.app.work.UploadWorker
 import com.pepulnow.app.data.LoadState
@@ -197,7 +198,7 @@ class AvatarStatusFragment : Fragment() {
                         }
                     }
 
-                } else if (sessionStatus.status <= UploadSessionStatus.UPLOAD_COMPLETE.status) {
+                } else if (sessionStatus.status <= UploadSessionStatus.FAILED.status) {
                     when (UploadSessionStatus.fromRawValue(sessionStatus.status)) {
                         UploadSessionStatus.PARTIALLY_DONE -> {
                             description.text = "Uploading photos.."
@@ -212,6 +213,24 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
+                        }
+                        UploadSessionStatus.FAILED -> {
+                            val uploadSessionWithFiles = uiState.value.uploadSessionWithFilesEntity
+                            if (uploadSessionWithFiles != null) {
+                                val failedUploads = uploadSessionWithFiles.uploadFilesEntity.map { it.uploadedFileName == null }
+                                    .count()
+                                description.text = "Some photos are failed to upload. Please upload again."
+                                btnCreateAvatar.setText("Retry Upload")
+                                progressIndicator.isVisible = false
+                                textProgressHint.isVisible = false
+                                cbNotifyMe.isVisible = false
+                            } else {
+                                description.text = "Oops! something went wrong"
+                                btnCreateAvatar.isVisible = false
+                                progressIndicator.isVisible = false
+                                textProgressHint.isVisible = false
+                                cbNotifyMe.isVisible = false
+                            }
                         }
                         else -> {
                             // Noop yet
@@ -287,6 +306,7 @@ class AvatarStatusFragment : Fragment() {
 
         btnCreateAvatar.setOnClickListener {
             val modelStatus = uiState.value.avatarStatusWithFiles?.avatarStatus?.modelStatus
+            val sessionStatus = uiState.value.sessionStatus
             if (modelStatus == "completed") {
                 // TODO: View results
                 findNavController().apply {
@@ -295,6 +315,9 @@ class AvatarStatusFragment : Fragment() {
 
                     navigate(R.id.avatar_result, null, navOpts)
                 }
+            } else if (sessionStatus == UploadSessionStatus.FAILED) {
+                val cachedSessionId = uiState.value.sessionId
+                gotoUploads(cachedSessionId)
             } else {
                 ServiceUtil.getNotificationManager(requireContext())
                     .cancel(UploadWorker.STATUS_NOTIFICATION_ID)
@@ -312,6 +335,27 @@ class AvatarStatusFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun gotoUploads(cachedSessionId: Long?) = safeCall {
+         findNavController().apply {
+             val navOpts = NavOptions.Builder()
+                 .setEnterAnim(R.anim.slide_in_right)
+                 .setExitAnim(R.anim.slide_out_right)
+                 .setPopEnterAnim(R.anim.slide_in_right)
+                 .setPopExitAnim(R.anim.slide_out_right)
+                 .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                 .build()
+             val args = Bundle().apply {
+                 /*
+                 * TODO: IMPORTANT - To restore previous upload session, uncomment the cachedSessionId
+                 * */
+                 /*if (cachedSessionId != null) {
+                     putLong(UploadStep2Fragment.ARG_CACHED_SESSION_ID, cachedSessionId)
+                 }*/
+             }
+             navigate(R.id.upload_step_2, args, navOpts)
+         }
     }
 
     override fun onStart() {

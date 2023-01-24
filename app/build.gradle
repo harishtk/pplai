@@ -29,10 +29,10 @@ android {
             localProps.load(rootProject.file('local.properties').newDataInputStream())
         }
         release {
-            /*storeFile file(localProps.RELEASE_STORE_FILE)
+            storeFile file(localProps.RELEASE_STORE_FILE)
             storePassword localProps.RELEASE_STORE_PASSWORD
             keyAlias localProps.RELEASE_KEY_ALIAS
-            keyPassword localProps.RELEASE_KEY_PASSWORD*/
+            keyPassword localProps.RELEASE_KEY_PASSWORD
 
             /*enableV3Signing = true
             enableV4Signing = true*/
@@ -50,10 +50,14 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    ext.googleServicesResourceRoot = "/"
+
     buildTypes {
         release {
-            minifyEnabled false
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
 
         debug {
@@ -111,7 +115,7 @@ android {
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
             buildConfigField "String", "ENV", '"prod"'
             buildConfigField "boolean", "IS_SECURED", "true"
-            buildConfigField "String", "S3_BUCKET", '""'
+            buildConfigField "String", "S3_BUCKET", '"https://d19quh86lv8eyv.cloudfront.net"'
         }
     }
 }
@@ -136,7 +140,6 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation("com.google.android.gms:play-services-auth:20.4.0")
 
-
     /* Firebase */
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-auth'
@@ -149,7 +152,8 @@ dependencies {
     implementation "androidx.datastore:datastore:1.0.0"
 
     /* ML Kit */
-    implementation("com.google.mlkit:face-detection:16.1.5")
+    // implementation("com.google.mlkit:face-detection:16.1.5")
+    implementation("com.google.android.gms:play-services-mlkit-face-detection:17.1.0")
 
     /* Kotlinx Coroutines */
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")

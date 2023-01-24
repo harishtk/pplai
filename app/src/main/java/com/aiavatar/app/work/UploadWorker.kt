@@ -15,6 +15,7 @@ import androidx.work.Data
 import androidx.work.ForegroundInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.Commons
 import com.aiavatar.app.Constant
 import com.aiavatar.app.MainActivity
@@ -25,6 +26,7 @@ import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.UploadFileStatus
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.core.domain.repository.AppRepository
+import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.domain.model.UploadImageData
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -171,15 +173,35 @@ class UploadWorker @AssistedInject constructor(
                     Timber.d("Upload result: ${index + 1} ${result.data.imageName} success")
                 }
             }
-        appDatabase.uploadSessionDao().updateUploadSessionStatus(
-            uploadSessionWithFiles.uploadSessionEntity._id!!,
-            UploadSessionStatus.UPLOAD_COMPLETE.status
-        )
 
-        if (uploadResultList.isNotEmpty()) {
+        val totalUploads = appDatabase.uploadFilesDao().getAllUploadFilesSync(sessionId)
+            .mapNotNull { it.uploadedFileName }.count()
+        if (totalUploads < getMinUploadImageCount() /* Min upload size */) {
+            appDatabase.uploadSessionDao().updateUploadSessionStatus(
+                uploadSessionWithFiles.uploadSessionEntity._id!!,
+                UploadSessionStatus.FAILED.status
+            )
+        } else {
+            appDatabase.uploadSessionDao().updateUploadSessionStatus(
+                uploadSessionWithFiles.uploadSessionEntity._id!!,
+                UploadSessionStatus.UPLOAD_COMPLETE.status
+            )
+        }
+
+        /* This flag tells if the user has completed gender selection */
+        val isUploadStarted = ApplicationDependencies.getPersistentStore().isUploadingPhotos
+        if (uploadResultList.isNotEmpty() && isUploadStarted) {
             notifyUploadComplete(context, uploadResultList.size)
         }
         return Result.success()
+    }
+
+    private fun getMinUploadImageCount(): Int {
+        return if (BuildConfig.DEBUG) {
+            0
+        } else {
+            10
+        }
     }
 
     private fun abortWork(message: String): Result {

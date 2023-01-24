@@ -2,6 +2,7 @@ package com.aiavatar.app.feature.home.presentation.create
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,10 +24,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.IOError
 import java.io.IOException
 import javax.inject.Inject
-import kotlin.system.exitProcess
 
 @HiltViewModel
 class UploadStep2ViewModel @Inject constructor(
@@ -71,6 +70,24 @@ class UploadStep2ViewModel @Inject constructor(
                 )
             }
         }.launchIn(viewModelScope)*/
+    }
+
+    fun restoreUploadSession() = viewModelScope.launch {
+        val cachedSessionId: Long = savedStateHandle[KEY_CACHED_UPLOAD_SESSION_ID] ?: return@launch
+        val uploadSessionWithFilesEntity = appDatabase.uploadSessionDao().getUploadSessionSync(cachedSessionId)
+        uploadSessionWithFilesEntity?.uploadFilesEntity
+            ?.map { entity ->
+                entity.localUriString.toUri()
+            }?.let { pickedUris ->
+                val restoredFaceMap = HashMap<String, Boolean>()
+                pickedUris.onEach { uri -> restoredFaceMap[uri.toString()] = true }
+                setPickedUris(pickedUris, restoredFaceMap)
+            }
+
+    }
+
+    fun setCachedSessionId(sessionId: Long) {
+        savedStateHandle[KEY_CACHED_UPLOAD_SESSION_ID] = sessionId
     }
 
     fun setFaceDetectionRunning(isRunning: Boolean) {
@@ -152,7 +169,7 @@ class UploadStep2ViewModel @Inject constructor(
                     trainingType = "unknown"
                 )
                 cachedSessionId = appDatabase.uploadSessionDao().insert(uploadSessionEntity)
-                savedStateHandle[KEY_CACHED_UPLOAD_SESSION_ID] = cachedSessionId
+                setCachedSessionId(cachedSessionId)
             }
 
             val totalUris = uiState.value.previewModelList
@@ -162,7 +179,7 @@ class UploadStep2ViewModel @Inject constructor(
                 .map { it.selectedMediaItem.uri }
                 .mapNotNull { uri ->
                     val entry =
-                        appDatabase.uploadFilesDao().getDeviceFileForUri(cachedSessionId, uri.toString())
+                        appDatabase.uploadFilesDao().getDeviceFileForUriSync(cachedSessionId, uri.toString())
                     if (entry != null) {
                         null
                     } else {

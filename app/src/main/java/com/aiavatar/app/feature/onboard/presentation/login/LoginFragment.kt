@@ -437,7 +437,6 @@ class LoginFragment : Fragment() {
     }
 
     private fun checkLastSignedInAccount() {
-        // TODO: Check last singed in account and confirm user
         val account = GoogleSignIn.getLastSignedInAccount(requireContext())
         if (account != null) {
             SimpleDialog(

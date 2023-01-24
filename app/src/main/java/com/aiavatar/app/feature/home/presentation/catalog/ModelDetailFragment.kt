@@ -1,8 +1,11 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +26,7 @@ import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
@@ -57,6 +61,8 @@ class ModelDetailFragment : Fragment() {
     private lateinit var storagePermissionLauncher: ActivityResultLauncher<Array<String>>
     private var mStoragePermissionContinuation: Continuation? = null
 
+    private var isSettingsLaunched = false
+
     private lateinit var from: String
     private var jumpToPosition = -1
 
@@ -78,10 +84,12 @@ class ModelDetailFragment : Fragment() {
                         map[Constant.PERMISSION_DENIED]?.let {
                             requireContext().showToast("Storage permission is required to upload photos")
                             // TODO: show storage rationale
+                            showStoragePermissionRationale(false)
                         }
                         map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
                             requireContext().showToast("Storage permission is required to upload photos")
                             // TODO: show storage rationale permanent
+                            showStoragePermissionRationale(true)
                         }
                     }
 
@@ -383,8 +391,45 @@ class ModelDetailFragment : Fragment() {
         }
     }
 
+    private fun showStoragePermissionRationale(openSettings: Boolean) {
+        /* Simple permission rationale dialog */
+        SimpleDialog(
+            context = requireContext(),
+            popupIcon = R.drawable.ic_files_permission,
+            titleText = getString(R.string.permissions_required),
+            message = getString(R.string.files_permission_des),
+            positiveButtonText = "Settings",
+            positiveButtonAction = {
+                if (openSettings) {
+                    /* go to settings */ openSettings()
+                } else {
+                    askStoragePermission()
+                }
+            },
+            cancellable = true,
+            showCancelButton = true
+        ).show()
+    }
+
+    private fun openSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val uri: Uri = Uri.fromParts("package", requireActivity().packageName, null)
+        intent.data = uri
+        startActivity(intent)
+        isSettingsLaunched = true
+    }
+
     private fun askStoragePermission() {
         storagePermissionLauncher.launch(storagePermissions)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isSettingsLaunched) {
+            // gotoCamera()
+            isSettingsLaunched = false
+        }
     }
 
     companion object {

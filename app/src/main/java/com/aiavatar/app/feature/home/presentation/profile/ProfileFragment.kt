@@ -36,47 +36,6 @@ class ProfileFragment : Fragment() {
 
     private val viewModel: ProfileViewModel by viewModels()
 
-    private val storagePermissions: Array<String> = arrayOf(
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
-    )
-
-    private lateinit var storagePermissionLauncher: ActivityResultLauncher<Array<String>>
-    private var mStoragePermissionContinuation: Continuation? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        storagePermissionLauncher =
-            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result: Map<String, Boolean> ->
-                val deniedList: List<String> = result.filter { !it.value }.map { it.key }
-                when {
-                    deniedList.isNotEmpty() -> {
-                        val map = deniedList.groupBy { permission ->
-                            if (shouldShowRequestPermissionRationale(permission)) {
-                                Constant.PERMISSION_DENIED
-                            } else {
-                                Constant.PERMISSION_PERMANENTLY_DENIED
-                            }
-                        }
-                        map[Constant.PERMISSION_DENIED]?.let {
-                            requireContext().showToast("Storage permission is required to upload photos")
-                            // TODO: show storage rationale
-                        }
-                        map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
-                            requireContext().showToast("Storage permission is required to upload photos")
-                            // TODO: show storage rationale permanent
-                        }
-                    }
-
-                    else -> {
-                        mStoragePermissionContinuation?.invoke()
-                        mStoragePermissionContinuation = null
-                    }
-                }
-            }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -138,7 +97,6 @@ class ProfileFragment : Fragment() {
 
         val callback = object : ModelListAdapter.Callback {
             override fun onItemClick(position: Int, data: ModelListUiModel.Item) {
-                // TODO: goto model detail
                 gotoModelDetail(position, data)
             }
         }
@@ -248,17 +206,6 @@ class ProfileFragment : Fragment() {
         } catch (ignore: Exception) {}
     }
 
-    private fun checkStoragePermission(): Boolean {
-        return storagePermissions.all {
-            ContextCompat.checkSelfPermission(requireContext(), it) ==
-                    PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    private fun askStoragePermission() {
-        storagePermissionLauncher.launch(storagePermissions)
-    }
-
     companion object {
         private const val UI_RENDER_WAIT_TIME = 50L
     }
@@ -301,7 +248,6 @@ class ModelListAdapter(
     ) : ViewHolder(binding.root) {
 
         fun bind(data: ModelListUiModel.Item, callback: Callback) = with(binding) {
-            // TODO: bind data
             title.text = data.modelList.modelData?.name
             description.text = "${data.modelList.modelData?.totalCount} creations"
             Glide.with(imageView)

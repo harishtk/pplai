@@ -4,8 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.aiavatar.app.core.data.source.local.entity.AvatarFilesEntity
-import com.aiavatar.app.core.data.source.local.entity.AvatarFilesTable
 import com.aiavatar.app.core.data.source.local.entity.UploadFilesEntity
 import com.aiavatar.app.core.data.source.local.entity.UploadFilesTable
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +20,7 @@ interface UploadFilesDao {
     @Query("SELECT * FROM ${UploadFilesTable.name} " +
             "WHERE ${UploadFilesTable.Columns.SESSION_ID} = :sessionId AND " +
             "${UploadFilesTable.Columns.LOCAL_URI_STRING} = :uriString")
-    suspend fun getDeviceFileForUri(sessionId: Long, uriString: String): UploadFilesEntity?
+    suspend fun getDeviceFileForUriSync(sessionId: Long, uriString: String): UploadFilesEntity?
 
     @Query("UPDATE ${UploadFilesTable.name} " +
             "SET ${UploadFilesTable.Columns.STATUS} = :status " +
