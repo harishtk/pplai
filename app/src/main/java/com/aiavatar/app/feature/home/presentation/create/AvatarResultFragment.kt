@@ -332,7 +332,7 @@ class AvatarResultAdapter(
         fun bind(data: AvatarResultUiModel.AvatarItem, callback: Callback) = with(binding) {
             Glide.with(view1)
                 .load(data.avatar.remoteFile)
-                .placeholder(R.color.grey_900)
+                .placeholder(R.drawable.loading_animation)
                 .into(view1)
 
             root.setOnClickListener { callback.onItemClick(adapterPosition, data) }

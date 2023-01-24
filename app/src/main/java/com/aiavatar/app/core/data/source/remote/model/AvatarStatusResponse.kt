@@ -3,6 +3,7 @@ package com.aiavatar.app.core.data.source.remote.model
 import com.aiavatar.app.core.domain.model.AvatarFile
 import com.aiavatar.app.core.domain.model.AvatarStatus
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
+import com.aiavatar.app.feature.home.data.source.remote.model.ListAvatarDto
 import com.google.gson.annotations.SerializedName
 
 data class AvatarStatusResponse(
@@ -24,7 +25,7 @@ data class AvatarStatusDto(
     @SerializedName("generatedAiCount")
     val generatedAiCount: Int,
     @SerializedName("generatedImages")
-    val generatedImages: List<String>,
+    val generatedImages: List<ListAvatarDto>,
     @SerializedName("paid")
     val paid: Boolean,
     @SerializedName("renamed")
@@ -50,10 +51,10 @@ fun AvatarStatusDto.toAvatarStatus(): AvatarStatus {
 }
 
 fun AvatarStatusDto.toAvatarFiles(): List<AvatarFile> {
-    return generatedImages.map { remoteImage ->
+    return generatedImages.map { listAvatar ->
         AvatarFile(
             modelId = modelId,
-            remoteFile = remoteImage,
+            remoteFile = listAvatar.imageName,
             localUri = "",
         )
     }

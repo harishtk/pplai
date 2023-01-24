@@ -172,7 +172,9 @@ class UploadWorker @AssistedInject constructor(
             UploadSessionStatus.UPLOAD_COMPLETE.status
         )
 
-        notifyUploadComplete(context, uploadResultList.size)
+        if (uploadResultList.isNotEmpty()) {
+            notifyUploadComplete(context, uploadResultList.size)
+        }
         return Result.success()
     }
 
