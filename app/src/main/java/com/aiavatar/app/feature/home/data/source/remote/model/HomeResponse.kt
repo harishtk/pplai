@@ -2,6 +2,7 @@ package com.aiavatar.app.feature.home.data.source.remote.model
 
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
+import com.aiavatar.app.nullAsEmpty
 import com.google.gson.annotations.SerializedName
 
 data class HomeResponse(
@@ -29,8 +30,7 @@ data class ListAvatarDto(
 
 fun ListAvatarDto.toCategory(): Category {
     return Category(
-        id = id,
-        categoryName = categoryName,
+        categoryName = categoryName.nullAsEmpty(),
         imageName = imageName
     )
 }

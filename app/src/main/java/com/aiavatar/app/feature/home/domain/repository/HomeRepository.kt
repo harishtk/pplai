@@ -25,4 +25,5 @@ interface HomeRepository {
 
     fun getAvatars(getAvatarsRequest: GetAvatarsRequest): Flow<Result<List<ListAvatar>>>
 
+    fun getCatalog2(forceRefresh: Boolean): Flow<Result<List<Category>>>
 }

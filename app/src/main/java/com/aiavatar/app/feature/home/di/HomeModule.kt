@@ -2,6 +2,7 @@ package com.aiavatar.app.feature.home.di
 
 import com.aiavatar.app.di.WebService
 import com.aiavatar.app.feature.home.data.repository.HomeRepositoryImpl
+import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
 import com.aiavatar.app.feature.home.data.source.remote.HomeApi
 import com.aiavatar.app.feature.home.data.source.remote.HomeRemoteDataSource
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
@@ -17,9 +18,13 @@ object HomeModule {
 
     @Provides
     fun provideHomeRepository(
-        homeRemoteDataSource: HomeRemoteDataSource
+        homeRemoteDataSource: HomeRemoteDataSource,
+        homeLocalDataSource: HomeLocalDataSource,
     ): HomeRepository {
-        return HomeRepositoryImpl(remoteDataSource = homeRemoteDataSource)
+        return HomeRepositoryImpl(
+            remoteDataSource = homeRemoteDataSource,
+            localDataSource = homeLocalDataSource
+        )
     }
 
     @Provides

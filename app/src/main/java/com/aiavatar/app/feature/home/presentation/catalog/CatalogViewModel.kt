@@ -46,7 +46,7 @@ class CatalogViewModel @Inject constructor(
 
         accept = { uiAction -> onUiAction(action = uiAction) }
 
-        refreshInternal()
+        refreshInternal(false)
     }
 
     private fun onUiAction(action: CatalogUiAction) {
@@ -63,14 +63,14 @@ class CatalogViewModel @Inject constructor(
     }
 
     fun refresh() {
-        refreshInternal()
+        refreshInternal(forceRefresh = true)
     }
 
-    private fun refreshInternal() {
-        getCatalogs()
+    private fun refreshInternal(forceRefresh: Boolean) {
+        getCatalogs(forceRefresh)
     }
 
-    private fun getCatalogs() {
+    private fun getCatalogs(forceRefresh: Boolean = false) {
         if (catalogFetchJob?.isActive == true) {
             val t = IllegalStateException("A login request is already in progress. Ignoring request")
             Timber.d(t)
@@ -78,7 +78,7 @@ class CatalogViewModel @Inject constructor(
         }
         catalogFetchJob?.cancel(CancellationException("New request")) // just in case
         catalogFetchJob = viewModelScope.launch {
-            homeRepository.getCatalog().collectLatest { result ->
+            homeRepository.getCatalog2(forceRefresh).collectLatest { result ->
                 when (result) {
                     is Result.Loading -> {
                         setLoadState(LoadType.REFRESH, LoadState.Loading())

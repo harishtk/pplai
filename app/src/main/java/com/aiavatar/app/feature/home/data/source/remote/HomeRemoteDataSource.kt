@@ -27,6 +27,9 @@ class HomeRemoteDataSource @Inject constructor(
         emit(safeApiCall { apiService.getCatalog() })
     }.flowOn(dispatcher)
 
+    suspend fun getCatalogSync(): NetworkResult<HomeResponse> =
+        safeApiCall { apiService.getCatalog() }
+
     fun getCatalogDetail(catalogDetailRequestDto: CatalogDetailRequestDto): Flow<NetworkResult<CatalogDetailResponse>> =
         flow {
             emit(NetworkResult.Loading())

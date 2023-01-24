@@ -37,12 +37,10 @@ class MoreCatalogFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        postponeEnterTransition(MainActivity.DEFAULT_UI_RENDER_WAIT_TIME, TimeUnit.MILLISECONDS)
-
-        val category = arguments?.getParcelable<Category?>(Constant.EXTRA_DATA)
+        /*val category = arguments?.getParcelable<Category?>(Constant.EXTRA_DATA)
         if (category != null) {
             viewModel.setCategory(category)
-        }
+        }*/
     }
 
     override fun onCreateView(
@@ -114,6 +112,10 @@ class MoreCatalogFragment : Fragment() {
         findNavController().apply {
             navigate(MoreCatalogFragmentDirections.actionMoreCatalogToUploadStep1())
         }
+    }
+
+    companion object {
+        const val ARG_CATEGORY_ID = "com.aiavatar.app.args.CATEGORY_ID"
     }
 }
 

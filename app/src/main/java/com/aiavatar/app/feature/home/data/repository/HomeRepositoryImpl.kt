@@ -6,6 +6,10 @@ import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.BadResponseException
 import com.aiavatar.app.commons.util.net.EmptyResponseException
+import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
+import com.aiavatar.app.feature.home.data.source.local.entity.CategoryEntity
+import com.aiavatar.app.feature.home.data.source.local.entity.asEntity
+import com.aiavatar.app.feature.home.data.source.local.entity.toCategory
 import com.aiavatar.app.feature.home.data.source.remote.HomeRemoteDataSource
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPlanDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.asDto
@@ -20,14 +24,71 @@ import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
 class HomeRepositoryImpl @Inject constructor(
     private val remoteDataSource: HomeRemoteDataSource,
+    private val localDataSource: HomeLocalDataSource,
 ) : HomeRepository, NetworkResultParser {
+
+    private fun observeAllCategoryInternal(): Flow<List<Category>> {
+        return localDataSource.observeAllCategories()
+            .map { list ->
+                list.map(CategoryEntity::toCategory)
+            }
+    }
+
+    private suspend fun refreshCategoriesInternal(): Result<List<Category>> {
+        val networkCatalogResult = remoteDataSource.getCatalogSync()
+        return when (networkCatalogResult) {
+            is NetworkResult.Loading -> Result.Loading
+            is NetworkResult.Success -> {
+                if (networkCatalogResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                    val categoryDtoList = networkCatalogResult?.data?.data?.avatars?.map { it.toCategory() }
+                    if (categoryDtoList != null) {
+                        val categories = categoryDtoList.map(Category::asEntity)
+                        localDataSource.deleteAllCategories()
+                        localDataSource.insertAllCategories(categories)
+                        Result.Success(categories.map(CategoryEntity::toCategory))
+                    } else {
+                        emptyResponse(networkCatalogResult)
+                    }
+                } else {
+                    badResponse(networkCatalogResult)
+                }
+            }
+            else -> parseErrorNetworkResult(networkCatalogResult)
+        }
+    }
+
+    override fun getCatalog2(forceRefresh: Boolean): Flow<Result<List<Category>>> {
+        return observeAllCategoryInternal()
+            .onStart {
+                if (forceRefresh) {
+                    localDataSource.deleteAllCategories()
+                }
+            }
+            .onEach { list ->
+                if (list.isEmpty()) {
+                    val remoteResult = refreshCategoriesInternal()
+                    if (remoteResult is Result.Error) {
+                        throw remoteResult.exception
+                    }
+                }
+            }
+            .map { list ->
+                if (list.isEmpty()) {
+                    Result.Loading
+                } else {
+                    Result.Success(list)
+                }
+            }
+            .catch { t ->
+                Result.Error(t as Exception)
+            }
+    }
 
     override fun getCatalog(): Flow<Result<List<Category>>> {
         return remoteDataSource.getCatalog().map { networkResult ->

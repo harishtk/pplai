@@ -115,7 +115,6 @@ class CatalogFragment : Fragment() {
             }
         }
 
-        swipeRefreshLayout.isEnabled = false
         swipeRefreshLayout.setOnRefreshListener {
             viewModel.refresh()
         }
@@ -134,9 +133,7 @@ class CatalogFragment : Fragment() {
         adapter: AvatarsAdapter,
         uiState: StateFlow<CatalogState>
     ) {
-        catalogList.postDelayed({
-            catalogList.adapter = adapter
-        }, UI_RENDER_WAIT_TIME)
+        catalogList.adapter = adapter
 
         val catalogListFlow = uiState.map { it.catalogList }
             .distinctUntilChanged()
@@ -217,8 +214,10 @@ class CatalogFragment : Fragment() {
 
     private fun gotoCatalogDetail(category: Category, cardClickPosition: Int = -1) {
         findNavController().apply {
-            val args = Bundle()
-            args.putParcelable(Constant.EXTRA_DATA, category)
+            val args = Bundle().apply {
+                category.id?.let { putLong("category_id", it) }
+            }
+            // args.putParcelable(Constant.EXTRA_DATA, category)
             navigate(R.id.action_catalog_list_to_more_catalog, args)
         }
     }
