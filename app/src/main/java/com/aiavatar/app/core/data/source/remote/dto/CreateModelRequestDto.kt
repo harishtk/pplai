@@ -4,7 +4,7 @@ import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.google.gson.annotations.SerializedName
 
 data class CreateModelRequestDto(
-    @SerializedName("foldername")
+    @SerializedName("folderName")
     val folderName: String,
     @SerializedName("trainingType")
     val trainingType: String,

@@ -10,6 +10,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.core.domain.util.BuenoCacheException
@@ -18,6 +20,9 @@ import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
 import com.bumptech.glide.Glide
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
@@ -82,7 +87,17 @@ class CatalogFragment : Fragment() {
 
         }
 
-        val avatarsAdapter = AvatarsAdapter(avatarsAdapterCallback)
+        val staggeredGridLayoutManager = StaggeredGridLayoutManager(2, RecyclerView.VERTICAL).apply {
+            gapStrategy = StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
+        }
+        catalogList.layoutManager = staggeredGridLayoutManager
+
+        /*val flexBoxLayoutManager = FlexboxLayoutManager(requireContext(), FlexDirection.ROW, FlexWrap.WRAP)*/
+
+        val avatarsAdapter = AvatarsAdapter(
+            layoutManager = staggeredGridLayoutManager,
+            avatarsAdapterCallback
+        )
 
         val notLoadingFlow = uiState.map { it.loadState }
             .map { it.refresh !is LoadState.Loading }
