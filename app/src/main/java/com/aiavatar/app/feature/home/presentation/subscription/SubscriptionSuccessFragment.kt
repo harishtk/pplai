@@ -140,10 +140,8 @@ class SubscriptionSuccessFragment : Fragment() {
 
     private fun gotoAvatarStatus() = safeCall {
         findNavController().apply {
-            val navOpts = NavOptions.Builder()
+            val navOpts = defaultNavOptsBuilder()
                 .setLaunchSingleTop(true)
-                /*.setEnterAnim(R.anim.slide_from_top)
-                .setExitAnim(R.anim.slide_to_top)*/
                 .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
                 .build()
             navigate(R.id.avatar_status, null, navOpts)

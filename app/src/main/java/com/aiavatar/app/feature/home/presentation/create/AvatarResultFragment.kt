@@ -272,7 +272,7 @@ class AvatarResultFragment : Fragment() {
             }
             WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
             Timber.d("Download scheduled: $modelId")
-            (activity as? MainActivity)?.restart()
+            gotoHome()
         }
 
         if (checkStoragePermission()) {
@@ -280,6 +280,15 @@ class AvatarResultFragment : Fragment() {
         } else {
             mStoragePermissionContinuation = cont
             askStoragePermission()
+        }
+    }
+
+    private fun gotoHome() = safeCall {
+        findNavController().apply {
+            val navOptions = defaultNavOptsBuilder()
+                .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                .build()
+            navigate(R.id.catalog_list, null, navOptions)
         }
     }
 
@@ -308,6 +317,7 @@ class AvatarResultFragment : Fragment() {
     private fun askStoragePermission() {
         storagePermissionLauncher.launch(storagePermissions)
     }
+
 }
 
 class AvatarResultAdapter(

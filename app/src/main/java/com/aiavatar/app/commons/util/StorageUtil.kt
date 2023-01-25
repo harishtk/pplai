@@ -62,6 +62,7 @@ object StorageUtil {
                         .asBitmap()
                         .load(uri)
                         .override(reqSize.width, reqSize.height)
+                        .centerCrop()
                         .submit().get()
 
                     BufferedOutputStream(FileOutputStream(outFile)).use { outputStream ->

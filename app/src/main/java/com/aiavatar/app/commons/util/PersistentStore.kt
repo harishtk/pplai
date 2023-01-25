@@ -2,15 +2,18 @@ package com.aiavatar.app.commons.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import java.util.*
 
 /**
- * TODO: 1. Encrypted prefs has a caveat of performance, migrate to Signal KV Store
+ * TODO: 1. Encrypted prefs has a caveat of performance, migrate to Signal KV Store (or)
+ * TODO: [DataStore]
  */
 class PersistentStore private constructor(
-    private val appPreferences: SharedPreferences,
+    private val appPreferences: SharedPreferences
 ) {
 
     val isLogged: Boolean
@@ -173,7 +176,10 @@ class PersistentStore private constructor(
             INSTANCE ?: synchronized(this) { INSTANCE ?: createSecureInstance(application) }
 
         private fun createInstance(application: Context): PersistentStore {
-            return PersistentStore(application.getSharedPreferences(APP_PREFERENCES_NAME, Context.MODE_PRIVATE))
+            return PersistentStore(
+                application.getSharedPreferences(APP_PREFERENCES_NAME, Context.MODE_PRIVATE),
+
+            )
                 .also { INSTANCE = it }
         }
 
