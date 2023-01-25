@@ -37,6 +37,7 @@ class MoreCatalogFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // TODO: get the category id and fetch category list
         /*val category = arguments?.getParcelable<Category?>(Constant.EXTRA_DATA)
         if (category != null) {
             viewModel.setCategory(category)

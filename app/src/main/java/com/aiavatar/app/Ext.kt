@@ -118,3 +118,17 @@ inline fun <R> safeCall(block: () -> R): R? {
     }
 }
 
+/**
+ * Calls [block] if [this] is null.
+ */
+internal inline fun <T> T?.ifNull(block: () -> T): T = this ?: block()
+
+/**
+ * Calls [block] if [this] is null. Returns [this] either way.
+ */
+internal inline fun <T> T?.ifNullAlso(block: () -> Unit): T? = this.also {
+    if (it == null) {
+        block()
+    }
+}
+

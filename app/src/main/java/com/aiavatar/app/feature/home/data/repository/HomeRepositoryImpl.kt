@@ -6,7 +6,12 @@ import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.BadResponseException
 import com.aiavatar.app.commons.util.net.EmptyResponseException
+import com.aiavatar.app.core.data.source.local.CacheLocalDataSource
+import com.aiavatar.app.core.data.source.local.entity.cacheKeyForTable
+import com.aiavatar.app.core.data.source.local.entity.modify
+import com.aiavatar.app.core.domain.util.BuenoCacheException
 import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
+import com.aiavatar.app.feature.home.data.source.local.entity.AvatarCategoriesTable
 import com.aiavatar.app.feature.home.data.source.local.entity.CategoryEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.asEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.toCategory
@@ -25,12 +30,17 @@ import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
+
+val DEFAULT_CACHE_LIFETIME: Long = TimeUnit.MINUTES.toMillis(15)
 
 class HomeRepositoryImpl @Inject constructor(
     private val remoteDataSource: HomeRemoteDataSource,
     private val localDataSource: HomeLocalDataSource,
+    private val cacheLocalDataSource: CacheLocalDataSource,
 ) : HomeRepository, NetworkResultParser {
 
     private fun observeAllCategoryInternal(): Flow<List<Category>> {
@@ -46,11 +56,24 @@ class HomeRepositoryImpl @Inject constructor(
             is NetworkResult.Loading -> Result.Loading
             is NetworkResult.Success -> {
                 if (networkCatalogResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                    val categoryDtoList = networkCatalogResult?.data?.data?.avatars?.map { it.toCategory() }
+                    val categoryDtoList =
+                        networkCatalogResult?.data?.data?.avatars?.map { it.toCategory() }
                     if (categoryDtoList != null) {
                         val categories = categoryDtoList.map(Category::asEntity)
                         localDataSource.deleteAllCategories()
                         localDataSource.insertAllCategories(categories)
+
+                        val cacheKeys = cacheLocalDataSource.getOrCreate(AvatarCategoriesTable.name)
+
+                        val affected = cacheLocalDataSource.updateCacheKey(
+                            cacheKeys.modify(
+                                createdAt = System.currentTimeMillis(),
+                                expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_LIFETIME)
+                            ).also {
+                                it._id = cacheKeys._id
+                            }
+                        )
+                        Timber.d("Cache keys: categories updated $affected cacheKeys = $cacheKeys")
                         Result.Success(categories.map(CategoryEntity::toCategory))
                     } else {
                         emptyResponse(networkCatalogResult)
@@ -67,7 +90,18 @@ class HomeRepositoryImpl @Inject constructor(
         return observeAllCategoryInternal()
             .onStart {
                 if (forceRefresh) {
-                    localDataSource.deleteAllCategories()
+                    val cacheKeys = cacheLocalDataSource.getOrCreate(AvatarCategoriesTable.name)
+                    if (cacheKeys.expired()) {
+                        Timber.d("Cache keys: ${cacheKeys.key} expired")
+                        localDataSource.deleteAllCategories()
+                    } else {
+                        val delta = TimeUnit.MILLISECONDS.toMillis((cacheKeys.expiresAt - System.currentTimeMillis()).coerceAtLeast(0))
+                        val lastUpdate = TimeUnit.MILLISECONDS.toMinutes(delta)
+                        val message = "Can't refresh. Last updated $lastUpdate minutes ago"
+                        val t = BuenoCacheException(cacheKeys.createdAt, message)
+                        Timber.d(t, "Cache keys: $message")
+                        throw BuenoCacheException(lastUpdate, message)
+                    }
                 }
             }
             .onEach { list ->
@@ -86,7 +120,7 @@ class HomeRepositoryImpl @Inject constructor(
                 }
             }
             .catch { t ->
-                Result.Error(t as Exception)
+                emit(Result.Error(t as Exception))
             }
     }
 
@@ -230,7 +264,8 @@ class HomeRepositoryImpl @Inject constructor(
                             Result.Error(ApiException(cause))
                         }
                     } else {
-                        val cause = BadResponseException("Unexpected response code ${networkResult.code}")
+                        val cause =
+                            BadResponseException("Unexpected response code ${networkResult.code}")
                         Result.Error(ApiException(cause))
                     }
                 }
@@ -253,7 +288,8 @@ class HomeRepositoryImpl @Inject constructor(
                             Result.Error(ApiException(cause))
                         }
                     } else {
-                        val cause = BadResponseException("Unexpected response code ${networkResult.code}")
+                        val cause =
+                            BadResponseException("Unexpected response code ${networkResult.code}")
                         Result.Error(ApiException(cause))
                     }
                 }

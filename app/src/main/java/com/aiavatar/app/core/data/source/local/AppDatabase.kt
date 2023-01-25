@@ -4,21 +4,17 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.aiavatar.app.core.data.source.local.dao.AvatarFilesDao
-import com.aiavatar.app.core.data.source.local.dao.AvatarStatusDao
-import com.aiavatar.app.core.data.source.local.dao.UploadFilesDao
-import com.aiavatar.app.core.data.source.local.dao.UploadSessionDao
-import com.aiavatar.app.core.data.source.local.entity.AvatarFilesEntity
-import com.aiavatar.app.core.data.source.local.entity.AvatarStatusEntity
-import com.aiavatar.app.core.data.source.local.entity.UploadFilesEntity
-import com.aiavatar.app.core.data.source.local.entity.UploadSessionEntity
+import com.aiavatar.app.core.data.source.local.dao.*
+import com.aiavatar.app.core.data.source.local.entity.*
 import com.aiavatar.app.feature.home.data.source.local.dao.CategoryDao
+import com.aiavatar.app.feature.home.data.source.local.entity.CatalogListEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.CategoryEntity
 
 @Database(
     entities = [UploadSessionEntity::class, UploadFilesEntity::class,
                 AvatarStatusEntity::class, AvatarFilesEntity::class,
-                CategoryEntity::class],
+                CategoryEntity::class, CacheKeysEntity::class,
+                CatalogListEntity::class],
     version = 1,
     exportSchema = false
 )
@@ -33,6 +29,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun avatarFilesDao(): AvatarFilesDao
 
     abstract fun categoryDao(): CategoryDao
+
+    abstract fun cacheKeysDao(): CacheKeysDao
 
     companion object {
         @Volatile
@@ -59,5 +57,7 @@ abstract class AppDatabase : RoomDatabase() {
         const val TABLE_AVATAR_FILES        = "avatar_files"
         const val TABLE_AVATAR_CATEGORIES   = "avatar_categories"
         const val TABLE_CATEGORY_LIST       = "category_list"
+
+        const val TABLE_CACHE_KEYS          = "cache_keys"
     }
 }

@@ -1,12 +1,16 @@
 package com.aiavatar.app.feature.home.data.source.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.google.gson.annotations.SerializedName
 
-@Entity(tableName = AppDatabase.TABLE_AVATAR_CATEGORIES)
+@Entity(
+    tableName = AvatarCategoriesTable.name,
+    indices = [Index(name = "catalog_name_index", value = [AvatarCategoriesTable.Columns.NAME], unique = true)]
+)
 data class CategoryEntity(
     @SerializedName("name")
     val name: String,

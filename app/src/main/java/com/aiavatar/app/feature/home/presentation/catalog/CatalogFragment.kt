@@ -20,6 +20,7 @@ import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AndroidEntryPoint
 class CatalogFragment : Fragment() {
@@ -94,6 +96,9 @@ class CatalogFragment : Fragment() {
                     retryButton.isVisible = avatarsAdapter.itemCount <= 0
                     val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorText
                     if (e != null) {
+                        if (BuildConfig.DEBUG) {
+                            Timber.e(e)
+                        }
                         if (uiErr != null) {
                             context?.showToast(uiErr.asString(requireContext()))
                         }
@@ -108,7 +113,11 @@ class CatalogFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadStateFlow ->
                 progressBar.isVisible = loadStateFlow.refresh is LoadState.Loading
-                swipeRefreshLayout.isRefreshing = loadStateFlow.refresh is LoadState.Loading
+                if (swipeRefreshLayout.isRefreshing) {
+                    if (loadStateFlow.refresh !is LoadState.Loading) {
+                        swipeRefreshLayout.isRefreshing = false
+                    }
+                }
                 if (loadStateFlow.refresh is LoadState.Loading) {
                     retryButton.isVisible = false
                 }

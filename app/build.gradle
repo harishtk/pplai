@@ -162,6 +162,8 @@ dependencies {
 
     /* Hilt */
     implementation "com.google.dagger:hilt-android:$hilt_version"
+    implementation 'androidx.core:core-ktx:+'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     kapt "com.google.dagger:hilt-compiler:$hilt_version"
 

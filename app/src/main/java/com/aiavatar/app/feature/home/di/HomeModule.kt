@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.home.di
 
+import com.aiavatar.app.core.data.source.local.CacheLocalDataSource
 import com.aiavatar.app.di.WebService
 import com.aiavatar.app.feature.home.data.repository.HomeRepositoryImpl
 import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
@@ -20,10 +21,12 @@ object HomeModule {
     fun provideHomeRepository(
         homeRemoteDataSource: HomeRemoteDataSource,
         homeLocalDataSource: HomeLocalDataSource,
+        cacheLocalDataSource: CacheLocalDataSource,
     ): HomeRepository {
         return HomeRepositoryImpl(
             remoteDataSource = homeRemoteDataSource,
-            localDataSource = homeLocalDataSource
+            localDataSource = homeLocalDataSource,
+            cacheLocalDataSource = cacheLocalDataSource
         )
     }
 

@@ -80,4 +80,12 @@
     <string name="content_description_close">Close</string>
     <string name="label_save">Save</string>
     <string name="label_recreate">Recreate</string>
+
+    <string name="cannot_refresh_message_single">Can\'t refresh. Last updated %1$d minute ago</string>
+    <string name="cannot_refresh_message_more">Can\'t refresh. Last updated %1$d minutes ago</string>
+
+    <plurals name="cannot_refresh_message">
+        <item quantity="one">@string/cannot_refresh_message_single</item>
+        <item quantity="other">@string/cannot_refresh_message_more</item>
+    </plurals>
 </resources>

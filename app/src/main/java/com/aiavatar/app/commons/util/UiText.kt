@@ -1,6 +1,7 @@
 package com.aiavatar.app.commons.util
 
 import android.content.Context
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import com.aiavatar.app.R
 
