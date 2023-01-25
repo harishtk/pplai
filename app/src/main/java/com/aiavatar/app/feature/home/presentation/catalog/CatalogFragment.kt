@@ -1,7 +1,6 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
 import android.os.Bundle
-import android.provider.Contacts.Intents.UI
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +12,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
+import com.aiavatar.app.core.domain.util.BuenoCacheException
 import com.aiavatar.app.databinding.FragmentCatalogBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.model.Category
@@ -20,7 +20,6 @@ import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -30,6 +29,8 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
+import kotlin.math.min
 
 @AndroidEntryPoint
 class CatalogFragment : Fragment() {
@@ -96,11 +97,36 @@ class CatalogFragment : Fragment() {
                     retryButton.isVisible = avatarsAdapter.itemCount <= 0
                     val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorText
                     if (e != null) {
-                        if (BuildConfig.DEBUG) {
-                            Timber.e(e)
-                        }
-                        if (uiErr != null) {
-                            context?.showToast(uiErr.asString(requireContext()))
+                        when (e) {
+                            is BuenoCacheException -> {
+                                val hours = TimeUnit.MINUTES.toHours(e.minutesAgo).toInt()
+                                val minutes = hours - e.minutesAgo.toInt()
+                                val timeAgoString = if (hours > 0) {
+                                    resources.getQuantityString(R.plurals.hours_ago, hours, hours)
+                                } else {
+                                    resources.getQuantityString(R.plurals.minutes_ago, minutes, minutes).also { minutesAgoString ->
+                                        context?.showToast(
+                                            getString(
+                                                R.string.cannot_refresh_message,
+                                                minutesAgoString
+                                            )
+                                        )
+                                    }
+                                }
+                                if (BuildConfig.DEBUG) {
+                                    getString(R.string.cannot_refresh_message, timeAgoString).apply {
+                                        Timber.d("Refresh: $this")
+                                    }
+                                }
+                            }
+                            else -> {
+                                if (BuildConfig.DEBUG) {
+                                    Timber.e(e)
+                                }
+                                if (uiErr != null) {
+                                    context?.showToast(uiErr.asString(requireContext()))
+                                }
+                            }
                         }
                         uiAction(CatalogUiAction.ErrorShown(e))
                     }
@@ -224,7 +250,7 @@ class CatalogFragment : Fragment() {
     private fun gotoCatalogDetail(category: Category, cardClickPosition: Int = -1) {
         findNavController().apply {
             val args = Bundle().apply {
-                category.id?.let { putLong("category_id", it) }
+                putString(MoreCatalogFragment.ARG_CATALOG_NAME, category.categoryName)
             }
             // args.putParcelable(Constant.EXTRA_DATA, category)
             navigate(R.id.action_catalog_list_to_more_catalog, args)

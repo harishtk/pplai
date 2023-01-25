@@ -11,7 +11,7 @@ data class SocialLoginRequestDto(
     @SerializedName("emailAddress")
     val email: String,
     @SerializedName("guestUserId")
-    val guestUserId: String,
+    val guestUserId: Long,
     @SerializedName("device")
     val platform: String,
     @SerializedName("fcm")

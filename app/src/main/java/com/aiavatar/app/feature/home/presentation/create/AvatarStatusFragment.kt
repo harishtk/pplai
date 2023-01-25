@@ -140,7 +140,7 @@ class AvatarStatusFragment : Fragment() {
                     // Avatar status
                     when (avatarStatusWithFiles.avatarStatus.modelStatus) {
                         "training_processing" -> {
-                            description.text = "We're pouring out hearts and souls into this project, we ask for a bit more time"
+                            description.text = "We're pouring out hearts and souls into this project, \nwe ask for a bit more time"
 
                             logo.isVisible = false
                             thinking.isVisible = true

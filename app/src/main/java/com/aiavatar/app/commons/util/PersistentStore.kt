@@ -34,8 +34,8 @@ class PersistentStore private constructor(
     val notifyMe: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.NOTIFY_UPON_COMPLETION, true)
 
-    val guestUserId: String
-        get() = getAppPreferences().getString(UserPreferenceKeys.GUEST_USER_ID, "") ?: ""
+    val guestUserId: Long
+        get() = getAppPreferences().getLong(UserPreferenceKeys.GUEST_USER_ID, 0L)
 
     val isProcessingModel: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.PROCESSING_MODEL, false)
@@ -100,8 +100,8 @@ class PersistentStore private constructor(
         return this
     }
 
-    fun setGuestUserId(userId: String): PersistentStore {
-        getAppPreferences().edit().putString(UserPreferenceKeys.GUEST_USER_ID, userId).apply()
+    fun setGuestUserId(userId: Long): PersistentStore {
+        getAppPreferences().edit().putLong(UserPreferenceKeys.GUEST_USER_ID, userId).apply()
         return this
     }
 
@@ -135,7 +135,7 @@ class PersistentStore private constructor(
         setDeviceToken("")
         setUsername("")
         setEmail("")
-        setGuestUserId("")
+        setGuestUserId(0L)
         setSocialImage(null)
         setCurrentAvatarStatusId(null)
         setProcessingModel(false)

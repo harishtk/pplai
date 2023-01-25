@@ -4,6 +4,9 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.feature.home.data.source.local.dao.CatalogListDao
+import com.aiavatar.app.feature.home.domain.model.CatalogList
+import com.aiavatar.app.feature.home.domain.model.ListAvatar
 
 @Entity(
     tableName = CatalogListTable.name,
@@ -17,6 +20,24 @@ data class CatalogListEntity(
     @ColumnInfo("id")
     @PrimaryKey(autoGenerate = true)
     var _id: Long? = null
+}
+
+fun CatalogListEntity.toCatalogList(): CatalogList {
+    return CatalogList(
+        catalogName = catalogName,
+        imageName = imageName
+    ).also {
+        it.id = _id
+    }
+}
+
+fun CatalogList.asEntity(): CatalogListEntity {
+    return CatalogListEntity(
+        catalogName = catalogName,
+        imageName = imageName
+    ).also {
+        it._id = id
+    }
 }
 
 object CatalogListTable {

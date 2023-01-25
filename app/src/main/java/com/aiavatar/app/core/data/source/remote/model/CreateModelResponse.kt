@@ -16,7 +16,7 @@ data class CreateModelDataDto(
     @SerializedName("id")
     val id: Long,
     @SerializedName("userId")
-    val guestUserId: String?,
+    val guestUserId: Long?,
     @SerializedName("eta")
     val eta: Long,
     @SerializedName("modelId")

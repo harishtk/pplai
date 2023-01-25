@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.home.data.source.remote.model
 
+import com.aiavatar.app.feature.home.domain.model.CatalogList
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.nullAsEmpty
@@ -39,6 +40,13 @@ fun ListAvatarDto.toListAvatar(): ListAvatar {
     return ListAvatar(
         id = id,
         categoryName = categoryName,
+        imageName = imageName
+    )
+}
+
+fun ListAvatarDto.toCatalogList(catalogName: String): CatalogList {
+    return CatalogList(
+        catalogName = catalogName,
         imageName = imageName
     )
 }

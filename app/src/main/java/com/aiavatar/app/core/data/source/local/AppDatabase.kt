@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.aiavatar.app.core.data.source.local.dao.*
 import com.aiavatar.app.core.data.source.local.entity.*
+import com.aiavatar.app.feature.home.data.source.local.dao.CatalogListDao
 import com.aiavatar.app.feature.home.data.source.local.dao.CategoryDao
 import com.aiavatar.app.feature.home.data.source.local.entity.CatalogListEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.CategoryEntity
@@ -29,6 +30,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun avatarFilesDao(): AvatarFilesDao
 
     abstract fun categoryDao(): CategoryDao
+
+    abstract fun catalogListDao(): CatalogListDao
 
     abstract fun cacheKeysDao(): CacheKeysDao
 

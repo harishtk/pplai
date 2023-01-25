@@ -17,6 +17,10 @@ interface CatalogListDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: CatalogListEntity): Long
 
-    @Delete
-    suspend fun deleteAll()
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(entities: List<CatalogListEntity>): List<Long>
+
+    @Query("DELETE FROM ${CatalogListTable.name} WHERE ${CatalogListTable.Columns.CATALOG_NAME} = :catalogName")
+    suspend fun deleteAll(catalogName: String)
+
 }

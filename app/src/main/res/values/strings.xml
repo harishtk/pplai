@@ -81,11 +81,21 @@
     <string name="label_save">Save</string>
     <string name="label_recreate">Recreate</string>
 
-    <string name="cannot_refresh_message_single">Can\'t refresh. Last updated %1$d minute ago</string>
-    <string name="cannot_refresh_message_more">Can\'t refresh. Last updated %1$d minutes ago</string>
+    <string name="cannot_refresh_message">Can\'t refresh. Last updated %1$s</string>
 
-    <plurals name="cannot_refresh_message">
-        <item quantity="one">@string/cannot_refresh_message_single</item>
-        <item quantity="other">@string/cannot_refresh_message_more</item>
+    <string name="hours_single">An hour ago</string>
+    <string name="hours_more">%1$d hours ago</string>
+
+    <string name="minutes_single">moments ago</string>
+    <!--<string name="minutes_more">%1$d minutes ago</string>-->
+    <string name="minutes_more">few minutes ago</string>
+
+    <plurals name="hours_ago">
+        <item quantity="one">@string/hours_single</item>
+        <item quantity="other">@string/hours_more</item>
+    </plurals>
+    <plurals name="minutes_ago">
+        <item quantity="one">@string/minutes_single</item>
+        <item quantity="other">@string/minutes_more</item>
     </plurals>
 </resources>

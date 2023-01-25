@@ -1,7 +1,6 @@
 package com.aiavatar.app.feature.home.domain.repository
 
 import com.aiavatar.app.commons.util.Result
-import com.aiavatar.app.feature.home.data.source.remote.model.ListAvatarDto
 import com.aiavatar.app.feature.home.domain.model.*
 import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
 import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
@@ -13,7 +12,7 @@ interface HomeRepository {
 
     fun getCatalog(): Flow<Result<List<Category>>>
 
-    fun getCatalogDetail(request: CatalogDetailRequest): Flow<Result<CatalogDetailData>>
+    fun getCatalogList(request: CatalogDetailRequest): Flow<Result<CatalogDetailData>>
 
     fun getSubscriptionPlans(): Flow<Result<List<SubscriptionPlan>>>
 
@@ -26,4 +25,6 @@ interface HomeRepository {
     fun getAvatars(getAvatarsRequest: GetAvatarsRequest): Flow<Result<List<ListAvatar>>>
 
     fun getCatalog2(forceRefresh: Boolean): Flow<Result<List<Category>>>
+
+    fun getCatalogList2(request: CatalogDetailRequest, forceRefresh: Boolean): Flow<Result<CatalogDetailData>>
 }

@@ -8,7 +8,7 @@ data class LoginRequestDto(
     @SerializedName("emailAddress")
     val email: String,
     @SerializedName("guestUserId")
-    val guestUserId: String,
+    val guestUserId: Long,
     @SerializedName("callFor")
     val callFor: String,
     @SerializedName("otp")

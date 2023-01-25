@@ -8,10 +8,10 @@ import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
-import com.aiavatar.app.feature.home.domain.model.Category
-import com.aiavatar.app.feature.home.domain.model.ListAvatar
+import com.aiavatar.app.feature.home.domain.model.CatalogList
 import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import com.aiavatar.app.launch
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,6 +36,15 @@ class MoreCatalogViewModel @Inject constructor(
     private var catalogDetailFetchJob: Job? = null
 
     init {
+        uiState.map { it.catalogName }
+            .distinctUntilChanged()
+            .onEach { catalogName ->
+                if (catalogName != null) {
+                    getCatalogDetailInternal(catalogName, false)
+                }
+            }
+            .launchIn(viewModelScope)
+
         accept = { uiAction -> onUiAction(uiAction) }
     }
 
@@ -53,34 +62,37 @@ class MoreCatalogViewModel @Inject constructor(
     }
 
     fun retry() {
-        uiState.value.category?.let {
-            getCatalogDetailInternal(it.categoryName!!)
+        uiState.value.catalogName?.let {
+            getCatalogDetailInternal(it, true)
         }
     }
 
-    fun setCategory(category: Category) {
+    fun setCatalogName(catalogName: String) {
         _uiState.update { state ->
             state.copy(
-                category = category
+                catalogName = catalogName
             )
         }
-        getCatalogDetailInternal(category.categoryName!!)
     }
 
-    private fun getCatalogDetailInternal(category: String) {
-        val request = CatalogDetailRequest(category)
-        getCatalogDetail(request)
+    private fun getCatalogDetailInternal(catalogName: String, forceRefresh: Boolean = false) {
+        val request = CatalogDetailRequest(category = catalogName)
+        getCatalogDetail(request, forceRefresh)
     }
 
-    private fun getCatalogDetail(request: CatalogDetailRequest) {
-        if (catalogDetailFetchJob?.isActive == true) {
+    private fun getCatalogDetail(
+        request: CatalogDetailRequest,
+        forceRefresh: Boolean
+    ) {
+        /*if (catalogDetailFetchJob?.isActive == true) {
             val t = IllegalStateException("A fetch job is already active. Ignoring request")
             Timber.e(t)
             return
-        }
+        }*/
         catalogDetailFetchJob?.cancel(CancellationException("New request")) // just in case
         catalogDetailFetchJob = viewModelScope.launch {
-            homeRepository.getCatalogDetail(request).collectLatest { result ->
+            homeRepository.getCatalogList2(request, forceRefresh).collectLatest { result ->
+                Timber.d("Catalog list: result $result")
                 when (result) {
                     is Result.Loading -> setLoading(LoadType.REFRESH, LoadState.Loading())
                     is Result.Error -> {
@@ -130,7 +142,7 @@ class MoreCatalogViewModel @Inject constructor(
 
 data class MoreCatalogState(
     val loadState: LoadStates = LoadStates.IDLE,
-    val category: Category? = null,
+    val catalogName: String? = null,
     val avatarList: List<MoreCatalogUiModel> = emptyList(),
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
@@ -141,5 +153,5 @@ interface MoreCatalogUiAction {
 }
 
 interface MoreCatalogUiModel {
-    data class Item(val listAvatar: ListAvatar, val selected: Boolean) : MoreCatalogUiModel
+    data class Item(val catalogList: CatalogList, val selected: Boolean) : MoreCatalogUiModel
 }

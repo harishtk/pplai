@@ -11,23 +11,18 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import androidx.transition.Transition
-import androidx.transition.TransitionManager
-import com.aiavatar.app.Constant
-import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.FragmentMoreCatalogBinding
 import com.aiavatar.app.databinding.ItemMoreCatalogBinding
-import com.aiavatar.app.feature.home.domain.model.Category
+import com.aiavatar.app.feature.home.domain.model.CatalogList
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.safeCall
 import com.bumptech.glide.Glide
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MoreCatalogFragment : Fragment() {
@@ -38,6 +33,11 @@ class MoreCatalogFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         // TODO: get the category id and fetch category list
+        arguments?.apply {
+            getString(ARG_CATALOG_NAME, null)?.let { name ->
+                viewModel.setCatalogName(name)
+            }
+        }
         /*val category = arguments?.getParcelable<Category?>(Constant.EXTRA_DATA)
         if (category != null) {
             viewModel.setCategory(category)
@@ -96,7 +96,7 @@ class MoreCatalogFragment : Fragment() {
     }
 
     private fun FragmentMoreCatalogBinding.bindToolbar(uiState: StateFlow<MoreCatalogState>) {
-        val catalogTitleFlow = uiState.mapNotNull { it.category?.categoryName }
+        val catalogTitleFlow = uiState.mapNotNull { it.catalogName }
         viewLifecycleOwner.lifecycleScope.launch {
             catalogTitleFlow.collectLatest { catalogTitle ->
                 toolbarIncluded.toolbarTitle.text = catalogTitle
@@ -117,6 +117,7 @@ class MoreCatalogFragment : Fragment() {
 
     companion object {
         const val ARG_CATEGORY_ID = "com.aiavatar.app.args.CATEGORY_ID"
+        const val ARG_CATALOG_NAME = "com.aiavatar.app.args.CATALOG_NAME"
     }
 }
 
@@ -131,7 +132,7 @@ class MoreCatalogScrollAdapter(
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val model = getItem(position)
         model as MoreCatalogUiModel.Item
-        holder.bind(model.listAvatar, model.selected, onCardClick)
+        holder.bind(model.catalogList, model.selected, onCardClick)
     }
 
     override fun onBindViewHolder(
@@ -166,7 +167,7 @@ class MoreCatalogScrollAdapter(
         private val binding: ItemMoreCatalogBinding
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(preset: ListAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
+        fun bind(preset: CatalogList, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
             title.text = preset.imageName
             Glide.with(imageView)
                 .load(URLProvider.avatarUrl(preset.imageName))
@@ -216,7 +217,7 @@ class MoreCatalogScrollAdapter(
                 newItem: MoreCatalogUiModel,
             ): Boolean {
                 return (oldItem is MoreCatalogUiModel.Item && newItem is MoreCatalogUiModel.Item &&
-                        oldItem.listAvatar.id == newItem.listAvatar.id)
+                        oldItem.catalogList.id == newItem.catalogList.id)
             }
 
             override fun areContentsTheSame(
@@ -224,7 +225,7 @@ class MoreCatalogScrollAdapter(
                 newItem: MoreCatalogUiModel,
             ): Boolean {
                 return (oldItem is MoreCatalogUiModel.Item && newItem is MoreCatalogUiModel.Item &&
-                        oldItem.listAvatar == newItem.listAvatar && oldItem.selected == newItem.selected)
+                        oldItem.catalogList == newItem.catalogList && oldItem.selected == newItem.selected)
             }
 
             override fun getChangePayload(

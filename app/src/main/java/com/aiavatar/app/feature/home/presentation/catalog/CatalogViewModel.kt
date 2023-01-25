@@ -93,10 +93,7 @@ class CatalogViewModel @Inject constructor(
                                 _uiState.update { state ->
                                     state.copy(
                                         exception = result.exception,
-                                        uiErrorText = UiText.StringResource(
-                                            R.string.cannot_refresh_message_more,
-                                            result.exception.minutesAgo
-                                        )
+                                        uiErrorText = UiText.somethingWentWrong
                                     )
                                 }
                             }
