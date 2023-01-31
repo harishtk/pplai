@@ -22,7 +22,7 @@ data class AvatarStatusEntity(
     val generatedAiCount: Int,
     @ColumnInfo("paid")
     val paid: Boolean,
-    @ColumnInfo("model_renamed")
+    @ColumnInfo("renamed")
     val modelRenamed: Boolean,
     @ColumnInfo("eta")
     val eta: Int
@@ -80,7 +80,7 @@ object AvatarStatusTable {
         const val TOTAL_AI_COUNT        = "total_ai_count"
         const val GENERATED_AI_COUNT    = "generated_ai_count"
         const val PAID                  = "paid"
-        const val MODEL_RENAMED         = "model_renamed"
+        const val MODEL_RENAMED         = "renamed"
         const val MODEL_ID              = "model_id"
         const val AVATAR_STATUS_ID      = "avatar_status_id"
     }

@@ -92,6 +92,13 @@ fun Context.showToast(message: String, isShort: Boolean = true) {
     Toast.makeText(this, message, toastLength).show()
 }
 
+fun Context.debugToast(message: String, isShort: Boolean = true) {
+    if (BuildConfig.DEBUG) {
+        showToast(message, isShort)
+    }
+}
+
+
 fun Long.format(): String {
     return String.format("%02d", this)
 }

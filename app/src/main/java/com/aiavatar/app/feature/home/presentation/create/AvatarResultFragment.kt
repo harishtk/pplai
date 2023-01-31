@@ -15,7 +15,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
@@ -35,7 +34,6 @@ import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -213,7 +211,7 @@ class AvatarResultFragment : Fragment() {
                         // TODO: if model is renamed directly save the photos
                         checkPermissionAndScheduleWorker(avatarStatus.modelId)
                     } else {
-                        context?.showToast("Getting folder name")
+                        context?.debugToast("Getting folder name")
                         EditFolderNameDialog { typedName ->
                             if (typedName.isBlank()) {
                                 return@EditFolderNameDialog "Name cannot be empty!"
@@ -300,7 +298,7 @@ class AvatarResultFragment : Fragment() {
                 val args = Bundle().apply {
                     putString(Constant.EXTRA_FROM, "result_preview")
                     putString(ModelDetailFragment.ARG_MODEL_ID, modelId)
-                    putInt(ModelDetailFragment.ARG_JUMP_TO_POSITION, position)
+                    data.avatar.id?.let { putLong(ModelDetailFragment.ARG_JUMP_TO_ID, it) }
                 }
                 navigate(R.id.model_detail, args, navOpts)
             }

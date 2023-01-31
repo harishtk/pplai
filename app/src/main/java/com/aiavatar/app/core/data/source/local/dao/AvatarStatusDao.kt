@@ -9,6 +9,7 @@ import androidx.room.Update
 import com.aiavatar.app.core.data.source.local.entity.AvatarStatusEntity
 import com.aiavatar.app.core.data.source.local.entity.AvatarStatusTable
 import com.aiavatar.app.core.data.source.local.model.AvatarStatusWithFilesEntity
+import com.aiavatar.app.core.domain.model.ModelStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -17,6 +18,10 @@ interface AvatarStatusDao {
     @Transaction
     @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.AVATAR_STATUS_ID} = :statusId")
     fun getAvatarStatus(statusId: Long): Flow<AvatarStatusWithFilesEntity?>
+
+    @Query("SELECT * FROM ${AvatarStatusTable.name} " +
+            "WHERE ${AvatarStatusTable.Columns.MODEL_STATUS} != completed")
+    fun getRunningTraining(): Flow<List<AvatarStatusWithFilesEntity>>?
 
     @Transaction
     @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.AVATAR_STATUS_ID} = :statusId")

@@ -64,7 +64,8 @@ class ModelDetailFragment : Fragment() {
     private var isSettingsLaunched = false
 
     private lateinit var from: String
-    private var jumpToPosition = -1
+    private var jumpToId: Long = -1
+    private var jumpToPosition: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,12 +106,14 @@ class ModelDetailFragment : Fragment() {
             when (from) {
                 "result_preview" -> {
                     val modelId = getString(ARG_MODEL_ID, "")
-                    jumpToPosition = getInt(ARG_JUMP_TO_POSITION, -1)
+                    jumpToId = getLong(ARG_JUMP_TO_ID, -1L)
                     viewModel.setModelId(modelId)
+                    // TODO: get data from db
                 }
                 "my_models" -> {
                     val modelId = getString(ARG_MODEL_ID, "")
                     viewModel.setModelId(modelId)
+                    viewModel.refresh()
                 }
             }
         }
@@ -137,7 +140,6 @@ class ModelDetailFragment : Fragment() {
             uiAction = viewModel.accept,
             uiEvent = viewModel.uiEvent
         )
-        viewModel.refresh()
     }
 
     private fun FragmentModelDetailBinding.bindState(
@@ -204,6 +206,10 @@ class ModelDetailFragment : Fragment() {
                 indicatorView.onPageSelected(position)
                 viewModel.toggleSelection(position)
                 avatarScrollerList.smoothScrollToPosition(position)
+                if (position == jumpToPosition) {
+                     jumpToPosition = -1
+                }
+                Timber.d("Jump to Id: $jumpToPosition")
             }
 
             override fun onPageScrolled(
@@ -238,18 +244,36 @@ class ModelDetailFragment : Fragment() {
             .distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
             avatarListFlow.collectLatest { avatarList ->
-                catalogPresetAdapter.submitList(avatarList)
+                catalogPresetAdapter.submitList(avatarList) {
+                    Timber.d("Jump to Id: $jumpToId")
+                    val jumpToPos = avatarList.mapIndexed { index, avatarUiModel ->
+                        val id = (avatarUiModel as? SelectableAvatarUiModel.Item)?.listAvatar?.id
+                        Timber.d("Compare: 1 id = $id  == jump = $jumpToId")
+                        if (avatarUiModel is SelectableAvatarUiModel.Item && avatarUiModel.listAvatar.id == jumpToId) {
+                            index
+                        } else {
+                            -1
+                        }
+                    }.filterNot {
+                        Timber.d("Filter: $it")
+                        it == -1
+                    }
+                        .lastOrNull()?.let { _jumpToPosition ->
+                            jumpToPosition = _jumpToPosition
+                            Timber.d("Jump to position: $jumpToPosition")
+                            try {
+                                catalogPreviewPager.setCurrentItem(jumpToPosition, false)
+                            } catch (e: Exception) {
+                                Timber.d(e)
+                            }
+                        }
+                }
                 scrollerAdapter.submitList(avatarList)
                 setUpIndicator(avatarList.size)
 
-                if (jumpToPosition != -1) {
+                if (jumpToId != -1L) {
                     catalogPreviewPager.post {
-                        try {
-                            catalogPreviewPager.setCurrentItem(jumpToPosition, false)
-                            jumpToPosition = -1
-                        } catch (e: Exception) {
-                            Timber.d(e)
-                        }
+
                     }
                 }
             }
@@ -436,7 +460,7 @@ class ModelDetailFragment : Fragment() {
         val TAG = ModelDetailFragment::class.java.simpleName
 
         const val ARG_MODEL_ID = "com.aiavatar.app.args.MODEL_ID"
-        const val ARG_JUMP_TO_POSITION = "com.aiavatar.app.args.JUMP_TO_POSITION"
+        const val ARG_JUMP_TO_ID = "com.aiavatar.app.args.JUMP_TO_ID"
     }
 }
 

@@ -7,6 +7,8 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.domain.model.AvatarFile
+import com.aiavatar.app.feature.home.domain.model.ListAvatar
+import com.aiavatar.app.saveTempImage
 
 @Entity(
     tableName = AvatarFilesTable.name,
@@ -76,6 +78,14 @@ fun AvatarFile.toEntity(): AvatarFilesEntity {
         it.downloadedAt = downloadedAt
         it.downloadedSize = downloadedSize
     }
+}
+
+fun AvatarFile.toListAvatar(): ListAvatar {
+    return ListAvatar(
+        id = id!!,
+        categoryName = null,
+        imageName = remoteFile
+    )
 }
 
 object AvatarFilesTable {

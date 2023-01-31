@@ -210,6 +210,7 @@ class AvatarStatusFragment : Fragment() {
                         UploadSessionStatus.UPLOAD_COMPLETE -> {
                             description.text = "Yay! Your photos for creating avatar!"
                             btnCreateAvatar.isVisible = true
+                            btnCreateAvatar.setText("Generate")
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false

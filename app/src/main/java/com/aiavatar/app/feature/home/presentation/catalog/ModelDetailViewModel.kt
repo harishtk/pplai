@@ -11,6 +11,7 @@ import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.toAvatarFile
+import com.aiavatar.app.core.data.source.local.entity.toListAvatar
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.request.RenameModelRequest
@@ -75,14 +76,26 @@ class ModelDetailViewModel @Inject constructor(
             }
         }.launchIn(viewModelScope)
 
-        uiState.mapNotNull { it.modelId }
+        uiState.map { it.modelId }
+            .distinctUntilChanged()
             .flatMapLatest { modelId ->
-                appDatabase.avatarStatusDao().getAvatarStatusForModelId(modelId = modelId)
+                Timber.d("Model id: $modelId")
+                if (modelId != null) {
+                    appDatabase.avatarStatusDao().getAvatarStatusForModelId(modelId = modelId).also {
+                        Timber.d("Local result: $it")
+                    }
+                } else {
+                    emptyFlow()
+                }
             }.onEach { avatarStatusWithFilesEntity ->
+                Timber.d("Local result: $avatarStatusWithFilesEntity")
                 if (avatarStatusWithFilesEntity != null) {
                     _uiState.update { state ->
                         state.copy(
                             avatarStatusWithFiles = avatarStatusWithFilesEntity.toAvatarStatusWithFiles(),
+                            avatarList = avatarStatusWithFilesEntity.toAvatarStatusWithFiles()
+                                .avatarFiles
+                                .map { SelectableAvatarUiModel.Item(it.toListAvatar(), false) }
                         )
                     }
                 }
@@ -116,6 +129,14 @@ class ModelDetailViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 modelId = modelId
+            )
+        }
+    }
+
+    fun setFrom(from: String) {
+        _uiState.update { state ->
+            state.copy(
+                from = from
             )
         }
     }
@@ -244,6 +265,7 @@ class ModelDetailViewModel @Inject constructor(
 
 data class ModelDetailState(
     val loadState: LoadStates = LoadStates.IDLE,
+    val from: String? = null,
     val modelId: String? = null,
     val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val avatarList: List<SelectableAvatarUiModel> = emptyList(),
