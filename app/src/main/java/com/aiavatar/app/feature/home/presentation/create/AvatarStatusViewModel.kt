@@ -16,6 +16,7 @@ import com.aiavatar.app.core.data.source.local.model.UploadSessionWithFilesEntit
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarStatus
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.ModelStatus
 import com.aiavatar.app.core.domain.model.UploadSessionWithFiles
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.CreateModelRequest
@@ -298,7 +299,7 @@ class AvatarStatusViewModel @Inject constructor(
                     is Result.Success -> {
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
 
-                        if (result.data.avatarStatus.modelStatus != "completed") {
+                        if (result.data.avatarStatus.modelStatus != ModelStatus.COMPLETED) {
                             scheduleAvatarStatusJob(forceNew = true)
                         }
                         /*val avatarStatus = result.data.avatarStatus

@@ -1,7 +1,7 @@
 package com.aiavatar.app.core.domain.model
 
 data class AvatarStatus(
-    val modelStatus: String,
+    val modelStatus: ModelStatus,
     val totalAiCount: Int,
     val generatedAiCount: Int,
     val paid: Boolean,
@@ -16,7 +16,7 @@ data class AvatarStatus(
     internal companion object {
         fun emptyStatus(modelId: String): AvatarStatus =
             AvatarStatus(
-                modelStatus = "unknown",
+                modelStatus = ModelStatus.Default,
                 totalAiCount = 0,
                 generatedAiCount = 0,
                 paid = false,
@@ -24,5 +24,27 @@ data class AvatarStatus(
                 modelId = modelId,
                 eta = 300
             )
+    }
+}
+
+enum class ModelStatus(val statusString: String) {
+    TRAINING_PROCESSING("training_processing"),
+    TRAINING_FAILED("training_failed"),
+    AVATAR_PROCESSING("avatar_processing"),
+    COMPLETED("completed"),
+    UNKNOWN("unknown");
+
+    companion object {
+        internal val Default = UNKNOWN
+
+        fun fromRawValue(rawValue: String): ModelStatus {
+            return when (rawValue) {
+                "training_processing" -> TRAINING_PROCESSING
+                "training_failed" -> TRAINING_FAILED
+                "avatar_processing" -> AVATAR_PROCESSING
+                "completed" -> COMPLETED
+                else -> UNKNOWN
+            }
+        }
     }
 }

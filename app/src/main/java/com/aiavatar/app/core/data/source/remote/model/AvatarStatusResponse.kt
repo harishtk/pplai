@@ -3,6 +3,7 @@ package com.aiavatar.app.core.data.source.remote.model
 import com.aiavatar.app.core.domain.model.AvatarFile
 import com.aiavatar.app.core.domain.model.AvatarStatus
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.ModelStatus
 import com.aiavatar.app.feature.home.data.source.remote.model.ListAvatarDto
 import com.google.gson.annotations.SerializedName
 
@@ -19,7 +20,7 @@ data class AvatarStatusDto(
     @SerializedName("id")
     val id: Long,
     @SerializedName("modelStatus")
-    val modelStatus: String,
+    val modelStatus: String, /* training_processing, training_failed, avatar_processing, completed */
     @SerializedName("totalAiCount")
     val totalAiCount: Int,
     @SerializedName("generatedAiCount")
@@ -38,7 +39,7 @@ data class AvatarStatusDto(
 
 fun AvatarStatusDto.toAvatarStatus(): AvatarStatus {
     return AvatarStatus(
-        modelStatus = modelStatus,
+        modelStatus = ModelStatus.fromRawValue(modelStatus),
         totalAiCount = totalAiCount,
         generatedAiCount = generatedAiCount,
         paid = paid,

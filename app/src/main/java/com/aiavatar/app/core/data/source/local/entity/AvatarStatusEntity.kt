@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.domain.model.AvatarStatus
+import com.aiavatar.app.core.domain.model.ModelStatus
 
 @Entity(
     tableName = AvatarStatusTable.name,
@@ -41,7 +42,7 @@ data class AvatarStatusEntity(
 fun AvatarStatusEntity.toAvatarStatus(): AvatarStatus {
     return AvatarStatus(
         modelId = modelId,
-        modelStatus = modelStatus,
+        modelStatus = ModelStatus.fromRawValue(modelStatus),
         totalAiCount = totalAiCount,
         generatedAiCount = generatedAiCount,
         paid = paid,
@@ -56,7 +57,7 @@ fun AvatarStatusEntity.toAvatarStatus(): AvatarStatus {
 
 fun AvatarStatus.toEntity(): AvatarStatusEntity {
     return AvatarStatusEntity(
-        modelStatus = modelStatus,
+        modelStatus = modelStatus.statusString,
         totalAiCount = totalAiCount,
         generatedAiCount = generatedAiCount,
         paid = paid,

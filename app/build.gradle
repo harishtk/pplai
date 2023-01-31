@@ -102,7 +102,6 @@ android {
             buildConfigField "String", "ENV", '"dev"'
             buildConfigField "boolean", "IS_SECURED", "false"
             buildConfigField "String", "S3_BUCKET", '"https://d19quh86lv8eyv.cloudfront.net"'
-            // https://d19quh86lv8eyv.cloudfront.net/aiAvatar/
         }
 
         prod {

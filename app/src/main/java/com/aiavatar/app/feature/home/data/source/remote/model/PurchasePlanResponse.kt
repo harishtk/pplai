@@ -14,6 +14,12 @@ data class PurchasePlanResponse(
 
     data class Data(
         @SerializedName("statusId")
-        val avatarStatusId: String
+        val avatarStatusId: String,
+        @SerializedName("userId")
+        val userId: String,
+        @SerializedName("eta")
+        val eta: Int,
+        @SerializedName("modelId")
+        val modelId: String,
     )
 }

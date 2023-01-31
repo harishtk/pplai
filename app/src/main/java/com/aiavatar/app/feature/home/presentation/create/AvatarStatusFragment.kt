@@ -19,6 +19,7 @@ import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
+import com.aiavatar.app.core.domain.model.ModelStatus
 import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
 import com.aiavatar.app.defaultNavOptsBuilder
 import com.aiavatar.app.di.ApplicationDependencies
@@ -139,7 +140,7 @@ class AvatarStatusFragment : Fragment() {
                 if (avatarStatusWithFiles != null) {
                     // Avatar status
                     when (avatarStatusWithFiles.avatarStatus.modelStatus) {
-                        "training_processing" -> {
+                        ModelStatus.TRAINING_PROCESSING -> {
                             description.text = "We're pouring out hearts and souls into this project, \nwe ask for a bit more time"
 
                             logo.isVisible = false
@@ -154,7 +155,7 @@ class AvatarStatusFragment : Fragment() {
                             val etaTime = getFormattedTime(avatarStatusWithFiles.avatarStatus.eta)
                             textProgressHint.text = "ETA $etaTime"
                         }
-                        "avatar_processing" -> {
+                        ModelStatus.AVATAR_PROCESSING -> {
                             description.text = "Generating your awesome photos!"
 
                             logo.isVisible = false
@@ -172,7 +173,7 @@ class AvatarStatusFragment : Fragment() {
 
                             cbNotifyMe.isVisible = true
                         }
-                        "completed" -> {
+                        ModelStatus.COMPLETED -> {
 
                             logo.isVisible = true
                             thinking.isVisible = false
@@ -187,6 +188,9 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
+                        }
+                        ModelStatus.TRAINING_FAILED -> {
+                            // TODO: retry uploading fresh images
                         }
                         else -> {
                             logo.isVisible = true
@@ -208,7 +212,7 @@ class AvatarStatusFragment : Fragment() {
                             cbNotifyMe.isVisible = false
                         }
                         UploadSessionStatus.UPLOAD_COMPLETE -> {
-                            description.text = "Yay! Your photos for creating avatar!"
+                            description.text = "Yay! Your photos are ready for creating avatar!"
                             btnCreateAvatar.isVisible = true
                             btnCreateAvatar.setText("Generate")
                             progressIndicator.isVisible = false
@@ -308,7 +312,7 @@ class AvatarStatusFragment : Fragment() {
         btnCreateAvatar.setOnClickListener {
             val modelStatus = uiState.value.avatarStatusWithFiles?.avatarStatus?.modelStatus
             val sessionStatus = uiState.value.sessionStatus
-            if (modelStatus == "completed") {
+            if (modelStatus == ModelStatus.COMPLETED) {
                 // TODO: View results
                 findNavController().apply {
                     val navOpts = defaultNavOptsBuilder()
