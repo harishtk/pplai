@@ -62,6 +62,17 @@ class HomeRemoteDataSource @Inject constructor(
         emit(safeApiCall { apiService.getMyModels() })
     }.flowOn(dispatcher)
 
+    suspend fun getMyModelsSync(): NetworkResult<MyModelsResponse> =
+        safeApiCall { apiService.getMyModels() }
+
+    fun getModel(modelId: String): Flow<NetworkResult<MyModelsResponse>> = flow {
+        emit(NetworkResult.Loading())
+        emit(safeApiCall { apiService.getModel(modelId) })
+    }.flowOn(dispatcher)
+
+    suspend fun getModelSync(modelId: String): NetworkResult<MyModelsResponse> =
+        safeApiCall { apiService.getModel(modelId) }
+
     fun getAvatars(getAvatarsRequestDto: GetAvatarsRequestDto): Flow<NetworkResult<GetAvatarsResponse>> = flow {
         emit(NetworkResult.Loading())
         emit(safeApiCall { apiService.getAvatars(getAvatarsRequestDto) })

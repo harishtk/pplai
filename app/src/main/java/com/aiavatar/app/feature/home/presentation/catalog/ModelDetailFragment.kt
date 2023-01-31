@@ -103,19 +103,20 @@ class ModelDetailFragment : Fragment() {
 
         arguments?.apply {
             from = getString(Constant.EXTRA_FROM, "unknown")
-            when (from) {
-                "result_preview" -> {
-                    val modelId = getString(ARG_MODEL_ID, "")
-                    jumpToId = getLong(ARG_JUMP_TO_ID, -1L)
-                    viewModel.setModelId(modelId)
-                    // TODO: get data from db
-                }
-                "my_models" -> {
-                    val modelId = getString(ARG_MODEL_ID, "")
-                    viewModel.setModelId(modelId)
-                    viewModel.refresh()
-                }
+            val modelId = getString(ARG_MODEL_ID, null)
+            val statusId = getString(ARG_STATUS_ID, null)
+            jumpToId = getLong(ARG_JUMP_TO_ID, -1L)
+
+            Timber.d("Args: model id = $modelId status id = $statusId")
+
+            if (modelId?.isNotBlank() == true) {
+                viewModel.setModelId(modelId)
             }
+            if (statusId?.isNotBlank() == true) {
+                viewModel.setStatusId(statusId)
+            }
+
+            viewModel.refresh()
         }
     }
 
@@ -310,7 +311,8 @@ class ModelDetailFragment : Fragment() {
 
         icDownload.setOnClickListener {
             val avatarStatus = uiState.value.avatarStatusWithFiles?.avatarStatus
-                ?: return@setOnClickListener
+            Timber.d("avatarStatus: $avatarStatus")
+            avatarStatus ?: return@setOnClickListener
             if (avatarStatus.modelRenamedByUser) {
                 // TODO: if model is renamed directly save the photos
                 checkPermissionAndScheduleWorker(avatarStatus.modelId)
@@ -328,8 +330,8 @@ class ModelDetailFragment : Fragment() {
                     viewModel.saveModelName(typedName)
                     null
                 }.show(childFragmentManager, "folder-name-dialog")
+                // checkPermissionAndScheduleWorker(uiState.value.modelId!!)
             }
-            checkPermissionAndScheduleWorker(uiState.value.modelId!!)
         }
 
         btnNext.setOnClickListener {
@@ -392,7 +394,7 @@ class ModelDetailFragment : Fragment() {
     private fun checkPermissionAndScheduleWorker(modelId: String) {
         val cont: Continuation = {
             WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
-            context?.showToast("Downloading")
+            context?.showToast("Downloading..")
         }
 
         if (checkStoragePermission()) {
@@ -460,6 +462,7 @@ class ModelDetailFragment : Fragment() {
         val TAG = ModelDetailFragment::class.java.simpleName
 
         const val ARG_MODEL_ID = "com.aiavatar.app.args.MODEL_ID"
+        const val ARG_STATUS_ID = "com.aiavatar.app.args.STATUS_ID"
         const val ARG_JUMP_TO_ID = "com.aiavatar.app.args.JUMP_TO_ID"
     }
 }

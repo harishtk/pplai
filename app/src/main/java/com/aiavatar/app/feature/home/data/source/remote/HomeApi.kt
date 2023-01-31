@@ -9,6 +9,7 @@ import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface HomeApi {
 
@@ -23,6 +24,9 @@ interface HomeApi {
 
     @POST("user/models")
     suspend fun getMyModels(): Response<MyModelsResponse>
+
+    @POST("user/models/{modelId}")
+    suspend fun getModel(@Path("modelId") modelId: String): Response<MyModelsResponse>
 
     @POST("user/avatars")
     suspend fun getAvatars(@Body requestDto: GetAvatarsRequestDto): Response<GetAvatarsResponse>

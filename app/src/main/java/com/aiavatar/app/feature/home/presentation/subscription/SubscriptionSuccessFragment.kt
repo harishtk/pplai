@@ -9,12 +9,12 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentSubscriptionSuccessBinding
+import com.aiavatar.app.di.ApplicationDependencies
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -72,11 +72,13 @@ class SubscriptionSuccessFragment : Fragment() {
                     }
                     is SubscriptionSuccessUiEvent.NextScreen -> {
                         nextButton.setOnClickListener(null)
-                        val delta = System.currentTimeMillis() - pagePresentedAt
+                        /*val delta = System.currentTimeMillis() - pagePresentedAt
                         viewLifecycleOwner.lifecycleScope.launch {
                             delay(UI_PRESENTATION_TIME)
-                            gotoAvatarStatus()
-                        }
+                            ApplicationDependencies.getPersistentStore().apply {
+                                gotoAvatarStatus(currentAvatarStatusId)
+                            }
+                        }*/
                     }
                 }
             }
@@ -134,16 +136,21 @@ class SubscriptionSuccessFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             delay(UI_PRESENTATION_TIME)
             nextButton.cancelSpinning()
-            gotoAvatarStatus()
+            ApplicationDependencies.getPersistentStore().apply {
+                gotoAvatarStatus(currentAvatarStatusId)
+            }
         }
     }
 
-    private fun gotoAvatarStatus() = safeCall {
+    private fun gotoAvatarStatus(currentAvatarStatusId: String?) = safeCall {
         findNavController().apply {
             val navOpts = defaultNavOptsBuilder()
                 .setLaunchSingleTop(true)
                 .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
                 .build()
+            val args = Bundle().apply {
+                putString(Constant.ARG_STATUS_ID, currentAvatarStatusId)
+            }
             navigate(R.id.avatar_status, null, navOpts)
         }
     }

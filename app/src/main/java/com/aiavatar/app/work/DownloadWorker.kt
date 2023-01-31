@@ -193,6 +193,7 @@ class DownloadWorker @AssistedInject constructor(
     }
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {
+        Timber.d("createForegroundInfo: $progress")
         createUploadNotificationChannel(context)
 
         // Build a notification using bytesRead and contentLength

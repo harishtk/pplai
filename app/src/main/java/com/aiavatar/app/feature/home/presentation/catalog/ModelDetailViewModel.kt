@@ -10,20 +10,19 @@ import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
-import com.aiavatar.app.core.data.source.local.entity.toAvatarFile
 import com.aiavatar.app.core.data.source.local.entity.toListAvatar
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.aiavatar.app.feature.home.presentation.create.AvatarResultUiEvent
-import com.aiavatar.app.feature.home.presentation.create.AvatarResultUiModel
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -31,6 +30,7 @@ import timber.log.Timber
 import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ModelDetailViewModel @Inject constructor(
     private val appRepository: AppRepository,
@@ -50,6 +50,7 @@ class ModelDetailViewModel @Inject constructor(
     val accept: (ModelDetailUiAction) -> Unit
 
     private var avatarsFetchJob: Job? = null
+    private var avatarStatusJob: Job? = null
 
     init {
         val selectableAvatarUiModelListFlow = uiState.map { it.avatarList }
@@ -76,8 +77,61 @@ class ModelDetailViewModel @Inject constructor(
             }
         }.launchIn(viewModelScope)
 
+        accept = { uiAction -> onUiAction(uiAction) }
+    }
+
+    private fun onUiAction(action: ModelDetailUiAction) {
+        when (action) {
+            is ModelDetailUiAction.ErrorShown -> {
+                _uiState.update { state ->
+                    state.copy(
+                        exception = null,
+                        uiErrorText = null
+                    )
+                }
+            }
+        }
+    }
+
+    fun refresh() {
+        uiState.value.modelId?.let { modelId ->
+            val request = GetAvatarsRequest(modelId = modelId)
+            getAvatarsForModel(request)
+        }
+        uiState.value.statusId?.let { statusId ->
+            val request = AvatarStatusRequest(id = statusId)
+            getStatus(request)
+        }
+    }
+
+    fun setModelId(modelId: String) {
+        _uiState.update { state ->
+            state.copy(
+                modelId = modelId
+            )
+        }
+    }
+
+    fun setStatusId(statusId: String) {
+        _uiState.update { state ->
+            state.copy(
+                statusId = statusId
+            )
+        }
+    }
+
+    /**
+     * Populates the model details from local cache.
+     */
+    private fun getModelResult(statusId: String) {
         uiState.map { it.modelId }
             .distinctUntilChanged()
+            .onStart {
+                val request = AvatarStatusRequest(
+                    id = statusId
+                )
+                getStatus(request)
+            }
             .flatMapLatest { modelId ->
                 Timber.d("Model id: $modelId")
                 if (modelId != null) {
@@ -101,36 +155,6 @@ class ModelDetailViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
-
-        accept = { uiAction -> onUiAction(uiAction) }
-    }
-
-    private fun onUiAction(action: ModelDetailUiAction) {
-        when (action) {
-            is ModelDetailUiAction.ErrorShown -> {
-                _uiState.update { state ->
-                    state.copy(
-                        exception = null,
-                        uiErrorText = null
-                    )
-                }
-            }
-        }
-    }
-
-    fun refresh() {
-        uiState.value.modelId?.let {
-            val request = GetAvatarsRequest(it)
-            getAvatarsForModel(request)
-        }
-    }
-
-    fun setModelId(modelId: String) {
-        _uiState.update { state ->
-            state.copy(
-                modelId = modelId
-            )
-        }
     }
 
     fun setFrom(from: String) {
@@ -248,6 +272,85 @@ class ModelDetailViewModel @Inject constructor(
         }
     }
 
+    private fun getStatus(request: AvatarStatusRequest) {
+        if (avatarStatusJob?.isActive == true) {
+            val t = IllegalStateException("A status request job is already active. Ignoring request.")
+            Timber.e(t)
+            return
+        }
+        avatarStatusJob?.cancel(CancellationException("New request")) // just in case
+        avatarStatusJob = viewModelScope.launch {
+            appRepository.avatarStatus(request).collectLatest { result ->
+                when (result) {
+                    is Result.Loading -> setLoading(LoadType.ACTION, LoadState.Loading())
+                    is Result.Error -> {
+                        when (result.exception) {
+                            is ApiException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
+                                    )
+                                }
+                            }
+                            is NoInternetException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.noInternet
+                                    )
+                                }
+                            }
+                        }
+                        setLoading(LoadType.ACTION, LoadState.Error(result.exception))
+                    }
+                    is Result.Success -> {
+                        setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
+
+                        _uiState.update { state ->
+                            state.copy(
+                                avatarStatusWithFiles = result.data
+                            )
+                        }
+
+                        /*val avatarStatus = result.data.avatarStatus
+                        when (avatarStatus.modelStatus) {
+                            "training_processing" -> {
+                                // TODO: update UI
+                            }
+                            "avatar_processing" -> {
+                                val progress = (avatarStatus.generatedAiCount.toFloat() / avatarStatus.totalAiCount)
+                                    .coerceIn(0.0F, 1.0F)
+                                *//*_uiState.update { state ->
+                                    state.copy(
+                                        progressHint = "${avatarStatus.generatedAiCount}/${avatarStatus.totalAiCount}"
+                                    )
+                                }*//*
+                            }
+                            "completed" -> {
+                                *//*ApplicationDependencies.getPersistentStore().apply {
+                                    setProcessingModel(false)
+                                    setGuestUserId("")
+                                }
+                                appDatabase.uploadSessionDao().apply {
+                                    updateUploadSessionStatus(
+                                        uiState.value.sessionId!!,
+                                        UploadSessionStatus.CREATING_MODEL.status
+                                    )
+                                    updateUploadSessionModelId(
+                                        uiState.value.sessionId!!,
+                                        result.data.statusId
+                                    )
+                                }*//*
+                            }
+                        }*/
+                        // sendEvent(Step3UiEvent.NextScreen)
+                    }
+                }
+            }
+        }
+    }
+
     @Suppress("SameParameterValue")
     private fun setLoading(
         loadType: LoadType,
@@ -267,6 +370,7 @@ data class ModelDetailState(
     val loadState: LoadStates = LoadStates.IDLE,
     val from: String? = null,
     val modelId: String? = null,
+    val statusId: String? = null,
     val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val avatarList: List<SelectableAvatarUiModel> = emptyList(),
     val exception: Exception? = null,

@@ -14,6 +14,8 @@ object Constant {
 
     /* Args */
     const val ARG_PLAN_ID = "com.aiavatar.app.args.PLAN_ID"
+    const val ARG_STATUS_ID = "com.aiavatar.app.args.STATUS_ID"
+    const val ARG_MODEL_ID = "com.aiavatar.app.args.MODEL_ID"
 
     const val MIME_TYPE_JPEG = "image/jpeg"
     const val MIME_TYPE_PLAIN_TEXT = "text/plain"

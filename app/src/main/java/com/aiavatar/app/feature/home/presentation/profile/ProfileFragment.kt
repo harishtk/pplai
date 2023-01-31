@@ -1,14 +1,10 @@
 package com.aiavatar.app.feature.home.presentation.profile
 
-import android.Manifest
-import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -20,15 +16,18 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.*
 import com.aiavatar.app.databinding.FragmentProfileBinding
+import com.aiavatar.app.databinding.ItemAvatarStatusBinding
 import com.aiavatar.app.databinding.ItemModelListBinding
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
-import com.aiavatar.app.feature.home.presentation.create.AvatarResultUiModel
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -39,7 +38,7 @@ class ProfileFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.fragment_profile, container, false)
     }
@@ -58,7 +57,7 @@ class ProfileFragment : Fragment() {
     private fun FragmentProfileBinding.bindState(
         uiState: StateFlow<ProfileState>,
         uiAction: (ProfileUiAction) -> Unit,
-        uiEvent: SharedFlow<ProfileUiEvent>
+        uiEvent: SharedFlow<ProfileUiEvent>,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             uiEvent.collectLatest { event ->
@@ -97,8 +96,18 @@ class ProfileFragment : Fragment() {
 
         val callback = object : ModelListAdapter.Callback {
             override fun onItemClick(position: Int, data: ModelListUiModel.Item) {
-                gotoModelDetail(position, data)
+                val statusId = data.modelList.statusId
+                Timber.d("Status: $statusId ${ApplicationDependencies.getPersistentStore().currentAvatarStatusId}")
+                if (data.modelList.statusId != "0") {
+                    gotoAvatarStatus(statusId)
+                } else {
+                    gotoAvatarResult(data.modelList.modelData?.id!!)
+                }
             }
+        }
+
+        swipeRefreshLayout.setOnRefreshListener {
+            viewModel.refresh()
         }
 
         val adapter = ModelListAdapter(callback)
@@ -133,7 +142,7 @@ class ProfileFragment : Fragment() {
 
     private fun FragmentProfileBinding.bindList(
         adapter: ModelListAdapter,
-        uiState: StateFlow<ProfileState>
+        uiState: StateFlow<ProfileState>,
     ) {
         modelListView.postDelayed({
             modelListView.adapter = adapter
@@ -156,17 +165,20 @@ class ProfileFragment : Fragment() {
 
     private fun FragmentProfileBinding.bindAppbar(uiState: StateFlow<ProfileState>) {
         appbarLayout.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
-            Timber.d("Offset: $verticalOffset total: ${appBarLayout.totalScrollRange}")
+            // Timber.d("Offset: $verticalOffset total: ${appBarLayout.totalScrollRange}")
         }
 
         toolbarSettings.setOnClickListener { gotoSettings() }
         toolbarNavigationIcon.setOnClickListener {
             try {
                 findNavController().navigateUp()
-            } catch (ignore: Exception) {}
+            } catch (ignore: Exception) {
+            }
         }
-        textUsernameExpanded.text = getString(R.string.username_with_prefix,
-            ApplicationDependencies.getPersistentStore().username)
+        textUsernameExpanded.text = getString(
+            R.string.username_with_prefix,
+            ApplicationDependencies.getPersistentStore().username
+        )
         ApplicationDependencies.getPersistentStore().apply {
             if (isLogged) {
                 Glide.with(profileImageExpanded)
@@ -191,19 +203,77 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun gotoModelDetail(position: Int, data: ModelListUiModel.Item) {
+    private fun gotoAvatarResult(modelId: String) = safeCall {
+        findNavController().apply {
+            val navOptions = defaultNavOptsBuilder().build()
+            val args = Bundle().apply {
+                putString(Constant.EXTRA_FROM, "result_preview")
+                putString(Constant.ARG_MODEL_ID, modelId)
+            }
+            navigate(R.id.avatar_result, args, navOptions)
+        }
+    }
+
+    private fun gotoAvatarStatus(statusId: String) = safeCall {
+        findNavController().apply {
+            val navOptions = defaultNavOptsBuilder().build()
+            val args = null
+            navigate(R.id.avatar_status, null, navOptions)
+        }
+    }
+
+    private fun gotoModelDetail(from: String, position: Int, data: ModelListUiModel.Item) {
         val modelId = data.modelList.modelData?.id!!
         try {
             findNavController().apply {
                 val navOpts = defaultNavOptsBuilder().build()
                 val args = Bundle().apply {
-                    putString(Constant.EXTRA_FROM, "my_models")
+                    putString(Constant.EXTRA_FROM, from)
                     putString(ModelDetailFragment.ARG_MODEL_ID, modelId)
+                    // putString(ModelDetailFragment.ARG_STATUS_ID, data.modelList.statusId)
                     // putInt(ModelDetailFragment.ARG_JUMP_TO_POSITION, position)
                 }
                 navigate(R.id.model_detail, args, navOpts)
             }
-        } catch (ignore: Exception) {}
+        } catch (ignore: Exception) {
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (Build.VERSION.SDK_INT > 23) {
+            EventBus.getDefault().register(this)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (Build.VERSION.SDK_INT <= 23) {
+            if (!EventBus.getDefault().isRegistered(this)) {
+                EventBus.getDefault().register(this)
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (Build.VERSION.SDK_INT <= 23) {
+            EventBus.getDefault().unregister(this)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (Build.VERSION.SDK_INT > 23) {
+            EventBus.getDefault().unregister(this)
+        }
+    }
+
+    @Subscribe
+    public fun onNewNotificationEvent(event: NewNotificationEvent) {
+        if (event.hint == "avatar_status") {
+            viewModel.refresh()
+        }
     }
 
     companion object {
@@ -212,12 +282,13 @@ class ProfileFragment : Fragment() {
 }
 
 class ModelListAdapter(
-    private val callback: Callback
+    private val callback: Callback,
 ) : ListAdapter<ModelListUiModel, ViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return when (viewType) {
             VIEW_TYPE_ITEM -> ItemViewHolder.from(parent)
+            VIEW_TYPE_THINKING -> AvatarStatusViewHolder.from(parent)
             else -> {
                 throw IllegalStateException("Unknown viewType $viewType")
             }
@@ -228,23 +299,59 @@ class ModelListAdapter(
         val model = getItem(position)
         when (model) {
             is ModelListUiModel.Item -> {
-                holder as ItemViewHolder
-                holder.bind(data = model, callback)
+                when (holder) {
+                    is ModelListAdapter.ItemViewHolder -> {
+                        holder.bind(data = model, callback)
+                    }
+                    is AvatarStatusViewHolder -> {
+                        holder.bind(data = model, callback)
+                    }
+                }
             }
         }
     }
 
     override fun getItemViewType(position: Int): Int {
         return when (val model = getItem(position)) {
-            is ModelListUiModel.Item -> VIEW_TYPE_ITEM
+            is ModelListUiModel.Item -> {
+                if (model.modelList.statusId != "0") {
+                    VIEW_TYPE_THINKING
+                } else {
+                    VIEW_TYPE_ITEM
+                }
+            }
             else -> {
                 throw IllegalStateException("Can't decide a view type for $position")
             }
         }
     }
 
+    class AvatarStatusViewHolder private constructor(
+        private val binding: ItemAvatarStatusBinding,
+    ) : ViewHolder(binding.root) {
+
+        fun bind(data: ModelListUiModel.Item, callback: Callback) = with(binding) {
+            title.text = "Generating.."
+            description.isVisible = false
+
+            itemView.setOnClickListener { callback.onItemClick(adapterPosition, data) }
+        }
+
+        companion object {
+            fun from(parent: ViewGroup): AvatarStatusViewHolder {
+                val itemView = LayoutInflater.from(parent.context).inflate(
+                    R.layout.item_avatar_status,
+                    parent,
+                    false
+                )
+                val binding = ItemAvatarStatusBinding.bind(itemView)
+                return AvatarStatusViewHolder(binding)
+            }
+        }
+    }
+
     class ItemViewHolder private constructor(
-        private val binding: ItemModelListBinding
+        private val binding: ItemModelListBinding,
     ) : ViewHolder(binding.root) {
 
         fun bind(data: ModelListUiModel.Item, callback: Callback) = with(binding) {
@@ -280,6 +387,7 @@ class ModelListAdapter(
 
     companion object {
         private const val VIEW_TYPE_ITEM = 0
+        private const val VIEW_TYPE_THINKING = 1
 
         private val DIFF_CALLBACK = object : ItemCallback<ModelListUiModel>() {
             override fun areItemsTheSame(

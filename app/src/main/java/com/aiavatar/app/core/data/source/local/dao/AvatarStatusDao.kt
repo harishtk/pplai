@@ -20,8 +20,8 @@ interface AvatarStatusDao {
     fun getAvatarStatus(statusId: Long): Flow<AvatarStatusWithFilesEntity?>
 
     @Query("SELECT * FROM ${AvatarStatusTable.name} " +
-            "WHERE ${AvatarStatusTable.Columns.MODEL_STATUS} != completed")
-    fun getRunningTraining(): Flow<List<AvatarStatusWithFilesEntity>>?
+            "WHERE ${AvatarStatusTable.Columns.MODEL_STATUS} != 'completed'")
+    fun getRunningTraining(): Flow<List<AvatarStatusEntity>>?
 
     @Transaction
     @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.AVATAR_STATUS_ID} = :statusId")

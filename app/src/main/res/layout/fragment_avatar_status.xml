@@ -12,6 +12,20 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.33" />
 
+    <ImageView android:id="@+id/btn_close"
+        android:layout_width="@dimen/large_icon_size"
+        android:layout_height="@dimen/large_icon_size"
+        android:layout_margin="@dimen/inset_large"
+        android:src="@drawable/cancel_trasparent_rounded"
+        android:background="@drawable/ripple_rounded"
+        android:contentDescription="@string/content_description_close"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintHorizontal_bias="1.0" />
+
     <ImageView android:id="@+id/logo"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -98,6 +112,21 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
         tools:checked="true"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/retry_button"
+        style="@style/Widget.App.Button.Outline.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/retry"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.8"
+        tools:visibility="visible" />
 
     <com.dd.CircularProgressButton
         android:id="@+id/btn_create_avatar"

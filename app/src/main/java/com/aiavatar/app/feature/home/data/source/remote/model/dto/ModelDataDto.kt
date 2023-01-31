@@ -19,7 +19,7 @@ data class ModelDataDto(
     val renamed: Boolean
 )
 
-fun ModelDataDto.toModelData(): ModelData {
+fun ModelDataDto.toModelData(statusId: String): ModelData {
     return ModelData(
         id = id,
         name = name,
@@ -27,5 +27,7 @@ fun ModelDataDto.toModelData(): ModelData {
         totalCount = totalCount,
         paid = paid,
         renamed = renamed
-    )
+    ).also {
+        it.statusId = statusId
+    }
 }

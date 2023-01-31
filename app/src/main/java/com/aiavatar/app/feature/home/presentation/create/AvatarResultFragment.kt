@@ -58,9 +58,15 @@ class AvatarResultFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        ApplicationDependencies.getPersistentStore().currentAvatarStatusId?.let {
-            viewModel.setAvatarStatusId(it)
+        arguments?.apply {
+            getString(Constant.ARG_STATUS_ID, null)?.let { statusId ->
+                viewModel.setAvatarStatusId(statusId)
+            }
+            getString(Constant.ARG_MODEL_ID, null)?.let { modelId ->
+                viewModel.setModelId(modelId)
+            }
         }
+        viewModel.refresh()
 
         storagePermissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result: Map<String, Boolean> ->
@@ -204,12 +210,18 @@ class AvatarResultFragment : Fragment() {
         btnNext.text = getString(R.string.label_download)
         btnNext.setOnClickListener {
             if (ApplicationDependencies.getPersistentStore().isLogged) {
-                val avatarStatus = uiState.value.avatarStatusWithFiles?.avatarStatus
-                if (avatarStatus != null && avatarStatus.paid) {
+                val (isPaid, renamed) = if (uiState.value.avatarStatusId != null) {
+                    uiState.value.avatarStatusWithFiles?.avatarStatus?.paid to
+                            uiState.value.avatarStatusWithFiles?.avatarStatus?.modelRenamedByUser
+                } else {
+                    uiState.value.modelData?.paid to
+                            uiState.value.modelData?.renamed
+                } ?: return@setOnClickListener
+                if (isPaid == true) {
                     // TODO: get folder name
-                    if (avatarStatus.modelRenamedByUser) {
+                    if (renamed == true) {
                         // TODO: if model is renamed directly save the photos
-                        checkPermissionAndScheduleWorker(avatarStatus.modelId)
+                        checkPermissionAndScheduleWorker(viewModel.getModelId()!!)
                     } else {
                         context?.debugToast("Getting folder name")
                         EditFolderNameDialog { typedName ->
@@ -291,13 +303,14 @@ class AvatarResultFragment : Fragment() {
     }
 
     private fun gotoModelDetail(position: Int, data: AvatarResultUiModel.AvatarItem) {
-        val modelId = viewModel.getModelId()
+        val statusId = viewModel.getStatusId()
         try {
             findNavController().apply {
                 val navOpts = defaultNavOptsBuilder().build()
                 val args = Bundle().apply {
                     putString(Constant.EXTRA_FROM, "result_preview")
-                    putString(ModelDetailFragment.ARG_MODEL_ID, modelId)
+                    // putString(ModelDetailFragment.ARG_MODEL_ID, modelId)
+                    putString(ModelDetailFragment.ARG_STATUS_ID, statusId)
                     data.avatar.id?.let { putLong(ModelDetailFragment.ARG_JUMP_TO_ID, it) }
                 }
                 navigate(R.id.model_detail, args, navOpts)

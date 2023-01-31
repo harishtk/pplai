@@ -193,11 +193,11 @@
     </style>
 
     <style name="Widget.App.FancyButton.Outline" parent="Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="materialThemeOverlay">@style/ThemeOverlay.App.FancyButton</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">@color/yellow_200</item>
         <item name="android:textSize">@dimen/text_size_tiny</item>
-        <item name="strokeColor">@color/teal_200</item>
+        <item name="strokeColor">@color/yellow_200</item>
         <item name="android:paddingTop">6dp</item>
         <item name="android:paddingBottom">6dp</item>
         <item name="android:paddingStart">16dp</item>
@@ -213,9 +213,9 @@
     <style name="Widget.App.Button.Outline" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">?attr/colorSecondary</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
-        <item name="strokeColor">@color/white</item>
+        <item name="strokeColor">?attr/colorSecondary</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
         <item name="android:paddingStart">20dp</item>
@@ -223,12 +223,8 @@
         <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
     </style>
 
-    <style name="Widget.App.Button.Outline.Small" parent="Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
-        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
-        <item name="android:textColor">@color/white</item>
+    <style name="Widget.App.Button.Outline.Small" parent="Widget.App.Button.Outline">
         <item name="android:textSize">@dimen/text_size_very_small</item>
-        <item name="strokeColor">@color/white</item>
         <item name="android:paddingTop">5dp</item>
         <item name="android:paddingBottom">5dp</item>
         <item name="android:paddingStart">10dp</item>

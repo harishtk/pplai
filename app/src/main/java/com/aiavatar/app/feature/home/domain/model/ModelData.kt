@@ -7,4 +7,6 @@ data class ModelData(
     val totalCount: Int,
     val paid: Boolean,
     val renamed: Boolean
-)
+) {
+    var statusId: String? = null
+}

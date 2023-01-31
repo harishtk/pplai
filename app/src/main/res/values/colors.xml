@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ripple_color">#80000000</color>
+    <color name="ripple_color">#26000000</color>
 
     <color name="red_50">#33EC5545</color>
     <color name="red_200">#EC5545</color>

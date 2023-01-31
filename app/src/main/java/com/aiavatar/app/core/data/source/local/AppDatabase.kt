@@ -8,14 +8,16 @@ import com.aiavatar.app.core.data.source.local.dao.*
 import com.aiavatar.app.core.data.source.local.entity.*
 import com.aiavatar.app.feature.home.data.source.local.dao.CatalogListDao
 import com.aiavatar.app.feature.home.data.source.local.dao.CategoryDao
+import com.aiavatar.app.feature.home.data.source.local.dao.ModelDao
 import com.aiavatar.app.feature.home.data.source.local.entity.CatalogListEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.CategoryEntity
+import com.aiavatar.app.feature.home.data.source.local.entity.ModelEntity
 
 @Database(
     entities = [UploadSessionEntity::class, UploadFilesEntity::class,
                 AvatarStatusEntity::class, AvatarFilesEntity::class,
                 CategoryEntity::class, CacheKeysEntity::class,
-                CatalogListEntity::class],
+                CatalogListEntity::class, ModelEntity::class],
     version = 1,
     exportSchema = false
 )
@@ -34,6 +36,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun catalogListDao(): CatalogListDao
 
     abstract fun cacheKeysDao(): CacheKeysDao
+
+    abstract fun modelDao(): ModelDao
 
     companion object {
         @Volatile
@@ -60,6 +64,8 @@ abstract class AppDatabase : RoomDatabase() {
         const val TABLE_AVATAR_FILES        = "avatar_files"
         const val TABLE_AVATAR_CATEGORIES   = "avatar_categories"
         const val TABLE_CATEGORY_LIST       = "category_list"
+        const val TABLE_MODELS              = "models"
+        const val TABLE_MODEL_AVATARS       = "model_avatars"
 
         const val TABLE_CACHE_KEYS          = "cache_keys"
     }

@@ -13,6 +13,6 @@ data class ModelListDto(
 fun ModelListDto.toModelList(): ModelList {
     return ModelList(
         statusId = statusId,
-        modelData = modelDataDto?.toModelData()
+        modelData = modelDataDto?.toModelData(statusId)
     )
 }

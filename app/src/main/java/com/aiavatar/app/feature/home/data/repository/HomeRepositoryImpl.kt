@@ -11,12 +11,15 @@ import com.aiavatar.app.core.data.source.local.CacheLocalDataSource
 import com.aiavatar.app.core.data.source.local.entity.modify
 import com.aiavatar.app.core.domain.util.BuenoCacheException
 import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
+import com.aiavatar.app.feature.home.data.source.local.dao.ModelDao
 import com.aiavatar.app.feature.home.data.source.local.entity.*
 import com.aiavatar.app.feature.home.data.source.remote.HomeRemoteDataSource
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPlanDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.asDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.toSubscriptionPlan
+import com.aiavatar.app.feature.home.data.source.remote.model.dto.ModelDataDto
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toCatalogDetailData
+import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelData
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelList
 import com.aiavatar.app.feature.home.data.source.remote.model.toCatalogList
 import com.aiavatar.app.feature.home.data.source.remote.model.toCategory
@@ -53,6 +56,18 @@ class HomeRepositoryImpl @Inject constructor(
             .map { list ->
                 list.map(CatalogListEntity::toCatalogList)
             }
+    }
+
+    private fun observeAllModel(): Flow<List<ModelData>> {
+        return localDataSource.observeAllModels()
+            .map { list ->
+                list.map(ModelEntity::toModelData)
+            }
+    }
+
+    private fun observeModel(modelId: String): Flow<ModelData?> {
+        return localDataSource.observeModel(modelId)
+            .map { it?.toModelData() }
     }
 
     private suspend fun refreshCategoriesInternal(): Result<List<Category>> {
@@ -124,6 +139,103 @@ class HomeRepositoryImpl @Inject constructor(
             }
             else -> parseErrorNetworkResult(networkResult)
         }
+    }
+
+    private suspend fun refreshAllModelInternal(): Result<List<ModelData>> {
+        val networkResult = remoteDataSource.getMyModelsSync()
+        return when (networkResult) {
+            is NetworkResult.Loading -> Result.Loading
+            is NetworkResult.Success -> {
+                if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                    val modelData: List<ModelData>? = networkResult.data?.data?.models?.mapNotNull {
+                        it.modelDataDto?.toModelData(it.statusId)
+                    }
+                    if (modelData != null) {
+                        localDataSource.deleteAllModels()
+                        localDataSource.insertAllModel(modelData.map { it.toEntity() })
+
+                        Result.Success(modelData)
+                    } else {
+                        emptyResponse(networkResult)
+                    }
+                } else {
+                    badResponse(networkResult)
+                }
+            }
+            else -> parseErrorNetworkResult(networkResult)
+        }
+    }
+
+    private suspend fun refreshModelInternal(modelId: String): Result<ModelData> {
+        return when (val networkResult = remoteDataSource.getModelSync(modelId)) {
+            is NetworkResult.Loading -> Result.Loading
+            is NetworkResult.Success -> {
+                if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                    val data = networkResult.data?.data?.models?.firstOrNull()?.let {
+                        it.modelDataDto?.toModelData(it.statusId)
+                    }
+                    if (data != null) {
+                        localDataSource.insertModel(data.toEntity())
+                        Result.Success(data)
+                    } else {
+                        emptyResponse(networkResult)
+                    }
+                } else {
+                    badResponse(networkResult)
+                }
+            }
+            else -> parseErrorNetworkResult(networkResult)
+        }
+    }
+
+    override fun getMyModels2(forceRefresh: Boolean): Flow<Result<List<ModelData>>> {
+        return observeAllModel()
+            .onStart {
+                if (forceRefresh) {
+                    localDataSource.deleteAllModels()
+                }
+            }
+            .onEach { list ->
+                if (list.isEmpty()) {
+                    val remoteResult = refreshAllModelInternal()
+                    if (remoteResult is Result.Error) {
+                        throw remoteResult.exception
+                    }
+                }
+            }
+            .map { list ->
+                if (list.isEmpty()) {
+                    Result.Loading
+                } else {
+                    Result.Success(list)
+                }
+            }
+            .catch { t ->
+                emit(Result.Error(t as Exception))
+            }
+    }
+
+    override fun getModel(modelId: String): Flow<Result<ModelData>> {
+        return observeModel(modelId)
+            .onEach { modelData ->
+                if (modelData == null) {
+                    // Model data not available in cache, get from remote
+                    val remoteResult = refreshModelInternal(modelId)
+                    if (remoteResult is Result.Error) {
+                        throw remoteResult.exception
+                    }
+                }
+            }
+            .map { modelData ->
+                if (modelData == null) {
+                    Result.Loading
+                } else {
+                    Result.Success(modelData)
+                }
+            }
+            .catch { t ->
+                emit(Result.Error(t as Exception))
+            }
     }
 
     // TODO: [forceRefresh] will not work as expected

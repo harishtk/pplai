@@ -9,8 +9,10 @@ import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.databinding.FragmentForceUpdateBinding
 import com.aiavatar.app.feature.home.domain.model.ModelList
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import com.aiavatar.app.nullAsEmpty
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -57,25 +59,25 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun refresh() {
-        refreshInternal()
+        refreshInternal(forceRefresh = true)
     }
 
-    private fun refreshInternal() {
-        getModels()
+    private fun refreshInternal(forceRefresh: Boolean) {
+        getModels(forceRefresh = forceRefresh)
     }
 
-    private fun getModels(loadType: LoadType = LoadType.REFRESH) {
-        if (modelsFetchJob?.isActive == true) {
+    private fun getModels(loadType: LoadType = LoadType.REFRESH, forceRefresh: Boolean = false) {
+        /*if (modelsFetchJob?.isActive == true) {
             val t = IllegalStateException("A model fetch job is already active. Ignoring request")
             if (BuildConfig.DEBUG) {
                 Timber.w(t)
             }
             return
-        }
+        }*/
 
         modelsFetchJob?.cancel(CancellationException("New request")) // just in case
         modelsFetchJob = viewModelScope.launch {
-            homeRepository.getMyModels().collectLatest { result ->
+            homeRepository.getMyModels2(forceRefresh).collectLatest { result ->
                 when (result) {
                     is Result.Loading -> setLoading(loadType, LoadState.Loading())
                     is Result.Error -> {
@@ -104,7 +106,9 @@ class ProfileViewModel @Inject constructor(
                         result.data.let {
                             _uiState.update { state ->
                                 state.copy(
-                                    modelListUiModels = it.map { ModelListUiModel.Item(it) }
+                                    modelListUiModels = it.map { modelData ->
+                                        ModelListUiModel.Item(ModelList(statusId = modelData.statusId.nullAsEmpty(), modelData))
+                                    }
                                 )
                             }
                         }

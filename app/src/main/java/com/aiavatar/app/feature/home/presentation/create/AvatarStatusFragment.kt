@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -14,18 +15,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.ServiceUtil
+import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.core.domain.model.ModelStatus
 import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
-import com.aiavatar.app.defaultNavOptsBuilder
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
-import com.aiavatar.app.safeCall
-import com.aiavatar.app.showToast
 import com.aiavatar.app.work.UploadWorker
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
@@ -74,6 +73,7 @@ class AvatarStatusFragment : Fragment() {
             uiEvent = viewModel.uiEvent
         )
         setupObservers()
+        handleBackPressed()
     }
 
     private fun FragmentAvatarStatusBinding.bindState(
@@ -282,6 +282,7 @@ class AvatarStatusFragment : Fragment() {
                         if (btnCreateAvatar.isVisible) {
                             btnCreateAvatar.shakeNow()
                         }
+                        retryButton.isVisible = e is NoInternetException
                         uiErr?.let { uiText -> context?.showToast(uiText.asString(requireContext())) }
                         uiAction(AvatarStatusUiAction.ErrorShown(e))
                     }
@@ -309,17 +310,22 @@ class AvatarStatusFragment : Fragment() {
             }
         }
 
+        bindClick(
+            uiState = uiState,
+            uiAction = uiAction
+        )
+    }
+
+    private fun FragmentAvatarStatusBinding.bindClick(
+        uiState: StateFlow<AvatarStatusState>,
+        uiAction: (AvatarStatusUiAction) -> Unit
+    ) {
         btnCreateAvatar.setOnClickListener {
             val modelStatus = uiState.value.avatarStatusWithFiles?.avatarStatus?.modelStatus
             val sessionStatus = uiState.value.sessionStatus
             if (modelStatus == ModelStatus.COMPLETED) {
                 // TODO: View results
-                findNavController().apply {
-                    val navOpts = defaultNavOptsBuilder()
-                        .build()
-
-                    navigate(R.id.avatar_result, null, navOpts)
-                }
+                gotoAvatarResult(uiState.value.avatarStatusId!!)
             } else if (sessionStatus == UploadSessionStatus.FAILED) {
                 val cachedSessionId = uiState.value.sessionId
                 gotoUploads(cachedSessionId)
@@ -329,6 +335,10 @@ class AvatarStatusFragment : Fragment() {
                 uiAction(AvatarStatusUiAction.CreateModel)
             }
         }
+
+        btnClose.setOnClickListener { activity?.onBackPressedDispatcher?.onBackPressed() }
+
+        retryButton.setOnClickListener { viewModel.refresh() }
     }
 
     private fun setupObservers() {
@@ -339,6 +349,34 @@ class AvatarStatusFragment : Fragment() {
                     viewModel.setSessionId(sessionId)
                 }
             }
+        }
+    }
+
+    private fun handleBackPressed() {
+        activity?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Do nothing. The page automatically closes
+                    safeCall {
+                        findNavController().apply {
+                            if (!navigateUp()) {
+                                gotoHome()
+                            }
+                        }
+                    }
+                }
+            })
+    }
+
+    private fun gotoAvatarResult(avatarStatusId: String) = safeCall {
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder()
+                .build()
+            val args = Bundle().apply {
+                putString(Constant.ARG_STATUS_ID, avatarStatusId)
+            }
+
+            navigate(R.id.avatar_result, args, navOpts)
         }
     }
 
@@ -361,6 +399,15 @@ class AvatarStatusFragment : Fragment() {
              }
              navigate(R.id.upload_step_2, args, navOpts)
          }
+    }
+
+    private fun gotoHome() = safeCall {
+        findNavController().apply {
+            val navOptions = NavOptions.Builder()
+                .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                .build()
+            navigate(R.id.catalog_list, null, navOptions)
+        }
     }
 
     override fun onStart() {
