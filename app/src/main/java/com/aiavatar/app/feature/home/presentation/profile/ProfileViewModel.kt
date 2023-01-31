@@ -77,7 +77,8 @@ class ProfileViewModel @Inject constructor(
 
         modelsFetchJob?.cancel(CancellationException("New request")) // just in case
         modelsFetchJob = viewModelScope.launch {
-            homeRepository.getMyModels2(forceRefresh).collectLatest { result ->
+            setLoading(loadType, LoadState.Loading())
+            homeRepository.getMyModels().collectLatest { result ->
                 when (result) {
                     is Result.Loading -> setLoading(loadType, LoadState.Loading())
                     is Result.Error -> {
@@ -107,7 +108,7 @@ class ProfileViewModel @Inject constructor(
                             _uiState.update { state ->
                                 state.copy(
                                     modelListUiModels = it.map { modelData ->
-                                        ModelListUiModel.Item(ModelList(statusId = modelData.statusId.nullAsEmpty(), modelData))
+                                        ModelListUiModel.Item(modelList = modelData)
                                     }
                                 )
                             }

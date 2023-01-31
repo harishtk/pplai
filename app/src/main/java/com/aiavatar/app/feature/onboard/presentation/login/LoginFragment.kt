@@ -130,13 +130,15 @@ class LoginFragment : Fragment() {
 
                         when (from) {
                             "avatar_result" -> {
+                                val modelId = arguments?.getString(Constant.ARG_MODEL_ID, "")
                                 findNavController().apply {
-                                    val args = bundleOf(
-                                        Constant.EXTRA_FROM to "login"
-                                    )
                                     val navOpts = defaultNavOptsBuilder()
                                         .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = false)
                                         .build()
+                                    val args = Bundle().apply {
+                                        putString(Constant.EXTRA_FROM, "login")
+                                        putString(Constant.ARG_MODEL_ID, modelId)
+                                    }
                                     navigate(R.id.subscription_plans, args, navOpts)
                                 }
                             }

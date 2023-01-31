@@ -50,10 +50,16 @@ class AppRemoteDataSource @Inject constructor(
         emit(safeApiCall { apiService.createModel(createModelRequestDto) })
     }.flowOn(dispatcher)
 
+    suspend fun createModelSync(createModelRequestDto: CreateModelRequestDto): NetworkResult<CreateModelResponse> =
+        safeApiCall { apiService.createModel(createModelRequestDto) }
+
     fun avatarStatus(avatarStatusRequestDto: AvatarStatusRequestDto): Flow<NetworkResult<AvatarStatusResponse>> = flow<NetworkResult<AvatarStatusResponse>> {
         emit(NetworkResult.Loading())
         emit(safeApiCall { apiService.avatarStatus(avatarStatusRequestDto) })
     }.flowOn(dispatcher)
+
+    suspend fun avatarStatusSync(avatarStatusRequestDto: AvatarStatusRequestDto): NetworkResult<AvatarStatusResponse> =
+        safeApiCall { apiService.avatarStatus(avatarStatusRequestDto) }
 
     fun renameModel(renameModelRequestDto: RenameModelRequestDto): Flow<NetworkResult<BaseResponse>> = flow {
         emit(NetworkResult.Loading())

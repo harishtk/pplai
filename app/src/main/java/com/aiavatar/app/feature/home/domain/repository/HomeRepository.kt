@@ -24,6 +24,8 @@ interface HomeRepository {
 
     fun getModel(modelId: String): Flow<Result<ModelData>>
 
+    fun getModel2(modelId: String): Flow<Result<ModelData>>
+
     fun getMyModels2(forceRefresh: Boolean): Flow<Result<List<ModelData>>>
 
     fun getAvatars(getAvatarsRequest: GetAvatarsRequest): Flow<Result<List<ListAvatar>>>

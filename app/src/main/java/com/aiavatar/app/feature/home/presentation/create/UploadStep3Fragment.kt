@@ -19,7 +19,9 @@ import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.databinding.FragmentUploadStep3Binding
 import com.aiavatar.app.databinding.ItemGenderSelectableBinding
 import com.aiavatar.app.feature.home.presentation.util.GenderModel
+import com.aiavatar.app.safeCall
 import com.aiavatar.app.showToast
+import com.aiavatar.app.work.WorkUtil
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,6 +67,9 @@ class UploadStep3Fragment : Fragment() {
             uiEvent.collectLatest { event ->
                 when (event) {
                     is Step3UiEvent.NextScreen -> {
+                        if (sessionIdCache != null) {
+                            WorkUtil.scheduleUploadWorker(requireContext(), sessionIdCache!!)
+                        }
                         gotoNextScreen()
                     }
                 }
@@ -114,17 +119,15 @@ class UploadStep3Fragment : Fragment() {
         }
     }
 
-    private fun gotoNextScreen() {
-        try {
-            findNavController().apply {
-                val navOpts = NavOptions.Builder()
-                    .setEnterAnim(R.anim.slide_in_right)
-                    .setExitAnim(R.anim.slide_out_right)
-                    .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
-                    .build()
-                navigate(R.id.avatar_status, null, navOpts)
-            }
-        } catch (ignore: Exception) {}
+    private fun gotoNextScreen() = safeCall {
+        findNavController().apply {
+            val navOpts = NavOptions.Builder()
+                .setEnterAnim(R.anim.slide_in_right)
+                .setExitAnim(R.anim.slide_out_right)
+                .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                .build()
+            navigate(R.id.avatar_status, null, navOpts)
+        }
     }
 }
 

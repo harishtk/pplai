@@ -152,14 +152,15 @@ class CatalogFragment : Fragment() {
         val loadStateFlow = uiState.map { it.loadState }
             .distinctUntilChangedBy { it.refresh }
         viewLifecycleOwner.lifecycleScope.launch {
-            loadStateFlow.collectLatest { loadStateFlow ->
-                progressBar.isVisible = loadStateFlow.refresh is LoadState.Loading
+            loadStateFlow.collectLatest { loadState ->
+                Timber.d("Load state: $loadState")
+                progressBar.isVisible = loadState.refresh is LoadState.Loading
                 if (swipeRefreshLayout.isRefreshing) {
-                    if (loadStateFlow.refresh !is LoadState.Loading) {
+                    if (loadState.refresh !is LoadState.Loading) {
                         swipeRefreshLayout.isRefreshing = false
                     }
                 }
-                if (loadStateFlow.refresh is LoadState.Loading) {
+                if (loadState.refresh is LoadState.Loading) {
                     retryButton.isVisible = false
                 }
             }

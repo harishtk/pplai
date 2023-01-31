@@ -116,12 +116,19 @@ class ProfileFragment : Fragment() {
             .distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
+                Timber.d("Load state: ${loadState.refresh}")
                 if (loadState.refresh is LoadState.Loading) {
                     emptyListContainer.isVisible = false
                     progressBar.isVisible = true
                 } else {
                     progressBar.isVisible = false
                     emptyListContainer.isVisible = adapter.itemCount <= 0
+                }
+
+                if (swipeRefreshLayout.isRefreshing) {
+                    if (loadState.refresh !is LoadState.Loading) {
+                        swipeRefreshLayout.isRefreshing = false
+                    }
                 }
             }
         }
@@ -144,9 +151,7 @@ class ProfileFragment : Fragment() {
         adapter: ModelListAdapter,
         uiState: StateFlow<ProfileState>,
     ) {
-        modelListView.postDelayed({
-            modelListView.adapter = adapter
-        }, UI_RENDER_WAIT_TIME)
+        modelListView.adapter = adapter
 
         val modelListUiModelsFlow = uiState.map { it.modelListUiModels }
             .distinctUntilChanged()

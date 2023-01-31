@@ -29,7 +29,11 @@ interface AppRepository {
 
     fun createModel(createModelRequest: CreateModelRequest): Flow<Result<CreateModelData>>
 
+    suspend fun createModelSync(createModelRequest: CreateModelRequest): Result<CreateModelData>
+
     fun avatarStatus(avatarStatusRequest: AvatarStatusRequest): Flow<Result<AvatarStatusWithFiles>>
+
+    suspend fun avatarStatusSync(avatarStatusRequest: AvatarStatusRequest): Result<AvatarStatusWithFiles>
 
     fun renameModel(renameModelRequest: RenameModelRequest): Flow<Result<String>>
 }

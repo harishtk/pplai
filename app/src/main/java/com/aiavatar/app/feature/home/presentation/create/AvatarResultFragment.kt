@@ -209,19 +209,13 @@ class AvatarResultFragment : Fragment() {
 
         btnNext.text = getString(R.string.label_download)
         btnNext.setOnClickListener {
+            val modelData = uiState.value.modelData ?: return@setOnClickListener
             if (ApplicationDependencies.getPersistentStore().isLogged) {
-                val (isPaid, renamed) = if (uiState.value.avatarStatusId != null) {
-                    uiState.value.avatarStatusWithFiles?.avatarStatus?.paid to
-                            uiState.value.avatarStatusWithFiles?.avatarStatus?.modelRenamedByUser
-                } else {
-                    uiState.value.modelData?.paid to
-                            uiState.value.modelData?.renamed
-                } ?: return@setOnClickListener
-                if (isPaid == true) {
+                if (modelData.paid) {
                     // TODO: get folder name
-                    if (renamed == true) {
+                    if (modelData.renamed) {
                         // TODO: if model is renamed directly save the photos
-                        checkPermissionAndScheduleWorker(viewModel.getModelId()!!)
+                        checkPermissionAndScheduleWorker(modelData.id)
                     } else {
                         context?.debugToast("Getting folder name")
                         EditFolderNameDialog { typedName ->
@@ -240,19 +234,21 @@ class AvatarResultFragment : Fragment() {
                 } else {
                     // TODO: goto payment
                     findNavController().apply {
-                        val args = bundleOf(
-                            Constant.EXTRA_FROM to "login"
-                        )
                         val navOpts = defaultNavOptsBuilder()
                             .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
                             .build()
+                        val args = Bundle().apply {
+                            putString(Constant.EXTRA_FROM, "login")
+                            putString(Constant.ARG_MODEL_ID, modelData.id)
+                        }
                         navigate(R.id.subscription_plans, args, navOpts)
                     }
                 }
             } else {
                 findNavController().apply {
                     val args = bundleOf(
-                        Constant.EXTRA_FROM to "avatar_result"
+                        Constant.EXTRA_FROM to "avatar_result",
+                        Constant.ARG_MODEL_ID to modelData.id
                     )
                     val navOpts = defaultNavOptsBuilder()
                         .setPopUpTo(R.id.avatar_result, inclusive = false, saveState = true)

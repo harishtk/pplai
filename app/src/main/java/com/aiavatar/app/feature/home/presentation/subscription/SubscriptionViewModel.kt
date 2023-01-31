@@ -113,48 +113,49 @@ class SubscriptionViewModel @Inject constructor(
         }
     }
 
+    fun setModelId(modelId: String) {
+        _uiState.update { state ->
+            state.copy(
+                modelId = modelId
+            )
+        }
+    }
+
     private fun startPurchaseFlowInternal() {
         // TODO: start Google Play purchase
         viewModelScope.launch {
-            val avatarStatusId = ApplicationDependencies.getPersistentStore().currentAvatarStatusId
-            if (avatarStatusId != null) {
-                val avatarStatus = appDatabase.avatarStatusDao().getAvatarStatusSync(statusId = avatarStatusId.toLong())
-                    ?.avatarStatusEntity
+            val modelId = uiState.value.modelId
+            if (modelId != null) {
+                val selectedPlan = uiState.value.subscriptionPlans
+                    .filterIsInstance<SubscriptionUiModel.Plan>()
+                    .find { it.selected }?.subscriptionPlan
 
-                if (avatarStatus != null) {
-                    val selectedPlan = uiState.value.subscriptionPlans
-                        .filterIsInstance<SubscriptionUiModel.Plan>()
-                        .find { it.selected }?.subscriptionPlan
+                if (selectedPlan != null) {
+                    val request = SubscriptionPurchaseRequest(
+                        id = selectedPlan.id.toString(),
+                        modelId = modelId,
+                        transactionId = ""
+                    )
 
-                    if (selectedPlan != null) {
-                        val request = SubscriptionPurchaseRequest(
-                            id = selectedPlan.id.toString(),
-                            modelId = avatarStatus.modelId,
-                            transactionId = ""
-                        )
-
-                        sendPurchaseDetailToServer(request)
-
-                    } else {
-                        val t = IllegalStateException("No plans selected")
-                        _uiState.update { state ->
-                            state.copy(
-                                exception = ResolvableException(t),
-                                uiErrorText = UiText.DynamicString("Please select a plan.")
-                            )
-                        }
-                    }
+                    sendPurchaseDetailToServer(request)
 
                 } else {
-                    sendEvent(SubscriptionUiEvent.ShowToast(
-                        UiText.DynamicString("Cannot complete your purchase")
-                    ))
-                    val t = IllegalStateException("Avatar status not found")
-                    Timber.e(t)
+                    val t = IllegalStateException("No plans selected")
+                    _uiState.update { state ->
+                        state.copy(
+                            exception = ResolvableException(t),
+                            uiErrorText = UiText.DynamicString("Please select a plan.")
+                        )
+                    }
                 }
             } else {
-                val t = IllegalStateException("Something went wrong")
-                Timber.e(t)
+                val t = IllegalStateException("No model id")
+                _uiState.update { state ->
+                    state.copy(
+                        exception = ResolvableException(t),
+                        uiErrorText = UiText.DynamicString("Cannot complete your purchase now.")
+                    )
+                }
             }
         }
     }
@@ -280,6 +281,7 @@ class SubscriptionViewModel @Inject constructor(
 
 data class SubscriptionState(
     val loadState: LoadStates = LoadStates.IDLE,
+    val modelId: String? = null,
     val subscriptionPlans: List<SubscriptionUiModel> = emptyList(),
     val exception: Exception? = null,
     val uiErrorText: UiText? = null

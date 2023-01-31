@@ -6,18 +6,15 @@ import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.BadResponseException
 import com.aiavatar.app.commons.util.net.EmptyResponseException
-import com.aiavatar.app.commons.util.time.TimeAgo
 import com.aiavatar.app.core.data.source.local.CacheLocalDataSource
 import com.aiavatar.app.core.data.source.local.entity.modify
 import com.aiavatar.app.core.domain.util.BuenoCacheException
 import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
-import com.aiavatar.app.feature.home.data.source.local.dao.ModelDao
 import com.aiavatar.app.feature.home.data.source.local.entity.*
 import com.aiavatar.app.feature.home.data.source.remote.HomeRemoteDataSource
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPlanDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.asDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.toSubscriptionPlan
-import com.aiavatar.app.feature.home.data.source.remote.model.dto.ModelDataDto
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toCatalogDetailData
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelData
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelList
@@ -216,6 +213,29 @@ class HomeRepositoryImpl @Inject constructor(
     }
 
     override fun getModel(modelId: String): Flow<Result<ModelData>> {
+        return remoteDataSource.getModel(modelId).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val data = networkResult.data?.data?.models?.firstOrNull()?.let {
+                            it.modelDataDto?.toModelData(it.statusId)
+                        }
+                        if (data != null) {
+                            Result.Success(data)
+                        } else {
+                            emptyResponse(networkResult)
+                        }
+                    } else {
+                        badResponse(networkResult)
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
+    }
+
+    override fun getModel2(modelId: String): Flow<Result<ModelData>> {
         return observeModel(modelId)
             .onEach { modelData ->
                 if (modelData == null) {

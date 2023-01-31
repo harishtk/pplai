@@ -39,6 +39,16 @@ class SubscriptionFragment : Fragment() {
 
     private val viewModel: SubscriptionViewModel by viewModels()
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        arguments?.apply {
+            getString(Constant.ARG_MODEL_ID, null)?.let { modelId ->
+                viewModel.setModelId(modelId)
+            } ?: error("No model id available")
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,

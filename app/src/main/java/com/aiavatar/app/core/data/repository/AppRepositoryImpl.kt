@@ -11,6 +11,8 @@ import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.toEntity
 import com.aiavatar.app.core.data.source.remote.AppRemoteDataSource
 import com.aiavatar.app.core.data.source.remote.dto.asDto
+import com.aiavatar.app.core.data.source.remote.model.AvatarStatusResponse
+import com.aiavatar.app.core.data.source.remote.model.CreateModelResponse
 import com.aiavatar.app.core.data.source.remote.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.data.source.remote.model.toCreateModelData
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
@@ -89,26 +91,13 @@ class AppRepositoryImpl @Inject constructor(
     }
 
     override fun createModel(createModelRequest: CreateModelRequest): Flow<Result<CreateModelData>> {
-        return remoteDataSource.createModel(createModelRequest.asDto()).map { networkResult ->
-            when (networkResult) {
-                is NetworkResult.Loading -> Result.Loading
-                is NetworkResult.Success -> {
-                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                        val data = networkResult.data.data
-                        if (data != null) {
-                            Result.Success(data.toCreateModelData())
-                        } else {
-                            val cause = EmptyResponseException("No data")
-                            Result.Error(ApiException(cause))
-                        }
-                    } else {
-                        val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                        Result.Error(ApiException(cause))
-                    }
-                }
-                else -> parseErrorNetworkResult(networkResult)
-            }
-        }
+        return remoteDataSource.createModel(createModelRequest.asDto()).map(this::parseCreateModelResponse)
+    }
+
+    override suspend fun createModelSync(createModelRequest: CreateModelRequest): Result<CreateModelData> {
+        return parseCreateModelResponse(
+            remoteDataSource.createModelSync(createModelRequest.asDto())
+        )
     }
 
     override fun avatarStatus(avatarStatusRequest: AvatarStatusRequest): Flow<Result<AvatarStatusWithFiles>> {
@@ -140,6 +129,12 @@ class AppRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun avatarStatusSync(avatarStatusRequest: AvatarStatusRequest): Result<AvatarStatusWithFiles> {
+        return parseAvatarStatusResponse(
+            remoteDataSource.avatarStatusSync(avatarStatusRequest.asDto())
+        )
+    }
+
     override fun renameModel(renameModelRequest: RenameModelRequest): Flow<Result<String>> {
         return remoteDataSource.renameModel(renameModelRequest.asDto()).map { networkResult ->
             when (networkResult) {
@@ -154,6 +149,54 @@ class AppRepositoryImpl @Inject constructor(
                 }
                 else -> parseErrorNetworkResult(networkResult)
             }
+        }
+    }
+
+    private suspend fun parseAvatarStatusResponse(networkResult: NetworkResult<AvatarStatusResponse>): Result<AvatarStatusWithFiles> {
+        return when (networkResult) {
+            is NetworkResult.Loading -> Result.Loading
+            is NetworkResult.Success -> {
+                if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                    val data = networkResult.data.data
+                    if (data != null) {
+                        val avatarStatusWithFiles = networkResult.data.data.toAvatarStatusWithFiles()
+                        appDatabase.withTransaction {
+                            appDatabase.avatarStatusDao().insert(avatarStatusWithFiles.avatarStatus.toEntity())
+                            val files = avatarStatusWithFiles.avatarFiles.map { it.toEntity() }
+                            appDatabase.avatarFilesDao().insertAll(files)
+                        }
+                        Result.Success(avatarStatusWithFiles)
+                    } else {
+                        val cause = EmptyResponseException("No data")
+                        Result.Error(ApiException(cause))
+                    }
+                } else {
+                    val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
+                    Result.Error(ApiException(cause))
+                }
+            }
+            else -> parseErrorNetworkResult(networkResult)
+        }
+    }
+
+    private fun parseCreateModelResponse(networkResult: NetworkResult<CreateModelResponse>): Result<CreateModelData> {
+        return when (networkResult) {
+            is NetworkResult.Loading -> Result.Loading
+            is NetworkResult.Success -> {
+                if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                    val data = networkResult.data.data
+                    if (data != null) {
+                        Result.Success(data.toCreateModelData())
+                    } else {
+                        val cause = EmptyResponseException("No data")
+                        Result.Error(ApiException(cause))
+                    }
+                } else {
+                    val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
+                    Result.Error(ApiException(cause))
+                }
+            }
+            else -> parseErrorNetworkResult(networkResult)
         }
     }
 

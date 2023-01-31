@@ -18,7 +18,9 @@ import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.ServiceUtil
+import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.core.domain.model.ModelStatus
@@ -212,9 +214,9 @@ class AvatarStatusFragment : Fragment() {
                             cbNotifyMe.isVisible = false
                         }
                         UploadSessionStatus.UPLOAD_COMPLETE -> {
-                            description.text = "Yay! Your photos are ready for creating avatar!"
-                            btnCreateAvatar.isVisible = true
-                            btnCreateAvatar.setText("Generate")
+                            // description.text = "Yay! Your photos are ready for creating avatar!"
+                            description.text = "Creating model.."
+                            btnCreateAvatar.isVisible = false
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
@@ -252,13 +254,13 @@ class AvatarStatusFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
                 // TODO: show loader
-                /*if (btnCreateAvatar.isVisible) {
+                if (btnCreateAvatar.isVisible) {
                     if (loadState.action is LoadState.Loading) {
                         btnCreateAvatar.setSpinning()
                     } else {
                         btnCreateAvatar.cancelSpinning()
                     }
-                }*/
+                }
             }
         }
 

@@ -9,6 +9,7 @@ import android.net.Uri
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toFile
 import androidx.hilt.work.HiltWorker
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.CoroutineWorker
 import androidx.work.Data
@@ -20,25 +21,25 @@ import com.aiavatar.app.Commons
 import com.aiavatar.app.Constant
 import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.ServiceUtil
+import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.net.ProgressRequestBody
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.UploadFileStatus
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
+import com.aiavatar.app.core.data.source.local.entity.toEntity
+import com.aiavatar.app.core.domain.model.AvatarStatus
+import com.aiavatar.app.core.domain.model.CreateModelData
+import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
+import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.domain.model.UploadImageData
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.update
 import okhttp3.MultipartBody
 import timber.log.Timber
 import kotlin.math.abs
@@ -176,24 +177,49 @@ class UploadWorker @AssistedInject constructor(
 
         val totalUploads = appDatabase.uploadFilesDao().getAllUploadFilesSync(sessionId)
             .mapNotNull { it.uploadedFileName }.count()
-        if (totalUploads < getMinUploadImageCount() /* Min upload size */) {
+        return if (totalUploads < getMinUploadImageCount() /* Min upload size */) {
             appDatabase.uploadSessionDao().updateUploadSessionStatus(
                 uploadSessionWithFiles.uploadSessionEntity._id!!,
                 UploadSessionStatus.FAILED.status
             )
+            abortWork("Unable to complete upload.")
         } else {
             appDatabase.uploadSessionDao().updateUploadSessionStatus(
                 uploadSessionWithFiles.uploadSessionEntity._id!!,
                 UploadSessionStatus.UPLOAD_COMPLETE.status
             )
-        }
+            /* This flag tells if the user has completed gender selection */
+            val isUploadStarted = ApplicationDependencies.getPersistentStore().isUploadingPhotos
+            if (uploadResultList.isNotEmpty() && isUploadStarted) {
+                notifyUploadComplete(context, uploadResultList.size)
+            }
 
-        /* This flag tells if the user has completed gender selection */
-        val isUploadStarted = ApplicationDependencies.getPersistentStore().isUploadingPhotos
-        if (uploadResultList.isNotEmpty() && isUploadStarted) {
-            notifyUploadComplete(context, uploadResultList.size)
+            when (val result = createModelInternal(uploadSessionWithFiles.uploadSessionEntity._id!!).await()) {
+                is com.aiavatar.app.commons.util.Result.Success -> {
+                    ApplicationDependencies.getPersistentStore().apply {
+                        setProcessingModel(true)
+                        setUploadingPhotos(false)
+                        result.data.guestUserId?.let { setGuestUserId(it) }
+                        setCurrentAvatarStatusId(result.data.statusId.toString())
+                    }
+                    appDatabase.uploadSessionDao().apply {
+                        appDatabase.avatarStatusDao().apply {
+                            val newAvatarStatus = AvatarStatus.emptyStatus(result.data.modelId).apply {
+                                avatarStatusId = result.data.statusId
+                            }
+                            insert(newAvatarStatus.toEntity())
+                        }
+                    }
+                    /*// TODO: get avatar status
+                    val request = AvatarStatusRequest(result.data.statusId.toString())
+                    getStatus(request)*/
+                    Result.success()
+                }
+                else -> {
+                    abortWork("Create model request failed")
+                }
+            }
         }
-        return Result.success()
     }
 
     private fun getMinUploadImageCount(): Int {
@@ -202,6 +228,29 @@ class UploadWorker @AssistedInject constructor(
         } else {
             10
         }
+    }
+
+    private fun createModelInternal(sessionId: Long): Deferred<com.aiavatar.app.commons.util.Result<CreateModelData>> = workerScope.async {
+        Timber.d( "createModelInternal() called")
+        val uploadSessionWithFilesEntity = appDatabase.uploadSessionDao().getUploadSessionSync(sessionId)
+        val fileNameArray: List<String> = uploadSessionWithFilesEntity?.uploadFilesEntity?.mapNotNull { it.uploadedFileName }
+            ?: emptyList()
+        if (uploadSessionWithFilesEntity != null) {
+            val request = CreateModelRequest(
+                folderName = uploadSessionWithFilesEntity.uploadSessionEntity.folderName,
+                trainingType = uploadSessionWithFilesEntity.uploadSessionEntity.trainingType,
+                files = fileNameArray,
+                fcm = ApplicationDependencies.getPersistentStore().fcmToken
+            )
+            createModel(request)
+        } else {
+            val cause = IllegalStateException("session data not found")
+            com.aiavatar.app.commons.util.Result.Error(cause)
+        }
+    }
+
+    private suspend fun createModel(request: CreateModelRequest): com.aiavatar.app.commons.util.Result<CreateModelData> {
+        return appRepository.createModelSync(request)
     }
 
     private fun abortWork(message: String): Result {

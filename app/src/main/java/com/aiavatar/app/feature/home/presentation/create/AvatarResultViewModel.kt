@@ -12,15 +12,14 @@ import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.toAvatarFile
-import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarFile
-import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.home.domain.model.ModelData
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.model.toAvatarFile
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import com.aiavatar.app.nullAsEmpty
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -141,7 +140,7 @@ class AvatarResultViewModel @Inject constructor(
     }
 
     fun getModelId(): String? {
-        return uiState.value.avatarStatusWithFiles?.avatarStatus?.modelId
+        return uiState.value.modelData?.id
     }
 
     fun getStatusId(): String?  {
@@ -171,9 +170,19 @@ class AvatarResultViewModel @Inject constructor(
                     val avatarResultList = avatarStatusWithFilesEntity.avatarFilesEntity.map {
                         AvatarResultUiModel.AvatarItem(it.toAvatarFile())
                     }
+                    val modelData = with(avatarStatusWithFilesEntity.avatarStatusEntity) {
+                        ModelData(
+                            id = modelId,
+                            name = modelName.nullAsEmpty(),
+                            latestImage = "",
+                            totalCount = this.totalAiCount,
+                            paid = this.paid,
+                            renamed = this.modelRenamed
+                        )
+                    }
                     _uiState.update { state ->
                         state.copy(
-                            avatarStatusWithFiles = avatarStatusWithFilesEntity.toAvatarStatusWithFiles(),
+                            modelData = modelData,
                             avatarResultList = avatarResultList
                         )
                     }
@@ -285,7 +294,6 @@ data class AvatarResultState(
     val loadState: LoadStates = LoadStates.IDLE,
     val avatarStatusId: String? = null,
     val modelId: String? = null,
-    val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val modelData: ModelData? = null,
     val avatarResultList: List<AvatarResultUiModel> = emptyList(),
     val exception: Exception? = null,
