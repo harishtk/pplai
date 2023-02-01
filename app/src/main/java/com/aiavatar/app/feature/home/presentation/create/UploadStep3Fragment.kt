@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.home.presentation.create
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import com.aiavatar.app.Constant
 import com.aiavatar.app.R
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.UiText
@@ -69,9 +71,9 @@ class UploadStep3Fragment : Fragment() {
                     is Step3UiEvent.NextScreen -> {
                         // TODO: don't user work manager for simplicity sake!
                         if (sessionIdCache != null) {
-                            WorkUtil.scheduleUploadWorker(requireContext(), sessionIdCache!!)
+                            // WorkUtil.scheduleUploadWorker(requireContext(), sessionIdCache!!)
                         }
-                        gotoNextScreen()
+                        gotoNextScreen(sessionIdCache)
                     }
                 }
             }
@@ -120,14 +122,20 @@ class UploadStep3Fragment : Fragment() {
         }
     }
 
-    private fun gotoNextScreen() = safeCall {
+    private fun gotoNextScreen(sessionId: Long?) = safeCall {
+        Log.d("UploadStep3Fragment", "gotoNextScreen() called")
         findNavController().apply {
             val navOpts = NavOptions.Builder()
                 .setEnterAnim(R.anim.slide_in_right)
                 .setExitAnim(R.anim.slide_out_right)
                 .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
                 .build()
-            navigate(R.id.avatar_status, null, navOpts)
+            val args = Bundle().apply {
+                if (sessionId != null) {
+                    putLong(Constant.ARG_UPLOAD_SESSION_ID, sessionId)
+                }
+            }
+            navigate(R.id.avatar_status, args, navOpts)
         }
     }
 }

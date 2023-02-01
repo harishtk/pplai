@@ -8,16 +8,19 @@ import com.aiavatar.app.core.data.source.local.dao.*
 import com.aiavatar.app.core.data.source.local.entity.*
 import com.aiavatar.app.feature.home.data.source.local.dao.CatalogListDao
 import com.aiavatar.app.feature.home.data.source.local.dao.CategoryDao
+import com.aiavatar.app.feature.home.data.source.local.dao.ModelAvatarDao
 import com.aiavatar.app.feature.home.data.source.local.dao.ModelDao
 import com.aiavatar.app.feature.home.data.source.local.entity.CatalogListEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.CategoryEntity
+import com.aiavatar.app.feature.home.data.source.local.entity.ModelAvatarEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.ModelEntity
 
 @Database(
     entities = [UploadSessionEntity::class, UploadFilesEntity::class,
                 AvatarStatusEntity::class, AvatarFilesEntity::class,
                 CategoryEntity::class, CacheKeysEntity::class,
-                CatalogListEntity::class, ModelEntity::class, LoginUserEntity::class],
+                CatalogListEntity::class, ModelEntity::class,
+                LoginUserEntity::class, ModelAvatarEntity::class],
     version = 1,
     exportSchema = false
 )
@@ -40,6 +43,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun modelDao(): ModelDao
 
     abstract fun loginUserDao(): LoginUserDao
+
+    abstract fun modelAvatarDao(): ModelAvatarDao
 
     companion object {
         @Volatile

@@ -20,6 +20,7 @@ import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.commons.util.concurrent.ThreadSafeCounter
 import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -66,19 +67,24 @@ class DownloadWorker @AssistedInject constructor(
         val modelId = workerParameters.inputData.getString(MODEL_ID)
             ?: return abortWork("No model id.")
 
-        val avatarStatusWithFiles = appDatabase.avatarStatusDao().getAvatarStatusForModelIdSync(modelId)
-            ?: return abortWork("No download session data found for model $modelId")
+        val modelData = appDatabase.modelDao().getModelSync(modelId)
+            ?: return abortWork("No model data found")
+
+        val modelAvatarEntities = appDatabase.modelAvatarDao().getModelAvatarsSync(modelId)
+        if (modelAvatarEntities.isEmpty()) {
+            return abortWork("No download session data found for model $modelId")
+        }
 
         setForegroundAsync(createForegroundInfo(0))
 
         val relativeDownloadPath = StringBuilder()
             .append(context.getString(R.string.app_name))
             .append(File.separator)
-            .append(avatarStatusWithFiles.avatarStatusEntity.modelName)
+            .append(modelData.name)
             .toString()
 
         var failedCount: Int = 0
-        val jobs = avatarStatusWithFiles.avatarFilesEntity
+        val jobs = modelAvatarEntities
             .filter { entity -> entity.downloaded == 0 }
             .map { avatarFilesEntity ->
             workerScope.launch {
@@ -121,12 +127,12 @@ class DownloadWorker @AssistedInject constructor(
                     }
                 }.onFailure { t ->
                     Timber.e(t)
-
                 }
             }
         }
 
         totalDownloads = jobs.count()
+        Timber.d("Downloading $totalDownloads images")
 
         jobs.map {
             it.join()
@@ -141,6 +147,7 @@ class DownloadWorker @AssistedInject constructor(
 
     private fun updateDownloadCounter() {
         val current = downloadCounter.increment()
+        Timber.d("Download counter: $current")
         val progress = if (totalDownloads != 0) {
             (current * 100) / totalDownloads
         } else {

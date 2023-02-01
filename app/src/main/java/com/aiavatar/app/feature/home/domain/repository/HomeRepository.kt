@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.home.domain.repository
 
 import com.aiavatar.app.commons.util.Result
+import com.aiavatar.app.feature.home.data.source.local.entity.ModelAvatarEntity
 import com.aiavatar.app.feature.home.domain.model.*
 import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
 import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
@@ -29,6 +30,11 @@ interface HomeRepository {
     fun getMyModels2(forceRefresh: Boolean): Flow<Result<List<ModelData>>>
 
     fun getAvatars(getAvatarsRequest: GetAvatarsRequest): Flow<Result<List<ListAvatar>>>
+
+    fun getAvatars2(getAvatarsRequest: GetAvatarsRequest, forceRefresh: Boolean): Flow<Result<List<ModelAvatar>>>
+
+    @Deprecated("not used")
+    suspend fun getAvatars2Sync(getAvatarsRequest: GetAvatarsRequest): Result<List<ModelAvatar>>
 
     fun getCatalog2(forceRefresh: Boolean): Flow<Result<List<Category>>>
 

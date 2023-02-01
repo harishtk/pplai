@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.domain.model.AvatarFile
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
+import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.saveTempImage
 
 @Entity(
@@ -61,6 +62,19 @@ fun AvatarFilesEntity.toAvatarFile(): AvatarFile {
         progress = progress
     ).also {
         it.id = _id
+        it.downloadedAt = downloadedAt
+        it.downloadedSize = downloadedSize
+    }
+}
+
+fun AvatarFilesEntity.toModelAvatar(): ModelAvatar {
+    return ModelAvatar(
+        modelId = modelId,
+        remoteFile = remoteFile,
+        localUri = localUri,
+        downloaded = downloaded,
+        progress = progress
+    ).also {
         it.downloadedAt = downloadedAt
         it.downloadedSize = downloadedSize
     }

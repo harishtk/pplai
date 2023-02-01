@@ -83,7 +83,8 @@ class SubscriptionFragment : Fragment() {
                         findNavController().apply {
                             val args = bundleOf(
                                 Constant.EXTRA_FROM to "login",
-                                Constant.ARG_PLAN_ID to event.planId
+                                Constant.ARG_PLAN_ID to event.planId,
+                                Constant.ARG_STATUS_ID to event.statusId
                             )
                             val navOpts = defaultNavOptsBuilder()
                                 .setPopUpTo(R.id.subscription_plans, inclusive = true, saveState = false)

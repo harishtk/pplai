@@ -78,4 +78,7 @@ class HomeRemoteDataSource @Inject constructor(
         emit(safeApiCall { apiService.getAvatars(getAvatarsRequestDto) })
     }.flowOn(dispatcher)
 
+    suspend fun getAvatarsSync(getAvatarsRequestDto: GetAvatarsRequestDto): NetworkResult<GetAvatarsResponse> =
+        safeApiCall { apiService.getAvatars(getAvatarsRequestDto) }
+
 }

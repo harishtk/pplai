@@ -28,12 +28,16 @@ class SubscriptionSuccessFragment : Fragment() {
     private val viewModel: SubscriptionSuccessViewModel by viewModels()
 
     private lateinit var planId: String
+    private var statusIdCache: String? = null
     private var pagePresentedAt: Long = -1L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         planId = arguments?.getString(Constant.ARG_PLAN_ID, "") ?: ""
+        arguments?.apply {
+            statusIdCache = getString(Constant.ARG_STATUS_ID, null)
+        }
     }
 
     override fun onCreateView(
@@ -136,7 +140,7 @@ class SubscriptionSuccessFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             delay(UI_PRESENTATION_TIME)
             nextButton.cancelSpinning()
-            gotoAvatarStatus(null)
+            gotoAvatarStatus(statusIdCache)
         }
     }
 
@@ -149,7 +153,7 @@ class SubscriptionSuccessFragment : Fragment() {
             val args = Bundle().apply {
                 putString(Constant.ARG_STATUS_ID, currentAvatarStatusId)
             }
-            navigate(R.id.avatar_status, null, navOpts)
+            navigate(R.id.avatar_status, args, navOpts)
         }
     }
 

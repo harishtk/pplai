@@ -264,7 +264,7 @@ class SubscriptionViewModel @Inject constructor(
                                 insert(newAvatarStatus.toEntity())
                             }
                         }
-                        sendEvent(SubscriptionUiEvent.PurchaseComplete(request.id))
+                        sendEvent(SubscriptionUiEvent.PurchaseComplete(request.id, result.data.avatarStatusId))
                     }
                 }
             }
@@ -306,7 +306,7 @@ interface SubscriptionUiAction {
 
 interface SubscriptionUiEvent {
     data class ShowToast(val message: UiText) : SubscriptionUiEvent
-    data class PurchaseComplete(val planId: String) : SubscriptionUiEvent
+    data class PurchaseComplete(val planId: String, val statusId: String) : SubscriptionUiEvent
 }
 
 interface SubscriptionUiModel {

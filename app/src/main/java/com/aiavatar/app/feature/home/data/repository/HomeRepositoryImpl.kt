@@ -15,6 +15,7 @@ import com.aiavatar.app.feature.home.data.source.remote.HomeRemoteDataSource
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPlanDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.asDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.toSubscriptionPlan
+import com.aiavatar.app.feature.home.data.source.remote.model.GetAvatarsResponse
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toCatalogDetailData
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelData
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelList
@@ -28,6 +29,8 @@ import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import com.aiavatar.app.ifNullAlso
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -41,6 +44,13 @@ class HomeRepositoryImpl @Inject constructor(
     private val localDataSource: HomeLocalDataSource,
     private val cacheLocalDataSource: CacheLocalDataSource,
 ) : HomeRepository, NetworkResultParser {
+
+    private fun observeModelAvatarsInternal(modelId: String): Flow<List<ModelAvatar>> {
+        return localDataSource.observeModelAvatars(modelId)
+            .map { list ->
+                list.map(ModelAvatarEntity::toModelAvatar)
+            }
+    }
 
     private fun observeAllCategoryInternal(): Flow<List<Category>> {
         return localDataSource.observeAllCategories()
@@ -496,26 +506,69 @@ class HomeRepositoryImpl @Inject constructor(
     }
 
     override fun getAvatars(getAvatarsRequest: GetAvatarsRequest): Flow<Result<List<ListAvatar>>> {
-        return remoteDataSource.getAvatars(getAvatarsRequest.asDto()).map { networkResult ->
-            when (networkResult) {
-                is NetworkResult.Loading -> Result.Loading
-                is NetworkResult.Success -> {
-                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                        val avatarList = networkResult.data.data?.avatars?.map { it.toListAvatar() }
-                        if (avatarList != null) {
-                            Result.Success(avatarList)
-                        } else {
-                            val cause = EmptyResponseException("No data")
-                            Result.Error(ApiException(cause))
-                        }
+        return remoteDataSource.getAvatars(getAvatarsRequest.asDto()).map(this::parseGetAvatarsResponse)
+    }
+
+    override fun getAvatars2(getAvatarsRequest: GetAvatarsRequest, forceRefresh: Boolean): Flow<Result<List<ModelAvatar>>> = flow<Result<List<ModelAvatar>>> {
+        val cache = observeModelAvatarsInternal(getAvatarsRequest.modelId).first()
+
+        if (cache.isEmpty() && forceRefresh) {
+            emit(Result.Loading)
+            val result = parseGetAvatarsResponse(
+                remoteDataSource.getAvatarsSync(getAvatarsRequest.asDto())
+            )
+            when (result) {
+                is Result.Success -> {
+                    val modelAvatarList = result.data.map {
+                        ModelAvatar(
+                            modelId = getAvatarsRequest.modelId,
+                            remoteFile = it.imageName,
+                            downloaded = 0,
+                            localUri = "",
+                            progress = 0
+                        )
+                    }
+                    localDataSource.deleteAllModelAvatars(getAvatarsRequest.modelId)
+                    localDataSource.insertAllModelAvatars(modelAvatarList.map(ModelAvatar::toEntity))
+                }
+                is Result.Error -> {
+                    emit(result)
+                }
+                is Result.Loading -> {
+                    /* Noop */
+                }
+            }
+        }
+
+        emitAll(
+            observeModelAvatarsInternal(getAvatarsRequest.modelId)
+                .map { Result.Success(it) }
+        )
+    }
+
+    override suspend fun getAvatars2Sync(getAvatarsRequest: GetAvatarsRequest): Result<List<ModelAvatar>> {
+        return Result.Loading
+    }
+
+    private fun parseGetAvatarsResponse(networkResult: NetworkResult<GetAvatarsResponse>): Result<List<ListAvatar>> {
+        return when (networkResult) {
+            is NetworkResult.Loading -> Result.Loading
+            is NetworkResult.Success -> {
+                if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                    val avatarList = networkResult.data.data?.avatars?.map { it.toListAvatar() }
+                    if (avatarList != null) {
+                        Result.Success(avatarList)
                     } else {
-                        val cause =
-                            BadResponseException("Unexpected response code ${networkResult.code}")
+                        val cause = EmptyResponseException("No data")
                         Result.Error(ApiException(cause))
                     }
+                } else {
+                    val cause =
+                        BadResponseException("Unexpected response code ${networkResult.code}")
+                    Result.Error(ApiException(cause))
                 }
-                else -> parseErrorNetworkResult(networkResult)
             }
+            else -> parseErrorNetworkResult(networkResult)
         }
     }
 }

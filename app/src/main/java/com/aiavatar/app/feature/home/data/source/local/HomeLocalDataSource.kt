@@ -3,6 +3,7 @@ package com.aiavatar.app.feature.home.data.source.local
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.feature.home.data.source.local.entity.CatalogListEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.CategoryEntity
+import com.aiavatar.app.feature.home.data.source.local.entity.ModelAvatarEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.ModelEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -10,6 +11,17 @@ import javax.inject.Inject
 class HomeLocalDataSource @Inject constructor(
     private val database: AppDatabase
 ) {
+
+    fun observeModelAvatars(modelId: String): Flow<List<ModelAvatarEntity>> =
+        database.modelAvatarDao().getModelAvatars(modelId)
+
+    suspend fun insertAllModelAvatars(modelAvatars: List<ModelAvatarEntity>) {
+        database.modelAvatarDao().insertAll(modelAvatars)
+    }
+
+    suspend fun deleteAllModelAvatars(modelId: String) {
+        database.modelAvatarDao().deleteAll(modelId)
+    }
 
     fun observeAllModels(): Flow<List<ModelEntity>> =
         database.modelDao().getAllModel()

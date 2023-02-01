@@ -275,7 +275,9 @@ class AvatarResultFragment : Fragment() {
         val cont: Continuation = {
             WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
             Timber.d("Download scheduled: $modelId")
-            gotoHome()
+            if (!ApplicationDependencies.getPersistentStore().isLogged) {
+                gotoHome()
+            }
         }
 
         if (checkStoragePermission()) {
@@ -296,7 +298,7 @@ class AvatarResultFragment : Fragment() {
     }
 
     private fun gotoModelDetail(position: Int, data: AvatarResultUiModel.AvatarItem) {
-        Timber.d("gotoModelDetail: ${data.avatar.id}")
+        Timber.d("gotoModelDetail: ${data.avatar._id}")
         val modelId = viewModel.getModelId()
         val statusId = viewModel.getStatusId()
         try {
@@ -306,7 +308,7 @@ class AvatarResultFragment : Fragment() {
                     putString(Constant.EXTRA_FROM, "result_preview")
                     modelId?.let { putString(ModelDetailFragment.ARG_MODEL_ID, it) }
                     statusId?.let { putString(ModelDetailFragment.ARG_STATUS_ID, it) }
-                    data.avatar.id?.let { putLong(ModelDetailFragment.ARG_JUMP_TO_ID, it) }
+                    data.avatar._id?.let { putLong(ModelDetailFragment.ARG_JUMP_TO_ID, it) }
                     putString(ModelDetailFragment.ARG_JUMP_TO_IMAGE_NAME, data.avatar.remoteFile)
                 }
                 navigate(R.id.model_detail, args, navOpts)
@@ -382,7 +384,7 @@ class AvatarResultAdapter(
                 newItem: AvatarResultUiModel,
             ): Boolean {
                 return (oldItem is AvatarResultUiModel.AvatarItem && newItem is AvatarResultUiModel.AvatarItem &&
-                        oldItem.avatar.id == newItem.avatar.id)
+                        oldItem.avatar._id == newItem.avatar._id)
             }
 
             override fun areContentsTheSame(

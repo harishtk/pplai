@@ -1,36 +1,37 @@
 package com.aiavatar.app.feature.home.presentation.create
 
+import android.net.Uri
+import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ListenableWorker
 import com.aiavatar.app.BuildConfig
+import com.aiavatar.app.Constant
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.commons.util.net.ProgressRequestBody
 import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.UploadFileStatus
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.core.data.source.local.entity.toEntity
 import com.aiavatar.app.core.data.source.local.model.UploadSessionWithFilesEntity
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
-import com.aiavatar.app.core.domain.model.AvatarStatus
-import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
-import com.aiavatar.app.core.domain.model.ModelStatus
-import com.aiavatar.app.core.domain.model.UploadSessionWithFiles
+import com.aiavatar.app.core.domain.model.*
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.feature.onboard.domain.model.UploadImageData
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import okhttp3.MultipartBody
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -61,6 +62,7 @@ class AvatarStatusViewModel @Inject constructor(
 
     private var createModelJob: Job? = null
     private var avatarStatusJob: Job? = null
+    private var uploadPhotosJob: Job? = null
     private var scheduledAvatarStatusJob: Job? = null
 
     init {
@@ -340,6 +342,199 @@ class AvatarStatusViewModel @Inject constructor(
         }
     }
 
+    fun beginUpload(sessionId: Long) {
+        uploadPhotosJob = beginUploadInternal(sessionId)
+    }
+
+    /* Upload related */
+    private fun beginUploadInternal(sessionId: Long) = viewModelScope.launch {
+        /*val sessionId = workerParameters.inputData.getLong(UploadWorker.KEY_SESSION_ID, -1L)
+        if (sessionId == -1L) {
+            return abortWork("No session id, aborting photo upload.")
+        }*/
+
+        val uploadSessionWithFiles = appDatabase.uploadSessionDao().getUploadSessionSync(sessionId)
+            ?: return@launch uploadFailed("No upload session data found for session $sessionId")
+
+        appDatabase.uploadSessionDao().updateUploadSessionStatus(
+            uploadSessionWithFiles.uploadSessionEntity._id!!,
+            UploadSessionStatus.PARTIALLY_DONE.status
+        )
+        val uploadResultList: List<Deferred<Result<UploadImageData>>> =
+            uploadSessionWithFiles.uploadFilesEntity
+                .filter { it.uploadedFileName == null }
+                .map { uploadFilesEntity ->
+                    val task = viewModelScope.async {
+                        Timber.d("Preparing upload ${uploadFilesEntity.fileUriString}")
+                        val file = Uri.parse(uploadFilesEntity.fileUriString).toFile()
+                        val progressRequestBody = ProgressRequestBody(
+                            file,
+                            Constant.MIME_TYPE_JPEG,
+                            object : ProgressRequestBody.ProgressCallback {
+                                override fun onProgressUpdate(percentage: Int) {
+                                    Timber.d("Uploading: ${file.name} PROGRESS $percentage")
+                                    // progressCallback((percentage / 10f).coerceIn(0.0F, 1.0F))
+                                    runBlocking {
+                                        appDatabase.uploadFilesDao()
+                                            .updateFileUploadProgress(uploadFilesEntity._id!!, percentage)
+                                    }
+                                }
+
+                                override fun onError() {
+
+                                }
+                            }
+                        )
+                        val filePart: MultipartBody.Part =
+                            MultipartBody.Part.createFormData(
+                                "files",
+                                file.name,
+                                progressRequestBody
+                            )
+                        val folderNamePart: MultipartBody.Part =
+                            MultipartBody.Part.createFormData(
+                                "folderName",
+                                uploadSessionWithFiles.uploadSessionEntity.folderName
+                            )
+                        val fileNamePart: MultipartBody.Part =
+                            MultipartBody.Part.createFormData(
+                                "fileName",
+                                file.name
+                            )
+                        val typePart = MultipartBody.Part.createFormData(
+                            "type",
+                            "photo_sample"
+                        )
+
+                        val result = appRepository.uploadFileSync(
+                            folderName = folderNamePart,
+                            type = typePart,
+                            fileName = fileNamePart,
+                            files = filePart
+                        )
+                        when (result) {
+                            is com.aiavatar.app.commons.util.Result.Loading -> {
+                                appDatabase.uploadFilesDao().updateFileStatus(
+                                    uploadFilesEntity._id!!,
+                                    UploadFileStatus.UPLOADING.status
+                                )
+                            }
+
+                            is com.aiavatar.app.commons.util.Result.Success -> {
+                                appDatabase.uploadFilesDao().updateUploadedFileName(
+                                    uploadFilesEntity._id!!,
+                                    result.data.imageName,
+                                    System.currentTimeMillis()
+                                )
+                                appDatabase.uploadFilesDao().updateFileStatus(
+                                    uploadFilesEntity._id!!,
+                                    UploadFileStatus.COMPLETE.status
+                                )
+                            }
+
+                            is com.aiavatar.app.commons.util.Result.Error -> {
+                                appDatabase.uploadFilesDao().updateFileStatus(
+                                    uploadFilesEntity._id!!,
+                                    UploadFileStatus.FAILED.status
+                                )
+                            }
+                        }
+                        result
+                    }
+                    task
+                }
+
+        uploadResultList.awaitAll()
+        uploadResultList.map { it.getCompleted() }
+            .forEachIndexed { index, result ->
+                if (result is com.aiavatar.app.commons.util.Result.Success) {
+                    Timber.d("Upload result: ${index + 1} ${result.data.imageName} success")
+                }
+            }
+
+        val totalUploads = appDatabase.uploadFilesDao().getAllUploadFilesSync(sessionId)
+            .mapNotNull { it.uploadedFileName }.count()
+        if (totalUploads < getMinUploadImageCount() /* Min upload size */) {
+            appDatabase.uploadSessionDao().updateUploadSessionStatus(
+                uploadSessionWithFiles.uploadSessionEntity._id!!,
+                UploadSessionStatus.FAILED.status
+            )
+            uploadFailed("Unable to complete upload.")
+        } else {
+            appDatabase.uploadSessionDao().updateUploadSessionStatus(
+                uploadSessionWithFiles.uploadSessionEntity._id!!,
+                UploadSessionStatus.UPLOAD_COMPLETE.status
+            )
+
+            /*if (uploadResultList.isNotEmpty() && !ApplicationDependencies.getAppForegroundObserver().isForegrounded) {
+                notifyUploadComplete(context, uploadResultList.size)
+            }*/
+            sendEvent(AvatarStatusUiEvent.NotifyUploadProgress(uploadResultList.size, true))
+            createModelInternal(sessionId)
+
+            /* when (val result = createModelSyncInternal(uploadSessionWithFiles.uploadSessionEntity._id!!).await()) {
+                is com.aiavatar.app.commons.util.Result.Success -> {
+                    ApplicationDependencies.getPersistentStore().apply {
+                        setProcessingModel(true)
+                        result.data.guestUserId?.let { setGuestUserId(it) }
+                    }
+                    appDatabase.uploadSessionDao().apply {
+                        appDatabase.avatarStatusDao().apply {
+                            val newAvatarStatus = AvatarStatus.emptyStatus(result.data.modelId).apply {
+                                avatarStatusId = result.data.statusId
+                            }
+                            insert(newAvatarStatus.toEntity())
+                        }
+                    }
+                    /*// TODO: get avatar status
+                    val request = AvatarStatusRequest(result.data.statusId.toString())
+                    getStatus(request)*/
+                }
+                else -> {
+                    uploadFailed("Create model request failed")
+                }
+            } */
+        }
+    }
+
+    private fun uploadFailed(message: String) {
+        // TODO: handle upload failure
+    }
+
+    private fun getMinUploadImageCount(): Int {
+        return if (BuildConfig.DEBUG) {
+            0
+        } else {
+            UploadStep2Fragment.MIN_IMAGES
+        }
+    }
+    /* END - Upload related */
+
+    /* Model creation */
+    private fun createModelSyncInternal(sessionId: Long): Deferred<com.aiavatar.app.commons.util.Result<CreateModelData>> = viewModelScope.async {
+        Timber.d( "createModelInternal() called")
+        val uploadSessionWithFilesEntity = appDatabase.uploadSessionDao().getUploadSessionSync(sessionId)
+        val fileNameArray: List<String> = uploadSessionWithFilesEntity?.uploadFilesEntity?.mapNotNull { it.uploadedFileName }
+            ?: emptyList()
+        if (uploadSessionWithFilesEntity != null) {
+            val request = CreateModelRequest(
+                folderName = uploadSessionWithFilesEntity.uploadSessionEntity.folderName,
+                trainingType = uploadSessionWithFilesEntity.uploadSessionEntity.trainingType,
+                files = fileNameArray,
+                fcm = ApplicationDependencies.getPersistentStore().fcmToken
+            )
+            createModelSync(request)
+        } else {
+            val cause = IllegalStateException("session data not found")
+            com.aiavatar.app.commons.util.Result.Error(cause)
+        }
+    }
+
+    private suspend fun createModelSync(request: CreateModelRequest): com.aiavatar.app.commons.util.Result<CreateModelData> {
+        return appRepository.createModelSync(request)
+    }
+    /* END - Model creation */
+
     private fun setLoading(
         loadType: LoadType,
         loadState: LoadState
@@ -373,6 +568,7 @@ class AvatarStatusViewModel @Inject constructor(
         scheduledAvatarStatusJob?.cancel(t)
         avatarStatusJob?.cancel(t)
         createModelJob?.cancel(t)
+        uploadPhotosJob?.cancel(t)
         super.onCleared()
     }
 
@@ -399,6 +595,7 @@ interface AvatarStatusUiAction {
 
 interface AvatarStatusUiEvent {
     data class ShowToast(val message: UiText) : AvatarStatusUiEvent
+    data class NotifyUploadProgress(val progress: Int, val isComplete: Boolean) : AvatarStatusUiEvent
 }
 
 private const val TOGGLE_STATE_NOTIFY_ME = "toggle_state_notify_me"

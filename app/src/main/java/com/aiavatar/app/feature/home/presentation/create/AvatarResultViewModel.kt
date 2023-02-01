@@ -12,9 +12,11 @@ import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.toAvatarFile
+import com.aiavatar.app.core.data.source.local.entity.toModelAvatar
 import com.aiavatar.app.core.domain.model.AvatarFile
 import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
+import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.domain.model.ModelData
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.model.toAvatarFile
@@ -168,7 +170,7 @@ class AvatarResultViewModel @Inject constructor(
             }.onEach { avatarStatusWithFilesEntity ->
                 if (avatarStatusWithFilesEntity != null) {
                     val avatarResultList = avatarStatusWithFilesEntity.avatarFilesEntity.map {
-                        AvatarResultUiModel.AvatarItem(it.toAvatarFile())
+                        AvatarResultUiModel.AvatarItem(it.toModelAvatar())
                     }
                     val modelData = with(avatarStatusWithFilesEntity.avatarStatusEntity) {
                         ModelData(
@@ -194,7 +196,7 @@ class AvatarResultViewModel @Inject constructor(
     private fun getModelDetail(modelId: String) {
         modelDetailFetchJob?.cancel(CancellationException("New request"))
         modelDetailFetchJob = viewModelScope.launch {
-            homeRepository.getModel(modelId).collectLatest { result ->
+            homeRepository.getModel2(modelId).collectLatest { result ->
                 when (result) {
                     is Result.Loading -> { /* Noop */ }
                     is Result.Error -> {
@@ -223,7 +225,8 @@ class AvatarResultViewModel @Inject constructor(
 
         avatarsFetchJob?.cancel(CancellationException("New request")) // just in case
         avatarsFetchJob = viewModelScope.launch {
-            homeRepository.getAvatars(request).collectLatest { result ->
+            setLoading(LoadType.REFRESH, LoadState.Loading())
+            homeRepository.getAvatars2(request, forceRefresh = true).collectLatest { result ->
                 Timber.d("getAvatars: $result")
                 when (result) {
                     is Result.Loading -> setLoading(LoadType.REFRESH, LoadState.Loading())
@@ -252,7 +255,7 @@ class AvatarResultViewModel @Inject constructor(
                         setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
 
                         val avatarResultList = result.data.map {
-                            AvatarResultUiModel.AvatarItem(it.toAvatarFile(request.modelId))
+                            AvatarResultUiModel.AvatarItem(it)
                         }
 
                         _uiState.update { state ->
@@ -311,5 +314,5 @@ interface AvatarResultUiEvent {
 }
 
 interface AvatarResultUiModel {
-    data class AvatarItem(val avatar: AvatarFile) : AvatarResultUiModel
+    data class AvatarItem(val avatar: ModelAvatar) : AvatarResultUiModel
 }

@@ -1,11 +1,17 @@
 package com.aiavatar.app.feature.home.presentation.create
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.core.app.NotificationCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -13,8 +19,11 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavDeepLinkBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
+import androidx.work.ForegroundInfo
+import androidx.work.WorkManager
 import com.aiavatar.app.*
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.ServiceUtil
@@ -57,6 +66,12 @@ class AvatarStatusFragment : Fragment() {
             getString(Constant.ARG_STATUS_ID, null)?.let { statusId ->
                 viewModel.setAvatarStatusId(statusId)
             }
+            getLong(Constant.ARG_UPLOAD_SESSION_ID, -1L).let { uploadSessionId ->
+                if (uploadSessionId != -1L) {
+                    viewModel.beginUpload(uploadSessionId)
+                    createForegroundInfo(requireContext(), 0)
+                }
+            }
         }
 
         /*ApplicationDependencies.getPersistentStore().currentAvatarStatusId?.let {
@@ -97,6 +112,11 @@ class AvatarStatusFragment : Fragment() {
                     when (event) {
                         is AvatarStatusUiEvent.ShowToast -> {
                             context?.showToast(event.message.asString(requireContext()))
+                        }
+                        is AvatarStatusUiEvent.NotifyUploadProgress -> {
+                            if (event.isComplete) {
+                                notifyUploadComplete(requireContext(), event.progress)
+                            }
                         }
                     }
                 }
@@ -234,6 +254,7 @@ class AvatarStatusFragment : Fragment() {
                             description.text = "Uploading photos.."
                             btnCreateAvatar.isVisible = false
                             progressIndicator.isVisible = true
+                            progressIndicator.isIndeterminate = true
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
                         }
@@ -405,11 +426,11 @@ class AvatarStatusFragment : Fragment() {
                     if (isGuestUser) {
                         viewModel.setAvatarStatusId(runningStatus.last().avatarStatusId.toString())
                     } else {
-                        runningStatus
+                        /*runningStatus
                             .find { it.modelStatus != ModelStatus.COMPLETED.statusString }
                             ?.avatarStatusId?.let { statusId ->
                             viewModel.setAvatarStatusId(statusId)
-                        }
+                        }*/
                     }
                 }
             }
@@ -517,6 +538,68 @@ class AvatarStatusFragment : Fragment() {
         }
     }
 
+    private fun notifyUploadComplete(context: Context, photosCount: Int) {
+        ServiceUtil.getNotificationManager(context).cancel(UPLOAD_ONGOING_NOTIFICATION_ID)
+        val channelId = context.getString(R.string.upload_notification_channel_id)
+
+        val contentIntent = NavDeepLinkBuilder(context)
+            .setGraph(R.navigation.home_nav_graph)
+            .setDestination(R.id.avatar_status)
+            .setComponentName(MainActivity::class.java)
+            .createPendingIntent()
+
+        val notificationBuilder = NotificationCompat.Builder(context, channelId)
+        val notification = notificationBuilder.setOngoing(true)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationManager.IMPORTANCE_HIGH)
+            .setCategory(Notification.CATEGORY_STATUS)
+            .setOngoing(false)
+            .setAutoCancel(true)
+            .setContentTitle("Upload Complete!")
+            .setContentText("$photosCount Photos uploaded. Tap here to check status!")
+            .setContentIntent(contentIntent)
+            .build()
+        ServiceUtil.getNotificationManager(context)
+            .notify(UPLOAD_STATUS_NOTIFICATION_ID, notification)
+    }
+
+    private fun createForegroundInfo(context: Context, progress: Int): ForegroundInfo {
+        createUploadNotificationChannel(context)
+
+        val channelId = context.getString(R.string.upload_notification_channel_id)
+
+        val contentIntent = NavDeepLinkBuilder(context)
+            .setGraph(R.navigation.home_nav_graph)
+            .setDestination(R.id.avatar_status)
+            .setComponentName(MainActivity::class.java)
+            .createPendingIntent()
+
+        val notificationBuilder = NotificationCompat.Builder(context, channelId)
+        val notification = notificationBuilder.setOngoing(true)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationManager.IMPORTANCE_DEFAULT)
+            .setCategory(Notification.CATEGORY_PROGRESS)
+            .setContentTitle("Preparing upload")
+            .setProgress(100, progress, true)
+            .setOngoing(true)
+            .setContentIntent(contentIntent)
+            .build()
+        return ForegroundInfo(UPLOAD_STATUS_NOTIFICATION_ID, notification)
+    }
+
+    private fun createUploadNotificationChannel(context: Context) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as
+                NotificationManager
+        val channelId = context.getString(R.string.upload_notification_channel_id)
+        val channelName = context.getString(R.string.title_upload_notifications)
+        val channelDesc = context.getString(R.string.desc_upload_notifications)
+        val channel =
+            NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT)
+        channel.description = channelDesc
+
+        notificationManager.createNotificationChannel(channel)
+    }
+
     private fun getFormattedTime(etaSeconds: Int): String {
         val millisUntilFinished = etaSeconds * 1000L
         var millisUntilFinished2 = millisUntilFinished
@@ -540,5 +623,11 @@ class AvatarStatusFragment : Fragment() {
         )
         Timber.d("Timer: $uiText")
         return uiText
+    }
+
+    companion object {
+        const val UPLOAD_ONGOING_NOTIFICATION_ID    = 1001
+        const val UPLOAD_COMPLETE_NOTIFICATION_ID   = 1002
+        const val UPLOAD_STATUS_NOTIFICATION_ID     = 3001
     }
 }
