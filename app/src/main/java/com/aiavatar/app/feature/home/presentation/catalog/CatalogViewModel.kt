@@ -81,6 +81,7 @@ class CatalogViewModel @Inject constructor(
         }*/
         catalogFetchJob?.cancel(CancellationException("New request")) // just in case
         catalogFetchJob = viewModelScope.launch {
+            setLoadState(LoadType.REFRESH, LoadState.Loading())
             homeRepository.getCatalog2(forceRefresh).collectLatest { result ->
                 Timber.d("Catalog result: $result")
                 when (result) {

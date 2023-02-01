@@ -27,6 +27,7 @@ import com.aiavatar.app.core.domain.model.ModelStatus
 import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
+import com.aiavatar.app.viewmodels.UserViewModel
 import com.aiavatar.app.work.UploadWorker
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,19 +48,26 @@ class AvatarStatusFragment : Fragment() {
 
     private val viewModel: AvatarStatusViewModel by viewModels()
     private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val userViewModel: UserViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        ApplicationDependencies.getPersistentStore().currentAvatarStatusId?.let {
-            viewModel.setAvatarStatusId(it)
+        arguments?.apply {
+            getString(Constant.ARG_STATUS_ID, null)?.let { statusId ->
+                viewModel.setAvatarStatusId(statusId)
+            }
         }
+
+        /*ApplicationDependencies.getPersistentStore().currentAvatarStatusId?.let {
+            viewModel.setAvatarStatusId(it)
+        }*/
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.fragment_avatar_status, container, false)
     }
@@ -81,7 +89,7 @@ class AvatarStatusFragment : Fragment() {
     private fun FragmentAvatarStatusBinding.bindState(
         uiState: StateFlow<AvatarStatusState>,
         uiAction: (AvatarStatusUiAction) -> Unit,
-        uiEvent: SharedFlow<AvatarStatusUiEvent>
+        uiEvent: SharedFlow<AvatarStatusUiEvent>,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -143,7 +151,8 @@ class AvatarStatusFragment : Fragment() {
                     // Avatar status
                     when (avatarStatusWithFiles.avatarStatus.modelStatus) {
                         ModelStatus.TRAINING_PROCESSING -> {
-                            description.text = "We're pouring out hearts and souls into this project, \nwe ask for a bit more time"
+                            description.text =
+                                "We're pouring out hearts and souls into this project, \nwe ask for a bit more time"
 
                             logo.isVisible = false
                             thinking.isVisible = true
@@ -167,10 +176,12 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.isVisible = true
                             progressIndicator.isIndeterminate = false
                             textProgressHint.isVisible = true
-                            textProgressHint.text = "${avatarStatusWithFiles.avatarStatus.generatedAiCount}/" +
-                                    "${avatarStatusWithFiles.avatarStatus.totalAiCount}"
-                            val progress = (avatarStatusWithFiles.avatarStatus.generatedAiCount.toFloat() / avatarStatusWithFiles.avatarStatus.totalAiCount)
-                                .coerceIn(0.0F, 1.0F)
+                            textProgressHint.text =
+                                "${avatarStatusWithFiles.avatarStatus.generatedAiCount}/" +
+                                        "${avatarStatusWithFiles.avatarStatus.totalAiCount}"
+                            val progress =
+                                (avatarStatusWithFiles.avatarStatus.generatedAiCount.toFloat() / avatarStatusWithFiles.avatarStatus.totalAiCount)
+                                    .coerceIn(0.0F, 1.0F)
                             progressIndicator.progress = (progress * 100).toInt()
 
                             cbNotifyMe.isVisible = true
@@ -215,7 +226,7 @@ class AvatarStatusFragment : Fragment() {
                         }
                         UploadSessionStatus.UPLOAD_COMPLETE -> {
                             // description.text = "Yay! Your photos are ready for creating avatar!"
-                            description.text = "Creating model.."
+                            description.text = "Please wait.."
                             btnCreateAvatar.isVisible = false
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
@@ -224,10 +235,12 @@ class AvatarStatusFragment : Fragment() {
                         UploadSessionStatus.FAILED -> {
                             val uploadSessionWithFiles = uiState.value.uploadSessionWithFilesEntity
                             if (uploadSessionWithFiles != null) {
-                                val failedUploads = uploadSessionWithFiles.uploadFilesEntity.map { it.uploadedFileName == null }
-                                    .count()
-                                description.text = "Some photos are failed to upload. Please upload again."
-                                btnCreateAvatar.setText("Retry Upload")
+                                val failedUploads =
+                                    uploadSessionWithFiles.uploadFilesEntity.map { it.uploadedFileName == null }
+                                        .count()
+                                description.text =
+                                    "Some photos are failed to upload. Please upload again."
+                                btnCreateAvatar.idleText = "Retry Upload"
                                 progressIndicator.isVisible = false
                                 textProgressHint.isVisible = false
                                 cbNotifyMe.isVisible = false
@@ -320,13 +333,18 @@ class AvatarStatusFragment : Fragment() {
 
     private fun FragmentAvatarStatusBinding.bindClick(
         uiState: StateFlow<AvatarStatusState>,
-        uiAction: (AvatarStatusUiAction) -> Unit
+        uiAction: (AvatarStatusUiAction) -> Unit,
     ) {
         btnCreateAvatar.setOnClickListener {
             val modelStatus = uiState.value.avatarStatusWithFiles?.avatarStatus?.modelStatus
             val sessionStatus = uiState.value.sessionStatus
             if (modelStatus == ModelStatus.COMPLETED) {
                 // TODO: View results
+                ApplicationDependencies.getPersistentStore().apply {
+                    if (isLogged) {
+                        setProcessingModel(false)
+                    }
+                }
                 gotoAvatarResult(uiState.value.avatarStatusId!!)
             } else if (sessionStatus == UploadSessionStatus.FAILED) {
                 val cachedSessionId = uiState.value.sessionId
@@ -338,7 +356,13 @@ class AvatarStatusFragment : Fragment() {
             }
         }
 
-        btnClose.setOnClickListener { activity?.onBackPressedDispatcher?.onBackPressed() }
+        if (ApplicationDependencies.getPersistentStore().isLogged) {
+            btnClose.isVisible = true
+            btnClose.setOnClickListener { activity?.onBackPressedDispatcher?.onBackPressed() }
+        } else {
+            // If the user isn't logged in, then this is a blocker page
+            btnClose.isVisible = false
+        }
 
         retryButton.setOnClickListener { viewModel.refresh() }
     }
@@ -352,6 +376,29 @@ class AvatarStatusFragment : Fragment() {
                 }
             }
         }
+
+        val isGuestUserFlow = userViewModel.loginUser
+            .map { it == null }
+        viewLifecycleOwner.lifecycleScope.launch {
+            combine(
+                viewModel.runningTrainingsFlow,
+                isGuestUserFlow,
+                ::Pair
+            ).collectLatest { (runningStatus, isGuestUser) ->
+                Timber.d("Avatar status: $runningStatus guest = $isGuestUser")
+                if (runningStatus.isNotEmpty()) {
+                    if (isGuestUser) {
+                        viewModel.setAvatarStatusId(runningStatus.last().avatarStatusId.toString())
+                    } else {
+                        runningStatus
+                            .find { it.modelStatus != ModelStatus.COMPLETED.statusString }
+                            ?.avatarStatusId?.let { statusId ->
+                            viewModel.setAvatarStatusId(statusId)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun handleBackPressed() {
@@ -362,7 +409,13 @@ class AvatarStatusFragment : Fragment() {
                     safeCall {
                         findNavController().apply {
                             if (!navigateUp()) {
-                                gotoHome()
+                                if (ApplicationDependencies.getPersistentStore().isLogged) {
+                                    gotoHome()
+                                } else {
+                                    // If the user isn't logged in, then is is a blocker page
+                                    // Nothing much to do.
+                                    activity?.finishAffinity()
+                                }
                             }
                         }
                     }
@@ -383,24 +436,24 @@ class AvatarStatusFragment : Fragment() {
     }
 
     private fun gotoUploads(cachedSessionId: Long?) = safeCall {
-         findNavController().apply {
-             val navOpts = NavOptions.Builder()
-                 .setEnterAnim(R.anim.slide_in_right)
-                 .setExitAnim(R.anim.slide_out_right)
-                 .setPopEnterAnim(R.anim.slide_in_right)
-                 .setPopExitAnim(R.anim.slide_out_right)
-                 .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
-                 .build()
-             val args = Bundle().apply {
-                 /*
-                 * TODO: IMPORTANT - To restore previous upload session, uncomment the cachedSessionId
-                 * */
-                 /*if (cachedSessionId != null) {
-                     putLong(UploadStep2Fragment.ARG_CACHED_SESSION_ID, cachedSessionId)
-                 }*/
-             }
-             navigate(R.id.upload_step_2, args, navOpts)
-         }
+        findNavController().apply {
+            val navOpts = NavOptions.Builder()
+                .setEnterAnim(R.anim.slide_in_right)
+                .setExitAnim(R.anim.slide_out_right)
+                .setPopEnterAnim(R.anim.slide_in_right)
+                .setPopExitAnim(R.anim.slide_out_right)
+                .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                .build()
+            val args = Bundle().apply {
+                /*
+                * TODO: IMPORTANT - To restore previous upload session, uncomment the cachedSessionId
+                * */
+                /*if (cachedSessionId != null) {
+                    putLong(UploadStep2Fragment.ARG_CACHED_SESSION_ID, cachedSessionId)
+                }*/
+            }
+            navigate(R.id.upload_step_2, args, navOpts)
+        }
     }
 
     private fun gotoHome() = safeCall {

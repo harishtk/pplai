@@ -41,8 +41,6 @@ class ProfileViewModel @Inject constructor(
 
     init {
         accept = { uiAction -> onUiAction(uiAction) }
-
-        refresh()
     }
 
     private fun onUiAction(action: ProfileUiAction) {

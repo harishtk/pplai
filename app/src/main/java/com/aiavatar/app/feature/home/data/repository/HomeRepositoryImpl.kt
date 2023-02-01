@@ -18,6 +18,7 @@ import com.aiavatar.app.feature.home.data.source.remote.dto.toSubscriptionPlan
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toCatalogDetailData
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelData
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelList
+import com.aiavatar.app.feature.home.data.source.remote.model.dto.toPurchasePlanData
 import com.aiavatar.app.feature.home.data.source.remote.model.toCatalogList
 import com.aiavatar.app.feature.home.data.source.remote.model.toCategory
 import com.aiavatar.app.feature.home.data.source.remote.model.toListAvatar
@@ -421,16 +422,16 @@ class HomeRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun purchasePlan(subscriptionPurchaseRequest: SubscriptionPurchaseRequest): Flow<Result<String>> {
+    override fun purchasePlan(subscriptionPurchaseRequest: SubscriptionPurchaseRequest): Flow<Result<PurchasePlanData>> {
         return remoteDataSource.purchasePlan(subscriptionPurchaseRequest.asDto())
             .map { networkResult ->
                 when (networkResult) {
                     is NetworkResult.Loading -> Result.Loading
                     is NetworkResult.Success -> {
                         if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                            val statusId = networkResult.data.data?.avatarStatusId
-                            if (statusId != null) {
-                                Result.Success(statusId)
+                            val data = networkResult.data.purchasePlanDataDto?.toPurchasePlanData()
+                            if (data != null) {
+                                Result.Success(data)
                             } else {
                                 val cause = EmptyResponseException("No status id")
                                 Result.Error(ApiException(cause))

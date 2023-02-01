@@ -18,7 +18,7 @@ data class AvatarStatusResponse(
 
 data class AvatarStatusDto(
     @SerializedName("id")
-    val id: Long,
+    val id: String,
     @SerializedName("modelStatus")
     val modelStatus: String, /* training_processing, training_failed, avatar_processing, completed */
     @SerializedName("totalAiCount")

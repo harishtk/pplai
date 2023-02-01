@@ -1,7 +1,7 @@
 package com.aiavatar.app.feature.home.data.source.remote.model
 
+import com.aiavatar.app.feature.home.data.source.remote.model.dto.PurchasePlanDataDto
 import com.google.gson.annotations.SerializedName
-import retrofit2.SkipCallbackExecutor
 
 data class PurchasePlanResponse(
     @SerializedName("statusCode")
@@ -9,17 +9,6 @@ data class PurchasePlanResponse(
     @SerializedName("message")
     val message: String,
     @SerializedName("data")
-    val data: Data?
-) {
+    val purchasePlanDataDto: PurchasePlanDataDto?
+)
 
-    data class Data(
-        @SerializedName("statusId")
-        val avatarStatusId: String,
-        @SerializedName("userId")
-        val userId: String,
-        @SerializedName("eta")
-        val eta: Int,
-        @SerializedName("modelId")
-        val modelId: String,
-    )
-}

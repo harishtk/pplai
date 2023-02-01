@@ -37,6 +37,7 @@ import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentLoginBinding
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.viewmodels.UserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -60,6 +61,7 @@ import kotlin.math.sign
 class LoginFragment : Fragment() {
 
     private val viewModel: LoginViewModel by viewModels()
+    private val userViewModel: UserViewModel by viewModels()
 
     private var savedStateHandle: SavedStateHandle? = null
 
@@ -88,7 +90,7 @@ class LoginFragment : Fragment() {
         Timber.d("From: $from")
 
         savedStateHandle = when (from) {
-            "landing" -> findNavController().getBackStackEntry(R.id.landingPage)?.savedStateHandle
+            "profile" -> findNavController().previousBackStackEntry?.savedStateHandle
             else -> null
         }
         savedStateHandle?.set(LOGIN_RESULT, false)
@@ -153,7 +155,7 @@ class LoginFragment : Fragment() {
                                     navigate(R.id.upload_step_1, args, navOpts)
                                 }
                             }
-                            "landing" -> {
+                            "profile" -> { /* 'popup' means previous page, the one who fired it expects the result */
                                 savedStateHandle?.set(LOGIN_RESULT, true)
                                 findNavController().popBackStack()
                             }
@@ -430,8 +432,17 @@ class LoginFragment : Fragment() {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     if (!viewModel.handleBackPressed()) {
-                        if (!findNavController().navigateUp()) {
-                            activity?.finish()
+                        findNavController().apply {
+                            when (from) {
+                                "profile" -> {
+                                    popBackStack(R.id.profile, true)
+                                }
+                                else -> {
+                                    if (!navigateUp()) {
+                                        activity?.finish()
+                                    }
+                                }
+                            }
                         }
                     }
                 }

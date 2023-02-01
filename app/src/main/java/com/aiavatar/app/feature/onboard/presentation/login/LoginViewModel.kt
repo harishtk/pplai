@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.onboard.presentation.login
 
 import android.util.Log
+import android.util.LogPrinter
 import androidx.core.util.PatternsCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -14,7 +15,10 @@ import com.aiavatar.app.commons.util.ValidationResult
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.LoginUserEntity
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.feature.onboard.domain.model.LoginData
 import com.aiavatar.app.feature.onboard.domain.model.request.LoginRequest
 import com.aiavatar.app.feature.onboard.domain.model.request.SocialLoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
@@ -28,11 +32,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.math.log
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    val savedStateHandle: SavedStateHandle,
-    val repository: AccountsRepository
+    private val savedStateHandle: SavedStateHandle,
+    private val repository: AccountsRepository,
+    @Deprecated("use repo instead")
+    private val appDatabase: AppDatabase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LoginState>(LoginState())
@@ -283,10 +290,8 @@ class LoginViewModel @Inject constructor(
                             }
                             CALL_FOR_VERIFY_OTP -> {
                                 result.data.let { loginData ->
+                                    setLoginData(loginData)
                                     ApplicationDependencies.getPersistentStore()
-                                        .setUserId(loginData.loginUser?.userId.nullAsEmpty())
-                                        .setDeviceToken(loginData.deviceToken.nullAsEmpty())
-                                        .setUsername(loginData.loginUser?.username.nullAsEmpty())
                                         .setEmail(loginRequest.email)
                                 }
                                 sendEvent(LoginUiEvent.ShowToast(UiText.DynamicString("Login successful!")))
@@ -346,16 +351,31 @@ class LoginViewModel @Inject constructor(
                     is Result.Success -> {
                         setLoading(LoadState.NotLoading.Complete, LoadType.ACTION)
                         result.data.let { loginData ->
+                            setLoginData(loginData)
                             ApplicationDependencies.getPersistentStore()
-                                .setUserId(loginData.loginUser?.userId.nullAsEmpty())
-                                .setDeviceToken(loginData.deviceToken.nullAsEmpty())
-                                .setUsername(loginData.loginUser?.username.nullAsEmpty())
                                 .setEmail(socialLoginRequest.email)
                                 .setSocialImage(photoUrl)
                         }
                         sendEvent(LoginUiEvent.ShowToast(UiText.DynamicString("Login successful!")))
                         sendEvent(LoginUiEvent.NextScreen)
                     }
+                }
+            }
+        }
+    }
+
+    private fun setLoginData(loginData: LoginData) = viewModelScope.launch {
+        ApplicationDependencies.getPersistentStore()
+            .setUserId(loginData.loginUser?.userId)
+            .setDeviceToken(loginData.deviceToken.nullAsEmpty())
+            .setUsername(loginData.loginUser?.username.nullAsEmpty())
+
+        viewModelScope.launch {
+            appDatabase.loginUserDao().apply {
+                deleteAll()
+                LoginUserEntity(username = loginData.loginUser?.username.nullAsEmpty()).apply {
+                    userId = loginData.loginUser?.userId
+                    insert(this)
                 }
             }
         }

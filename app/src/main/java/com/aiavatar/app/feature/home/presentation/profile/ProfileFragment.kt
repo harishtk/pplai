@@ -5,10 +5,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
@@ -21,6 +25,8 @@ import com.aiavatar.app.databinding.ItemModelListBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
+import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
+import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,11 +35,13 @@ import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
+import kotlin.math.log
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment() {
 
     private val viewModel: ProfileViewModel by viewModels()
+    private val userViewModel: UserViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,6 +60,9 @@ class ProfileFragment : Fragment() {
             uiAction = viewModel.accept,
             uiEvent = viewModel.uiEvent
         )
+
+        setupObservers()
+        handleBackPressed()
     }
 
     private fun FragmentProfileBinding.bindState(
@@ -97,7 +108,6 @@ class ProfileFragment : Fragment() {
         val callback = object : ModelListAdapter.Callback {
             override fun onItemClick(position: Int, data: ModelListUiModel.Item) {
                 val statusId = data.modelList.statusId
-                Timber.d("Status: $statusId ${ApplicationDependencies.getPersistentStore().currentAvatarStatusId}")
                 if (data.modelList.statusId != "0") {
                     gotoAvatarStatus(statusId)
                 } else {
@@ -119,7 +129,7 @@ class ProfileFragment : Fragment() {
                 Timber.d("Load state: ${loadState.refresh}")
                 if (loadState.refresh is LoadState.Loading) {
                     emptyListContainer.isVisible = false
-                    progressBar.isVisible = true
+                    progressBar.isVisible = adapter.itemCount <= 0
                 } else {
                     progressBar.isVisible = false
                     emptyListContainer.isVisible = adapter.itemCount <= 0
@@ -197,12 +207,60 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            userViewModel.loginUser.collectLatest { loginUser ->
+                Timber.d("Login user: $loginUser")
+                if (loginUser == null) {
+                    gotoLogin()
+                } else {
+                    if (loginUser.userId != null) {
+                        viewModel.refresh()
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                /*getNavigationResultFlow<Boolean>(LoginFragment.LOGIN_RESULT)?.collectLatest { isLoggedIn ->
+                    if (isLoggedIn != null && isLoggedIn != true) {
+                        safeCall { findNavController().navigateUp() }
+                    }
+                }*/
+            }
+        }
+    }
+
+    private fun handleBackPressed() {
+        activity?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Do nothing. The page automatically closes
+                    findNavController().apply {
+                        navigateUp()
+                    }
+                }
+            })
+    }
+
+    private fun gotoLogin() {
+        Timber.d("User login: opening login..")
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder().build()
+            val args = Bundle().apply {
+                /* 'popup' means previous page, the one who fired it expects the result */
+                putString(Constant.EXTRA_FROM, "profile")
+            }
+            navigate(R.id.login_fragment, args, navOpts)
+        }
+    }
+
     private fun gotoSettings() {
         findNavController().apply {
             val navOpts = NavOptions.Builder()
                 .setEnterAnim(R.anim.slide_in_right)
                 .setExitAnim(R.anim.slide_out_right)
-                .setPopExitAnim(R.anim.slide_out_right)
                 .build()
             navigate(R.id.action_profile_to_settings, null, navOpts)
         }
@@ -222,8 +280,10 @@ class ProfileFragment : Fragment() {
     private fun gotoAvatarStatus(statusId: String) = safeCall {
         findNavController().apply {
             val navOptions = defaultNavOptsBuilder().build()
-            val args = null
-            navigate(R.id.avatar_status, null, navOptions)
+            val args = Bundle().apply {
+                putString(Constant.ARG_STATUS_ID, statusId)
+            }
+            navigate(R.id.avatar_status, args, navOptions)
         }
     }
 

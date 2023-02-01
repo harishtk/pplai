@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.commons.util.Result
+import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.toLoginUser
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
@@ -22,18 +24,20 @@ class UserViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     private val appRepository: AppRepository,
     private val homeRepository: HomeRepository,
+    @Deprecated("user repo")
+    private val appDatabase: AppDatabase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _userId = MutableStateFlow<String?>(null)
-    val userId = _userId
-        .stateIn(
+    val loginUser = appDatabase.loginUserDao().getLoginUser()
+        .map { it?.toLoginUser() }
+        /*.shareIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = readFromPrefs()
-        )
+            replay = 0
+        )*/
 
-    private fun readFromPrefs(): String {
+    private fun readFromPrefs(): String? {
         return ApplicationDependencies.getPersistentStore().userId
     }
 

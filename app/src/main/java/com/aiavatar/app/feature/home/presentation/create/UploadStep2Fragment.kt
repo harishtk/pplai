@@ -176,7 +176,6 @@ class UploadStep2Fragment : Fragment() {
             uiEvent.collectLatest { event ->
                 when (event) {
                     is UploadStep2UiEvent.PrepareUpload -> {
-                        WorkUtil.scheduleUploadWorker(requireActivity(), event.sessionId)
                         sharedViewModel.setCurrentUploadSessionId(event.sessionId)
                         gotoNextScreen()
                     }

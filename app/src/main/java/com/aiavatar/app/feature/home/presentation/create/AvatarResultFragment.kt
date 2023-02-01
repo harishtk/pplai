@@ -101,7 +101,7 @@ class AvatarResultFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.fragment_avatar_result, container, false)
     }
@@ -120,7 +120,7 @@ class AvatarResultFragment : Fragment() {
     private fun FragmentAvatarResultBinding.bindState(
         uiState: StateFlow<AvatarResultState>,
         uiAction: (AvatarResultUiAction) -> Unit,
-        uiEvent: SharedFlow<AvatarResultUiEvent>
+        uiEvent: SharedFlow<AvatarResultUiEvent>,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             uiEvent.collectLatest { event ->
@@ -183,6 +183,8 @@ class AvatarResultFragment : Fragment() {
             }
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
+                progressBar.isVisible = loadState.refresh is LoadState.Loading &&
+                        adapter.itemCount <= 0
                 if (loadState.action is LoadState.Loading) {
                     btnNext.setSpinning()
                 } else {
@@ -203,7 +205,7 @@ class AvatarResultFragment : Fragment() {
 
     private fun FragmentAvatarResultBinding.bindClick(
         uiState: StateFlow<AvatarResultState>,
-        uiAction: (AvatarResultUiAction) -> Unit
+        uiAction: (AvatarResultUiAction) -> Unit,
     ) {
         icDownload.isVisible = false
 
@@ -259,7 +261,7 @@ class AvatarResultFragment : Fragment() {
         }
 
         icShare.isVisible = true
-        icShare.setOnClickListener {  }
+        icShare.setOnClickListener { }
 
         btnClose.setOnClickListener { findNavController().navigateUp() }
     }
@@ -271,11 +273,6 @@ class AvatarResultFragment : Fragment() {
     private fun checkPermissionAndScheduleWorker(modelId: String) {
         WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
         val cont: Continuation = {
-            ApplicationDependencies.getPersistentStore().apply {
-                setCurrentAvatarStatusId(null)
-                setUploadingPhotos(false)
-                setProcessingModel(false)
-            }
             WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
             Timber.d("Download scheduled: $modelId")
             gotoHome()
@@ -299,19 +296,23 @@ class AvatarResultFragment : Fragment() {
     }
 
     private fun gotoModelDetail(position: Int, data: AvatarResultUiModel.AvatarItem) {
+        Timber.d("gotoModelDetail: ${data.avatar.id}")
+        val modelId = viewModel.getModelId()
         val statusId = viewModel.getStatusId()
         try {
             findNavController().apply {
                 val navOpts = defaultNavOptsBuilder().build()
                 val args = Bundle().apply {
                     putString(Constant.EXTRA_FROM, "result_preview")
-                    // putString(ModelDetailFragment.ARG_MODEL_ID, modelId)
-                    putString(ModelDetailFragment.ARG_STATUS_ID, statusId)
+                    modelId?.let { putString(ModelDetailFragment.ARG_MODEL_ID, it) }
+                    statusId?.let { putString(ModelDetailFragment.ARG_STATUS_ID, it) }
                     data.avatar.id?.let { putLong(ModelDetailFragment.ARG_JUMP_TO_ID, it) }
+                    putString(ModelDetailFragment.ARG_JUMP_TO_IMAGE_NAME, data.avatar.remoteFile)
                 }
                 navigate(R.id.model_detail, args, navOpts)
             }
-        } catch (ignore: Exception) {}
+        } catch (ignore: Exception) {
+        }
     }
 
     private fun checkStoragePermission(): Boolean {
@@ -328,7 +329,7 @@ class AvatarResultFragment : Fragment() {
 }
 
 class AvatarResultAdapter(
-    private val callback: Callback
+    private val callback: Callback,
 ) : ListAdapter<AvatarResultUiModel, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return ItemViewHolder.from(parent)
@@ -343,7 +344,7 @@ class AvatarResultAdapter(
     }
 
     class ItemViewHolder(
-        private val binding: ItemSquareImageBinding
+        private val binding: ItemSquareImageBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(data: AvatarResultUiModel.AvatarItem, callback: Callback) = with(binding) {

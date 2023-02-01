@@ -14,7 +14,7 @@ data class CreateModelResponse(
 
 data class CreateModelDataDto(
     @SerializedName("statusId")
-    val id: Long,
+    val id: String,
     @SerializedName("userId")
     val guestUserId: Long?,
     @SerializedName("eta")

@@ -65,6 +65,7 @@ class ModelDetailFragment : Fragment() {
 
     private lateinit var from: String
     private var jumpToId: Long = -1
+    private var jumpToImageName: String? = null
     private var jumpToPosition: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,8 +107,9 @@ class ModelDetailFragment : Fragment() {
             val modelId = getString(ARG_MODEL_ID, null)
             val statusId = getString(ARG_STATUS_ID, null)
             jumpToId = getLong(ARG_JUMP_TO_ID, -1L)
+            jumpToImageName = getString(ARG_JUMP_TO_IMAGE_NAME, null)
 
-            Timber.d("Args: model id = $modelId status id = $statusId")
+            Timber.d("Args: model id = $modelId status id = $statusId jumpTo = $jumpToId")
 
             if (modelId?.isNotBlank() == true) {
                 viewModel.setModelId(modelId)
@@ -123,7 +125,7 @@ class ModelDetailFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.fragment_model_detail, container, false)
     }
@@ -146,7 +148,7 @@ class ModelDetailFragment : Fragment() {
     private fun FragmentModelDetailBinding.bindState(
         uiState: StateFlow<ModelDetailState>,
         uiAction: (ModelDetailUiAction) -> Unit,
-        uiEvent: SharedFlow<ModelDetailUiEvent>
+        uiEvent: SharedFlow<ModelDetailUiEvent>,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             uiEvent.collectLatest { event ->
@@ -208,7 +210,9 @@ class ModelDetailFragment : Fragment() {
                 viewModel.toggleSelection(position)
                 avatarScrollerList.smoothScrollToPosition(position)
                 if (position == jumpToPosition) {
-                     jumpToPosition = -1
+                    jumpToPosition = -1
+                    jumpToId = -1
+                    jumpToImageName = null
                 }
                 Timber.d("Jump to Id: $jumpToPosition")
             }
@@ -216,7 +220,7 @@ class ModelDetailFragment : Fragment() {
             override fun onPageScrolled(
                 position: Int,
                 positionOffset: Float,
-                positionOffsetPixels: Int
+                positionOffsetPixels: Int,
             ) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
                 indicatorView.onPageScrolled(position, positionOffset, positionOffsetPixels)
@@ -240,47 +244,43 @@ class ModelDetailFragment : Fragment() {
         val scrollerAdapter = AvatarScrollAdapter { clickedPosition ->
             catalogPreviewPager.setCurrentItem(clickedPosition, true)
         }
+        avatarScrollerList.adapter = scrollerAdapter
 
         val avatarListFlow = uiState.map { it.avatarList }
             .distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
             avatarListFlow.collectLatest { avatarList ->
+                scrollerAdapter.submitList(avatarList)
                 catalogPresetAdapter.submitList(avatarList) {
                     Timber.d("Jump to Id: $jumpToId")
-                    val jumpToPos = avatarList.mapIndexed { index, avatarUiModel ->
-                        val id = (avatarUiModel as? SelectableAvatarUiModel.Item)?.listAvatar?.id
-                        Timber.d("Compare: 1 id = $id  == jump = $jumpToId")
-                        if (avatarUiModel is SelectableAvatarUiModel.Item && avatarUiModel.listAvatar.id == jumpToId) {
-                            index
-                        } else {
-                            -1
-                        }
-                    }.filterNot {
-                        Timber.d("Filter: $it")
-                        it == -1
-                    }
-                        .lastOrNull()?.let { _jumpToPosition ->
-                            jumpToPosition = _jumpToPosition
-                            Timber.d("Jump to position: $jumpToPosition")
-                            try {
-                                catalogPreviewPager.setCurrentItem(jumpToPosition, false)
-                            } catch (e: Exception) {
-                                Timber.d(e)
+                    if (jumpToImageName != null) {
+                        avatarList.mapIndexed { index, avatarUiModel ->
+                            val id =
+                                (avatarUiModel as? SelectableAvatarUiModel.Item)?.listAvatar?.imageName
+                            Timber.d("Compare: 1 id = $id  == jump = $jumpToId")
+                            if (avatarUiModel is SelectableAvatarUiModel.Item && avatarUiModel.listAvatar.imageName == jumpToImageName) {
+                                index
+                            } else {
+                                -1
                             }
+                        }.filterNot {
+                            Timber.d("Filter: $it")
+                            it == -1
                         }
-                }
-                scrollerAdapter.submitList(avatarList)
-                setUpIndicator(avatarList.size)
-
-                if (jumpToId != -1L) {
-                    catalogPreviewPager.post {
-
+                            .lastOrNull()?.let { _jumpToPosition ->
+                                jumpToPosition = _jumpToPosition
+                                Timber.d("Jump to position: $jumpToPosition")
+                                try {
+                                    catalogPreviewPager.setCurrentItem(jumpToPosition, false)
+                                } catch (e: Exception) {
+                                    Timber.d(e)
+                                }
+                            }
                     }
                 }
+                setUpIndicator(avatarList.size)
             }
         }
-
-        avatarScrollerList.adapter = scrollerAdapter
 
         when (from) {
             "result_preview" -> {
@@ -348,8 +348,10 @@ class ModelDetailFragment : Fragment() {
         }*/
 
         toolbarIncluded.toolbarNavigationIcon.setOnClickListener {
-            try { findNavController().navigateUp() }
-            catch (ignore: Exception) {}
+            try {
+                findNavController().navigateUp()
+            } catch (ignore: Exception) {
+            }
         }
     }
 
@@ -464,11 +466,12 @@ class ModelDetailFragment : Fragment() {
         const val ARG_MODEL_ID = "com.aiavatar.app.args.MODEL_ID"
         const val ARG_STATUS_ID = "com.aiavatar.app.args.STATUS_ID"
         const val ARG_JUMP_TO_ID = "com.aiavatar.app.args.JUMP_TO_ID"
+        const val ARG_JUMP_TO_IMAGE_NAME = "com.aiavatar.app.JUMP_TO_IMAGE_NAME"
     }
 }
 
 class AvatarScrollAdapter(
-    private val onCardClick: (position: Int) -> Unit = { }
+    private val onCardClick: (position: Int) -> Unit = { },
 ) : ListAdapter<SelectableAvatarUiModel, AvatarScrollAdapter.ItemViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
@@ -484,7 +487,7 @@ class AvatarScrollAdapter(
     override fun onBindViewHolder(
         holder: ItemViewHolder,
         position: Int,
-        payloads: MutableList<Any>
+        payloads: MutableList<Any>,
     ) {
         if (payloads.isNotEmpty()) {
             if (isValidPayload(payloads)) {
@@ -492,8 +495,11 @@ class AvatarScrollAdapter(
                     super.onBindViewHolder(holder, position, payloads); return
                 }
                 if (bundle.containsKey(SELECTION_TOGGLE_PAYLOAD)) {
-                    (holder as? ItemViewHolder)?.toggleSelection(bundle.getBoolean(
-                        SELECTION_TOGGLE_PAYLOAD, false))
+                    (holder as? ItemViewHolder)?.toggleSelection(
+                        bundle.getBoolean(
+                            SELECTION_TOGGLE_PAYLOAD, false
+                        )
+                    )
                 }
             } else {
                 super.onBindViewHolder(holder, position, payloads)
@@ -510,21 +516,22 @@ class AvatarScrollAdapter(
     }
 
     class ItemViewHolder private constructor(
-        private val binding: ItemScrollerListBinding
+        private val binding: ItemScrollerListBinding,
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(listAvatar: ListAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
-            title.text = listAvatar.imageName
-            Glide.with(previewImage)
-                .load(listAvatar.imageName)
-                .placeholder(R.color.transparent_black)
-                .error(R.color.white)
-                .into(previewImage)
+        fun bind(listAvatar: ListAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) =
+            with(binding) {
+                title.text = listAvatar.imageName
+                Glide.with(previewImage)
+                    .load(listAvatar.imageName)
+                    .placeholder(R.color.transparent_black)
+                    .error(R.color.white)
+                    .into(previewImage)
 
-            toggleSelection(selected)
+                toggleSelection(selected)
 
-            previewImage.setOnClickListener { onCardClick(adapterPosition) }
-        }
+                previewImage.setOnClickListener { onCardClick(adapterPosition) }
+            }
 
         fun toggleSelection(selected: Boolean) = with(binding) {
             previewImage.alpha = if (selected) {
@@ -576,7 +583,7 @@ class AvatarScrollAdapter(
 
             override fun getChangePayload(
                 oldItem: SelectableAvatarUiModel,
-                newItem: SelectableAvatarUiModel
+                newItem: SelectableAvatarUiModel,
             ): Any {
                 val updatePayload = bundleOf()
                 when {

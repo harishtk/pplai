@@ -29,17 +29,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -60,6 +50,14 @@ class AvatarStatusViewModel @Inject constructor(
     val uiEvent = _uiEvent.asSharedFlow()
 
     val accept: (AvatarStatusUiAction) -> Unit
+
+    val runningTrainingsFlow = appDatabase.avatarStatusDao()
+        .getRunningTraining()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     private var createModelJob: Job? = null
     private var avatarStatusJob: Job? = null
@@ -89,7 +87,7 @@ class AvatarStatusViewModel @Inject constructor(
 
         uiState.mapNotNull { it.avatarStatusId }
             .flatMapLatest { statusId ->
-                appDatabase.avatarStatusDao().getAvatarStatus(statusId = statusId.toLong())
+                appDatabase.avatarStatusDao().getAvatarStatus(statusId = statusId)
             }.onEach { avatarStatusWithFilesEntity ->
                 if (avatarStatusWithFilesEntity != null) {
                     _uiState.update { state ->
@@ -214,9 +212,7 @@ class AvatarStatusViewModel @Inject constructor(
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
                         ApplicationDependencies.getPersistentStore().apply {
                             setProcessingModel(true)
-                            setUploadingPhotos(false)
                             result.data.guestUserId?.let { setGuestUserId(it) }
-                            setCurrentAvatarStatusId(result.data.statusId.toString())
                         }
                         appDatabase.uploadSessionDao().apply {
                             appDatabase.avatarStatusDao().apply {
@@ -248,11 +244,15 @@ class AvatarStatusViewModel @Inject constructor(
 
     private fun getAvatarStatusInternal() = viewModelScope.launch {
         try {
-            val currentStatusId: String? = ApplicationDependencies.getPersistentStore()
-                .currentAvatarStatusId
+            val currentStatusId: String? = uiState.value.avatarStatusId
             if (currentStatusId != null) {
-                val request = AvatarStatusRequest(currentStatusId)
-                getStatus(request)
+                val status = appDatabase.avatarStatusDao().getAvatarStatusSync(currentStatusId)
+                if (status?.avatarStatusEntity?.modelStatus != ModelStatus.COMPLETED.statusString) {
+                    val request = AvatarStatusRequest(currentStatusId)
+                    getStatus(request)
+                } else {
+                    // Status is already in completed state
+                }
             } else {
                 val t = IllegalStateException("Failed to parse status id")
                 Timber.e(t)

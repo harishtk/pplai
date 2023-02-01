@@ -11,6 +11,8 @@ import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.toEntity
+import com.aiavatar.app.core.domain.model.AvatarStatus
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
@@ -252,7 +254,15 @@ class SubscriptionViewModel @Inject constructor(
                     is Result.Success -> {
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
                         ApplicationDependencies.getPersistentStore().apply {
-                            setCurrentAvatarStatusId(result.data)
+                            setProcessingModel(true)
+                        }
+                        appDatabase.uploadSessionDao().apply {
+                            appDatabase.avatarStatusDao().apply {
+                                val newAvatarStatus = AvatarStatus.emptyStatus(result.data.modelId).apply {
+                                    avatarStatusId = result.data.avatarStatusId
+                                }
+                                insert(newAvatarStatus.toEntity())
+                            }
                         }
                         sendEvent(SubscriptionUiEvent.PurchaseComplete(request.id))
                     }

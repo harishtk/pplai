@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
@@ -19,10 +20,8 @@ import com.aiavatar.app.databinding.FragmentCatalogBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
+import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexWrap
-import com.google.android.flexbox.FlexboxLayoutManager
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
@@ -35,12 +34,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
-import kotlin.math.min
+import kotlin.math.log
 
 @AndroidEntryPoint
 class CatalogFragment : Fragment() {
 
     private val viewModel: CatalogViewModel by viewModels()
+    private val userViewModel: UserViewModel by activityViewModels()
 
     private var _binding: FragmentCatalogBinding? = null
     private val binding: FragmentCatalogBinding
@@ -220,28 +220,38 @@ class CatalogFragment : Fragment() {
         toolbarNavigationIcon.isVisible = false
         toolbarTitle.text = "Avatar"
 
-        ApplicationDependencies.getPersistentStore().apply {
-            if (isLogged) {
-                /*val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
-                profileName.setText(initialLetter)*/
-                profileName.setText(null)
-                Glide.with(profileImage)
-                    .load(socialImage)
-                    .placeholder(R.drawable.profile_placeholder)
-                    .error(R.drawable.profile_placeholder)
-                    .into(profileImage)
-            } else {
-                profileName.setText(null)
-                profileImage.setImageResource(R.drawable.ic_account_outline)
+        viewLifecycleOwner.lifecycleScope.launch {
+            userViewModel.loginUser.collectLatest { loginUser ->
+                if (loginUser != null) {
+                    ApplicationDependencies.getPersistentStore().apply {
+                        if (isLogged) {
+                            /*val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
+                            profileName.setText(initialLetter)*/
+                            profileName.setText(null)
+                            Glide.with(profileImage)
+                                .load(socialImage)
+                                .placeholder(R.drawable.profile_placeholder)
+                                .error(R.drawable.profile_placeholder)
+                                .into(profileImage)
+                        } else {
+                            profileName.setText(null)
+                            profileImage.setImageResource(R.drawable.ic_account_outline)
+                        }
+                    }
+                } else {
+                    profileName.setText(null)
+                    profileImage.setImageResource(R.drawable.ic_account_outline)
+                }
             }
         }
 
         profileContainer.setOnClickListener {
-            if (ApplicationDependencies.getPersistentStore().isLogged) {
+            gotoProfile()
+            /*if (ApplicationDependencies.getPersistentStore().isLogged) {
                 gotoProfile()
             } else {
                 gotoLogin()
-            }
+            }*/
         }
     }
 

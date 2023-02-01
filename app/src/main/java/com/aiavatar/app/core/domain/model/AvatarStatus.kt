@@ -11,7 +11,7 @@ data class AvatarStatus(
 ) {
     var id: Long? = null
     var modelName: String? = null
-    var avatarStatusId: Long? = null
+    var avatarStatusId: String? = null
 
     internal companion object {
         fun emptyStatus(modelId: String): AvatarStatus =

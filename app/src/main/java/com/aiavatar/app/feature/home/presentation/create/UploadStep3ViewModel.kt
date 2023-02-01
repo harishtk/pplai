@@ -122,7 +122,6 @@ class UploadStep3ViewModel @Inject constructor(
                 sessionId,
                 selectedGender.title
             )
-            ApplicationDependencies.getPersistentStore().setUploadingPhotos(true)
             sendEvent(Step3UiEvent.NextScreen(false))
             /*if (uiState.value.sessionStatus == UploadSessionStatus.UPLOAD_COMPLETE) {
                 createModelInternal(sessionId)
@@ -201,7 +200,6 @@ class UploadStep3ViewModel @Inject constructor(
                         ApplicationDependencies.getPersistentStore().apply {
                             setProcessingModel(true)
                             result.data.guestUserId?.let { setGuestUserId(it) }
-                            setCurrentAvatarStatusId(result.data.statusId.toString())
                         }
                         appDatabase.avatarStatusDao().apply {
                             val newAvatarStatus = AvatarStatus.emptyStatus(result.data.modelId).apply {

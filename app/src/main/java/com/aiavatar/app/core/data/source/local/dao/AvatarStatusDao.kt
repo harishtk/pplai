@@ -17,15 +17,14 @@ interface AvatarStatusDao {
 
     @Transaction
     @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.AVATAR_STATUS_ID} = :statusId")
-    fun getAvatarStatus(statusId: Long): Flow<AvatarStatusWithFilesEntity?>
+    fun getAvatarStatus(statusId: String): Flow<AvatarStatusWithFilesEntity?>
 
-    @Query("SELECT * FROM ${AvatarStatusTable.name} " +
-            "WHERE ${AvatarStatusTable.Columns.MODEL_STATUS} != 'completed'")
-    fun getRunningTraining(): Flow<List<AvatarStatusEntity>>?
+    @Query("SELECT * FROM ${AvatarStatusTable.name}")
+    fun getRunningTraining(): Flow<List<AvatarStatusEntity>>
 
     @Transaction
     @Query("SELECT * FROM ${AvatarStatusTable.name} WHERE ${AvatarStatusTable.Columns.AVATAR_STATUS_ID} = :statusId")
-    suspend fun getAvatarStatusSync(statusId: Long): AvatarStatusWithFilesEntity?
+    suspend fun getAvatarStatusSync(statusId: String): AvatarStatusWithFilesEntity?
 
     @Query("UPDATE ${AvatarStatusTable.name} SET ${AvatarStatusTable.Columns.MODEL_NAME} = :modelName, " +
             "${AvatarStatusTable.Columns.MODEL_RENAMED} = :renamed " +

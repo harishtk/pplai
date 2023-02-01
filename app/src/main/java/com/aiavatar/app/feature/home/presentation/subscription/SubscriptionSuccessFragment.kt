@@ -136,9 +136,7 @@ class SubscriptionSuccessFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             delay(UI_PRESENTATION_TIME)
             nextButton.cancelSpinning()
-            ApplicationDependencies.getPersistentStore().apply {
-                gotoAvatarStatus(currentAvatarStatusId)
-            }
+            gotoAvatarStatus(null)
         }
     }
 

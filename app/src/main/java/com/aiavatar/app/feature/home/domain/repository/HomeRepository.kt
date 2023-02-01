@@ -16,7 +16,7 @@ interface HomeRepository {
 
     fun getSubscriptionPlans(): Flow<Result<List<SubscriptionPlan>>>
 
-    fun purchasePlan(subscriptionPurchaseRequest: SubscriptionPurchaseRequest): Flow<Result<String>>
+    fun purchasePlan(subscriptionPurchaseRequest: SubscriptionPurchaseRequest): Flow<Result<PurchasePlanData>>
 
     fun generateAvatar(generateAvatarRequest: GenerateAvatarRequest): Flow<Result<Long>>
 

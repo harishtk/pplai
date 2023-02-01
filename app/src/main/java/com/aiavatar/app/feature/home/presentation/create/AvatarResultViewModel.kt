@@ -164,7 +164,7 @@ class AvatarResultViewModel @Inject constructor(
         avatarStatusJob?.cancel(CancellationException("Refresh"))
         avatarStatusJob = uiState.mapNotNull { it.avatarStatusId }
             .flatMapLatest { statusId ->
-                appDatabase.avatarStatusDao().getAvatarStatus(statusId = statusId.toLong())
+                appDatabase.avatarStatusDao().getAvatarStatus(statusId = statusId)
             }.onEach { avatarStatusWithFilesEntity ->
                 if (avatarStatusWithFilesEntity != null) {
                     val avatarResultList = avatarStatusWithFilesEntity.avatarFilesEntity.map {
@@ -224,6 +224,7 @@ class AvatarResultViewModel @Inject constructor(
         avatarsFetchJob?.cancel(CancellationException("New request")) // just in case
         avatarsFetchJob = viewModelScope.launch {
             homeRepository.getAvatars(request).collectLatest { result ->
+                Timber.d("getAvatars: $result")
                 when (result) {
                     is Result.Loading -> setLoading(LoadType.REFRESH, LoadState.Loading())
                     is Result.Error -> {

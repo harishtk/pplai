@@ -20,8 +20,8 @@ class PersistentStore private constructor(
         get() = getAppPreferences().getString(UserPreferenceKeys.DEVICE_TOKEN, "")?.isNotBlank() == true
     val deviceToken: String
         get() = getAppPreferences().getString(UserPreferenceKeys.DEVICE_TOKEN, "") ?: ""
-    val userId: String
-        get() = getAppPreferences().getString(UserPreferenceKeys.USER_ID, "") ?: ""
+    val userId: String?
+        get() = getAppPreferences().getString(UserPreferenceKeys.USER_ID, null)
     val username: String
         get() = getAppPreferences().getString(UserPreferenceKeys.USERNAME, "") ?: ""
 
@@ -46,14 +46,8 @@ class PersistentStore private constructor(
     val isOnboardPresented: Boolean
         get() = getAppPreferences().getBoolean(AppEssentialKeys.ONBOARD_PRESENTED, false)
 
-    val isUploadingPhotos: Boolean
-        get() = getAppPreferences().getBoolean(UserPreferenceKeys.UPLOADING_PHOTOS, false)
-
     val isUploadStepSkipped: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.UPLOAD_STEP_SKIPPED, false)
-
-    val currentAvatarStatusId: String?
-        get() = getAppPreferences().getString(UserPreferenceKeys.CURRENT_AVATAR_STATUS_ID, null)
 
     val socialImage: String?
         get() = getAppPreferences().getString(UserPreferenceKeys.SOCIAL_IMAGE, null)
@@ -63,7 +57,7 @@ class PersistentStore private constructor(
         return this
     }
 
-    fun setUserId(userId: String): PersistentStore {
+    fun setUserId(userId: String?): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.USER_ID, userId).apply()
         return this
     }
@@ -113,16 +107,6 @@ class PersistentStore private constructor(
         return this
     }
 
-    fun setUploadingPhotos(isUploading: Boolean = true): PersistentStore {
-        getAppPreferences().edit().putBoolean(UserPreferenceKeys.UPLOADING_PHOTOS, isUploading).apply()
-        return this
-    }
-
-    fun setCurrentAvatarStatusId(statusId: String? = null): PersistentStore {
-        getAppPreferences().edit().putString(UserPreferenceKeys.CURRENT_AVATAR_STATUS_ID, statusId).apply()
-        return this
-    }
-
     fun setSocialImage(image: String? = null): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.SOCIAL_IMAGE, image).apply()
         return this
@@ -134,13 +118,12 @@ class PersistentStore private constructor(
     }
 
     fun logout() {
-        setUserId("")
+        setUserId(null)
         setDeviceToken("")
         setUsername("")
         setEmail("")
         setGuestUserId(0L)
         setSocialImage(null)
-        setCurrentAvatarStatusId(null)
         setProcessingModel(false)
         setUploadStepSkipped(false)
         setOnboardPresented(false)

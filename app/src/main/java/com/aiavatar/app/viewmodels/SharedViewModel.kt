@@ -31,7 +31,6 @@ class SharedViewModel @Inject constructor(
     }
 
     /* Currently uploading session id */
-    @Deprecated("not used")
     private var _currentUploadSessionId: MutableStateFlow<Long?> = MutableStateFlow(null)
     val currentUploadSessionId = _currentUploadSessionId
         .shareIn(

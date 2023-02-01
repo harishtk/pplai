@@ -188,9 +188,8 @@ class UploadWorker @AssistedInject constructor(
                 uploadSessionWithFiles.uploadSessionEntity._id!!,
                 UploadSessionStatus.UPLOAD_COMPLETE.status
             )
-            /* This flag tells if the user has completed gender selection */
-            val isUploadStarted = ApplicationDependencies.getPersistentStore().isUploadingPhotos
-            if (uploadResultList.isNotEmpty() && isUploadStarted) {
+
+            if (uploadResultList.isNotEmpty() && !ApplicationDependencies.getAppForegroundObserver().isForegrounded) {
                 notifyUploadComplete(context, uploadResultList.size)
             }
 
@@ -198,9 +197,7 @@ class UploadWorker @AssistedInject constructor(
                 is com.aiavatar.app.commons.util.Result.Success -> {
                     ApplicationDependencies.getPersistentStore().apply {
                         setProcessingModel(true)
-                        setUploadingPhotos(false)
                         result.data.guestUserId?.let { setGuestUserId(it) }
-                        setCurrentAvatarStatusId(result.data.statusId.toString())
                     }
                     appDatabase.uploadSessionDao().apply {
                         appDatabase.avatarStatusDao().apply {
@@ -280,7 +277,7 @@ class UploadWorker @AssistedInject constructor(
             .setOngoing(false)
             .setAutoCancel(true)
             .setContentTitle("Upload Complete!")
-            .setContentText("$photosCount Photos uploaded. Tap here to create your avatar!")
+            .setContentText("$photosCount Photos uploaded. Tap here to check status!")
             .setContentIntent(contentIntent)
             .build()
         ServiceUtil.getNotificationManager(context)

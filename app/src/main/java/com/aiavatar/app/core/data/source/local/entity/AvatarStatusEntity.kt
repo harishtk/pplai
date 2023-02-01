@@ -36,7 +36,7 @@ data class AvatarStatusEntity(
     var modelName: String? = null
 
     @ColumnInfo("avatar_status_id")
-    var avatarStatusId: Long? = null
+    var avatarStatusId: String? = null
 }
 
 fun AvatarStatusEntity.toAvatarStatus(): AvatarStatus {

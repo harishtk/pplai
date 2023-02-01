@@ -9,6 +9,8 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -23,9 +25,14 @@ import com.aiavatar.app.feature.home.presentation.util.SettingsItem
 import com.aiavatar.app.feature.home.presentation.util.SettingsListType
 import com.aiavatar.app.safeCall
 import com.aiavatar.app.showToast
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@AndroidEntryPoint
 class SettingsFragment : Fragment() {
+
+    private val viewModel: SettingsViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -66,6 +73,7 @@ class SettingsFragment : Fragment() {
             override fun onItemClick(position: Int) {
                 when (settingsListData[position].id) {
                     5 -> {
+                        viewModel.logout()
                         ApplicationDependencies.getPersistentStore().logout()
                         context?.showToast("Logged out!")
                         try {

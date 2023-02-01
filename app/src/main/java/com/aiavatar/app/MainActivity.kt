@@ -1,6 +1,5 @@
 package com.aiavatar.app
 
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -10,9 +9,6 @@ import androidx.activity.viewModels
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -20,7 +16,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
@@ -31,6 +26,8 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.UpdateAvailability
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -87,6 +84,10 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
             }
         }
 
+        ApplicationDependencies.getPersistentStore().apply {
+            Timber.d("User data: logged = $isLogged userId = $userId")
+        }
+
         setupObservers()
     }
 
@@ -112,8 +113,8 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         } else {
             val persistentStore = ApplicationDependencies.getPersistentStore()
             when {
-                persistentStore.isProcessingModel ||
-                        persistentStore.isUploadingPhotos -> {
+                persistentStore.isProcessingModel &&
+                    !persistentStore.isLogged -> {
                     graph = inflater.inflate(R.navigation.home_nav_graph)
                     graph.setStartDestination(R.id.avatar_status)
                 }
@@ -158,6 +159,28 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     }
 
     private fun setupObservers() {
+        /*val isGuestUserFlow = userViewModel.loginUser
+            .map { it == null }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                combine(
+                    sharedViewModel.shouldShowStatus,
+                    isGuestUserFlow,
+                    Boolean::and
+                ).collectLatest { show ->
+                    if (show) {
+                        safeCall {
+                            mainNavController.apply {
+                                val navOpts = defaultNavOptsBuilder()
+                                    .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                                    .build()
+                                navigate(R.id.avatar_status, null, navOpts)
+                            }
+                        }
+                    }
+                }
+            }
+        }*/
         /*lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 sharedViewModel.shouldShowStatus.collectLatest {
