@@ -67,6 +67,7 @@ class UploadStep3Fragment : Fragment() {
             uiEvent.collectLatest { event ->
                 when (event) {
                     is Step3UiEvent.NextScreen -> {
+                        // TODO: don't user work manager for simplicity sake!
                         if (sessionIdCache != null) {
                             WorkUtil.scheduleUploadWorker(requireContext(), sessionIdCache!!)
                         }

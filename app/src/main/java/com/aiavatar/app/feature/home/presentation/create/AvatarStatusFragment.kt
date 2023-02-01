@@ -204,6 +204,19 @@ class AvatarStatusFragment : Fragment() {
                         }
                         ModelStatus.TRAINING_FAILED -> {
                             // TODO: retry uploading fresh images
+                            logo.isVisible = true
+                            thinking.isVisible = false
+
+                            progressIndicator.isVisible = false
+                            textProgressHint.isVisible = false
+                            cbNotifyMe.isVisible = false
+
+                            description.text = "Something went wrong! Please try again."
+                            btnCreateAvatar.isVisible = true
+                            btnCreateAvatar.idleText = "Retry"
+                            progressIndicator.isVisible = false
+                            textProgressHint.isVisible = false
+                            cbNotifyMe.isVisible = false
                         }
                         else -> {
                             logo.isVisible = true
@@ -346,6 +359,8 @@ class AvatarStatusFragment : Fragment() {
                     }
                 }
                 gotoAvatarResult(uiState.value.avatarStatusId!!)
+            } else if (modelStatus == ModelStatus.TRAINING_FAILED) {
+                gotoUploads(null)
             } else if (sessionStatus == UploadSessionStatus.FAILED) {
                 val cachedSessionId = uiState.value.sessionId
                 gotoUploads(cachedSessionId)

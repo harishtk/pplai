@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
-val DEFAULT_CACHE_LIFETIME: Long = TimeUnit.DAYS.toMillis(1)
+val DEFAULT_CACHE_TIME_TO_LIVE: Long = TimeUnit.DAYS.toMillis(1)
 
 class HomeRepositoryImpl @Inject constructor(
     private val remoteDataSource: HomeRemoteDataSource,
@@ -86,7 +86,7 @@ class HomeRepositoryImpl @Inject constructor(
                         val affected = cacheLocalDataSource.updateCacheKey(
                             cacheKeys.modify(
                                 createdAt = System.currentTimeMillis(),
-                                expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_LIFETIME)
+                                expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_TIME_TO_LIVE)
                             ).also {
                                 it._id = cacheKeys._id
                             }
@@ -120,7 +120,7 @@ class HomeRepositoryImpl @Inject constructor(
                         val affected = cacheLocalDataSource.updateCacheKey(
                             cacheKeys.modify(
                                 createdAt = System.currentTimeMillis(),
-                                expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_LIFETIME)
+                                expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_TIME_TO_LIVE)
                             ).also {
                                 it._id = cacheKeys._id
                             }
