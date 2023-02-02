@@ -129,7 +129,7 @@ class AvatarResultFragment : Fragment() {
                         context?.showToast(event.message.asString(requireContext()))
                     }
                     is AvatarResultUiEvent.StartDownload -> {
-                        checkPermissionAndScheduleWorker(event.modelId)
+                        checkPermissionAndScheduleWorker(event.downloadSessionId)
                     }
                 }
             }
@@ -209,7 +209,7 @@ class AvatarResultFragment : Fragment() {
     ) {
         icDownload.isVisible = false
 
-        btnNext.text = getString(R.string.label_download)
+        btnNext.idleText = getString(R.string.label_download)
         btnNext.setOnClickListener {
             val modelData = uiState.value.modelData ?: return@setOnClickListener
             if (ApplicationDependencies.getPersistentStore().isLogged) {
@@ -217,7 +217,7 @@ class AvatarResultFragment : Fragment() {
                     // TODO: get folder name
                     if (modelData.renamed) {
                         // TODO: if model is renamed directly save the photos
-                        checkPermissionAndScheduleWorker(modelData.id)
+                        viewModel.createDownloadSession(modelData.name)
                     } else {
                         context?.debugToast("Getting folder name")
                         EditFolderNameDialog { typedName ->
@@ -270,11 +270,10 @@ class AvatarResultFragment : Fragment() {
 
     }
 
-    private fun checkPermissionAndScheduleWorker(modelId: String) {
-        WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
+    private fun checkPermissionAndScheduleWorker(downloadSessionId: Long) {
         val cont: Continuation = {
-            WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
-            Timber.d("Download scheduled: $modelId")
+            WorkUtil.scheduleDownloadWorker(requireContext(), downloadSessionId)
+            Timber.d("Download scheduled: $downloadSessionId")
             context?.debugToast("Downloading.. check notifications")
             if (!ApplicationDependencies.getPersistentStore().isLogged) {
                 gotoHome()

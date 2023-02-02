@@ -13,16 +13,15 @@ data class DownloadSessionWithFiles(
 )
 
 data class DownloadSession(
-    val id: Long?,
     val createdAt: Long,
     val status: DownloadSessionStatus = DownloadSessionStatus.UNKNOWN,
     val folderName: String,
 ) {
-    var workerId: String? = null
+    var id:         Long?   = null
+    var workerId:   String? = null
 }
 
 data class DownloadFile(
-    val id: Long?,
     val sessionId: Long,
     /**
      * Remote file uri
@@ -30,9 +29,11 @@ data class DownloadFile(
     val fileUri: Uri,
     val localUri: Uri,
     val status: DownloadFileStatus = DownloadFileStatus.UNKNOWN,
-    val progress: Int,
-    val downloaded: Int,
-    val downloadedFileName: String?,
-    val downloadedAt: Long?,
-    val downloadedSize: Long?
-)
+    val progress: Int = 0,
+    val downloaded: Int = 0,
+) {
+    var id:                 Long?   = null
+    var downloadedFileName: String? = null
+    var downloadedAt:       Long?   = null
+    var downloadedSize:     Long?   = null
+}

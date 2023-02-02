@@ -47,17 +47,34 @@ data class DownloadFilesEntity(
 
 fun DownloadFilesEntity.toDownloadFile(): DownloadFile {
     return DownloadFile(
-        id = _id,
         sessionId = sessionId,
         fileUri = fileUriString.toUri(),
         localUri = localUriString.toUri(),
         status = DownloadFileStatus.fromRawValue(status),
         progress = progress,
         downloaded = downloaded,
-        downloadedFileName = downloadedFileName,
-        downloadedAt = downloadedAt,
-        downloadedSize = downloadedSize
-    )
+    ).also {
+        it.id = _id
+        it.downloadedFileName = downloadedFileName
+        it.downloadedAt = downloadedAt
+        it.downloadedSize = downloadedSize
+    }
+}
+
+fun DownloadFile.toEntity(): DownloadFilesEntity {
+    return DownloadFilesEntity(
+        sessionId = sessionId,
+        fileUriString = fileUri.toString(),
+        localUriString = localUri.toString(),
+        status = status.status,
+        progress = progress,
+        downloaded = downloaded
+    ).also {
+        it._id = id
+        it.downloadedFileName = downloadedFileName
+        it.downloadedAt = downloadedAt
+        it.downloadedSize = downloadedSize
+    }
 }
 
 object DownloadFilesTable {

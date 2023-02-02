@@ -157,7 +157,7 @@ class ModelDetailFragment : Fragment() {
                         context?.showToast(event.message.asString(requireContext()))
                     }
                     is ModelDetailUiEvent.StartDownload -> {
-                        checkPermissionAndScheduleWorker(event.modelId)
+                        checkPermissionAndScheduleWorker(event.downloadSessionId)
                     }
                 }
             }
@@ -315,7 +315,7 @@ class ModelDetailFragment : Fragment() {
             avatarStatus ?: return@setOnClickListener
             if (avatarStatus.modelRenamedByUser) {
                 // TODO: if model is renamed directly save the photos
-                checkPermissionAndScheduleWorker(avatarStatus.modelId)
+                viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
             } else {
                 context?.showToast("Getting folder name")
                 EditFolderNameDialog { typedName ->
@@ -393,10 +393,11 @@ class ModelDetailFragment : Fragment() {
         }*/
     }
 
-    private fun checkPermissionAndScheduleWorker(modelId: String) {
+    private fun checkPermissionAndScheduleWorker(downloadSessionId: Long) {
         val cont: Continuation = {
-            WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
-            context?.showToast("Downloading..")
+            WorkUtil.scheduleDownloadWorker(requireContext(), downloadSessionId)
+            context?.showToast("Downloading.. check notifications")
+            Timber.d("Download scheduled: $downloadSessionId")
         }
 
         if (checkStoragePermission()) {

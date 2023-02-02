@@ -80,7 +80,7 @@
         app:cpb_colorIndicatorBackground="?attr/colorSecondaryVariant"
         app:cpb_cornerRadius="@dimen/button_corner_size"
         app:cpb_selectorIdle="@drawable/progress_button_state"
-        app:cpb_textIdle="Generate"
+        app:cpb_textIdle="Download"
         app:elevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

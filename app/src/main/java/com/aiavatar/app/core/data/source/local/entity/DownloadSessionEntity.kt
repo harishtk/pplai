@@ -2,6 +2,7 @@ package com.aiavatar.app.core.data.source.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.domain.model.DownloadSession
 
@@ -15,6 +16,7 @@ data class DownloadSessionEntity(
     val folderName: String,
 ) {
     @ColumnInfo("id")
+    @PrimaryKey(autoGenerate = true)
     var _id: Long? = null
 
     @ColumnInfo("worker_id")
@@ -23,11 +25,22 @@ data class DownloadSessionEntity(
 
 fun DownloadSessionEntity.toDownloadSession(): DownloadSession {
     return DownloadSession(
-        id = _id ?: -1L,
         createdAt = createdAt,
         status = DownloadSessionStatus.fromRawValue(status),
         folderName = folderName
     ).also {
+        it.id = _id
+        it.workerId = workerId
+    }
+}
+
+fun DownloadSession.toEntity(): DownloadSessionEntity {
+    return DownloadSessionEntity(
+        createdAt = createdAt,
+        status = status.status,
+        folderName = folderName
+    ).also {
+        it._id = id
         it.workerId = workerId
     }
 }

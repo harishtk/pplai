@@ -1,7 +1,6 @@
 package com.aiavatar.app.work
 
 import android.content.Context
-import android.provider.ContactsContract
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -9,8 +8,6 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.Operation
 import androidx.work.WorkManager
-import androidx.work.WorkRequest
-import com.aiavatar.app.Constant
 import java.util.concurrent.TimeUnit
 
 object WorkUtil {
@@ -38,9 +35,9 @@ object WorkUtil {
         return opr
     }
 
-    fun scheduleDownloadWorker(context: Context, modelId: String) {
+    fun scheduleDownloadWorker(context: Context, downloadSessionId: Long) {
         DownloadWorker.Builder()
-            .setModelId(modelId)
+            .setDownloadSessionId(downloadSessionId)
             .buildOneTimeRequest().apply {
                 WorkManager.getInstance(context).enqueueUniqueWork(
                     DownloadWorker.WORKER_NAME,

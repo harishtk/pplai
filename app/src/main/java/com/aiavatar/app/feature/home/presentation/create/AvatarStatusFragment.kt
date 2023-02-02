@@ -185,6 +185,8 @@ class AvatarStatusFragment : Fragment() {
 
                             val etaTime = getFormattedTime(avatarStatusWithFiles.avatarStatus.eta)
                             textProgressHint.text = "ETA $etaTime"
+
+                            dismissUploadStatusNotification()
                         }
                         ModelStatus.AVATAR_PROCESSING -> {
                             description.text = "Generating your awesome photos!"
@@ -205,6 +207,8 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.progress = (progress * 100).toInt()
 
                             cbNotifyMe.isVisible = true
+
+                            dismissUploadStatusNotification()
                         }
                         ModelStatus.COMPLETED -> {
 
@@ -237,6 +241,8 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
+
+                            dismissUploadStatusNotification()
                         }
                         else -> {
                             logo.isVisible = true
@@ -598,6 +604,11 @@ class AvatarStatusFragment : Fragment() {
         channel.description = channelDesc
 
         notificationManager.createNotificationChannel(channel)
+    }
+
+    private fun dismissUploadStatusNotification() {
+        ServiceUtil.getNotificationManager(requireContext())
+            .cancel(UPLOAD_STATUS_NOTIFICATION_ID)
     }
 
     private fun getFormattedTime(etaSeconds: Int): String {

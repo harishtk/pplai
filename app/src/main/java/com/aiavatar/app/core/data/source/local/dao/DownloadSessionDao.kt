@@ -54,7 +54,7 @@ interface DownloadSessionDao {
     suspend fun getAllDownloadSessionsSync(): List<DownloadSessionWithFilesEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(uploadSessionEntity: DownloadSessionEntity): Long
+    suspend fun insert(downloadSessionEntity: DownloadSessionEntity): Long?
 
     @Query("DELETE FROM ${DownloadSessionTable.name}")
     suspend fun deleteAllDownloadSessions()

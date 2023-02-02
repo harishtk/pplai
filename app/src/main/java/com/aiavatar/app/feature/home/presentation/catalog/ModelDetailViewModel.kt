@@ -1,5 +1,7 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.BuildConfig
@@ -10,9 +12,14 @@ import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.DownloadFileStatus
+import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
+import com.aiavatar.app.core.data.source.local.entity.toEntity
 import com.aiavatar.app.core.data.source.local.entity.toListAvatar
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.DownloadFile
+import com.aiavatar.app.core.domain.model.DownloadSession
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
@@ -51,6 +58,7 @@ class ModelDetailViewModel @Inject constructor(
 
     private var avatarsFetchJob: Job? = null
     private var avatarStatusJob: Job? = null
+    private var createDownloadSessionJob: Job? = null
 
     init {
         val selectableAvatarUiModelListFlow = uiState.map { it.avatarList }
@@ -118,6 +126,10 @@ class ModelDetailViewModel @Inject constructor(
                 statusId = statusId
             )
         }
+    }
+
+    fun createDownloadSession(modelName: String) {
+        createDownloadSessionInternal(modelName)
     }
 
     /**
@@ -199,7 +211,7 @@ class ModelDetailViewModel @Inject constructor(
                         val affectedRows = appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
                         Timber.d("Update model name: affected $affectedRows rows")
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
-                        sendEvent(ModelDetailUiEvent.StartDownload(modelId))
+                        createDownloadSessionInternal(modelName, LoadType.ACTION)
                     }
                 }
             }
@@ -351,6 +363,52 @@ class ModelDetailViewModel @Inject constructor(
         }
     }
 
+    /* Download session related */
+    private fun createDownloadSessionInternal(modelName: String, loadType: LoadType = LoadType.ACTION) {
+        createDownloadSessionJob = viewModelScope.launch {
+            setLoading(loadType, LoadState.Loading())
+            val modelId  = uiState.value.modelId
+
+            val downloadSession = DownloadSession(
+                createdAt = System.currentTimeMillis(),
+                status = DownloadSessionStatus.NOT_STARTED,
+                folderName = modelName
+            )
+            appDatabase.downloadSessionDao().apply {
+                insert(downloadSession.toEntity()).let { id ->
+                    downloadSession.id = id
+                }
+            }
+
+            val downloadFiles: List<DownloadFile> = if (modelId != null) {
+                appDatabase.modelAvatarDao().getModelAvatarsSync(modelId)
+                    .map { modelAvatarEntity ->
+                        DownloadFile(
+                            sessionId = downloadSession.id!!,
+                            fileUri = modelAvatarEntity.remoteFile.toUri(),
+                            localUri = Uri.EMPTY,
+                            status = DownloadFileStatus.NOT_STARTED
+                        )
+                    }
+            } else {
+                emptyList()
+            }
+
+            if (downloadFiles.isNotEmpty()) {
+                // TODO: add download files and schedule worker
+                appDatabase.downloadFilesDao().insertAll(
+                    downloadFiles.map(DownloadFile::toEntity)
+                )
+                sendEvent(ModelDetailUiEvent.StartDownload(downloadSessionId = downloadSession.id!!))
+                setLoading(loadType, LoadState.NotLoading.Complete)
+            } else {
+                val t = IllegalStateException("Nothing to download")
+                setLoading(loadType, LoadState.Error(t))
+            }
+        }
+    }
+    /* END - Download session related */
+
     @Suppress("SameParameterValue")
     private fun setLoading(
         loadType: LoadType,
@@ -362,6 +420,14 @@ class ModelDetailViewModel @Inject constructor(
 
     private fun sendEvent(newEvent: ModelDetailUiEvent) = viewModelScope.launch {
         _uiEvent.emit(newEvent)
+    }
+
+    override fun onCleared() {
+        val t = CancellationException("View model is dead")
+        avatarStatusJob?.cancel(t)
+        avatarsFetchJob?.cancel(t)
+        createDownloadSessionJob?.cancel(t)
+        super.onCleared()
     }
 
 }
@@ -383,7 +449,7 @@ interface ModelDetailUiAction {
 
 interface ModelDetailUiEvent {
     data class ShowToast(val message: UiText) : ModelDetailUiEvent
-    data class StartDownload(val modelId: String) : ModelDetailUiEvent
+    data class StartDownload(val downloadSessionId: Long) : ModelDetailUiEvent
 }
 
 interface SelectableAvatarUiModel {

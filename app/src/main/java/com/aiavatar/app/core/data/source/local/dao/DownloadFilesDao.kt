@@ -44,10 +44,10 @@ interface DownloadFilesDao {
     suspend fun updateDownloadedFileName(id: Long, downloadedFileUriString: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(uploadFilesEntity: DownloadFilesEntity)
+    suspend fun insert(downloadFilesEntity: DownloadFilesEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAll(uploadFilesEntities: List<DownloadFilesEntity>)
+    suspend fun insertAll(downloadFilesEntities: List<DownloadFilesEntity>)
 
     @Query("DELETE FROM ${DownloadFilesTable.name} WHERE ${DownloadFilesTable.Columns.ID} = :id")
     suspend fun deleteFile(id: Long)

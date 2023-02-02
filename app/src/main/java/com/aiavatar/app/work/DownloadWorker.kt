@@ -4,10 +4,14 @@ import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Environment
 import androidx.core.app.NotificationCompat
+import androidx.core.app.PendingIntentCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
 import androidx.navigation.NavDeepLinkBuilder
@@ -68,11 +72,9 @@ class DownloadWorker @AssistedInject constructor(
             }
         }
 
-        val sessionId: Long = if (workerParameters.inputData.hasKeyWithValueOfType(SESSION_ID, Long::class.java)) {
-            workerParameters.inputData.getLong(SESSION_ID, -1)
-        } else {
-            return abortWork("No session id.")
-        }
+        Timber.d("input data ${workerParameters.inputData.keyValueMap.values.first().javaClass.simpleName}")
+
+        val sessionId: Long = workerParameters.inputData.getLong(SESSION_ID, -1)
 
         val sessionWithFilesEntity: DownloadSessionWithFilesEntity = appDatabase.downloadSessionDao()
             .getDownloadSessionSync(sessionId)
@@ -89,6 +91,16 @@ class DownloadWorker @AssistedInject constructor(
             .append(File.separator)
             .append(sessionWithFilesEntity.downloadSessionEntity.folderName)
             .toString()
+
+        /*val viewUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            StringBuilder()
+                .append(Environment.DIRECTORY_PICTURES)
+                .append(File.separator)
+                .append(relativeDownloadPath)
+                .toString()
+        } else {
+
+        }*/
 
         var failedCount = 0
         val jobs = sessionWithFilesEntity.downloadFilesEntity
@@ -187,11 +199,24 @@ class DownloadWorker @AssistedInject constructor(
         val channelId = context.getString(R.string.download_notification_channel_id)
 
         // TODO: add pending intent to view the downloads
-        val contentIntent = NavDeepLinkBuilder(context)
+        /*val contentIntent = NavDeepLinkBuilder(context)
             .setGraph(R.navigation.home_nav_graph)
             .setDestination(R.id.catalog_list)
             .setComponentName(MainActivity::class.java)
-            .createPendingIntent()
+            .createPendingIntent()*/
+
+        val galleryIntent = Intent().apply {
+            action = Intent.ACTION_VIEW
+            type = Constant.MIME_TYPE_IMAGE
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        val contentIntent = PendingIntentCompat.getActivity(
+            context,
+            OPEN_GALLERY_REQUEST_CODE,
+            galleryIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT,
+            false
+        )
 
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
         val notification = notificationBuilder
@@ -280,6 +305,8 @@ class DownloadWorker @AssistedInject constructor(
 
         const val STATUS_NOTIFICATION_ID = 102
         private const val ONGOING_NOTIFICATION_ID = 103
+
+        private const val OPEN_GALLERY_REQUEST_CODE = 100
 
         const val EXTRA_ERROR_MESSAGE = "com.aiavatar.app.extras.ERROR_MESSAGE"
     }
