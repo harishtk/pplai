@@ -528,8 +528,10 @@ class HomeRepositoryImpl @Inject constructor(
                             progress = 0
                         )
                     }
-                    localDataSource.deleteAllModelAvatars(getAvatarsRequest.modelId)
-                    localDataSource.insertAllModelAvatars(modelAvatarList.map(ModelAvatar::toEntity))
+                    localDataSource.apply {
+                        deleteAllModelAvatars(getAvatarsRequest.modelId)
+                        insertAllModelAvatars(modelAvatarList.map(ModelAvatar::toEntity))
+                    }
                 }
                 is Result.Error -> {
                     emit(result)

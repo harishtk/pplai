@@ -156,7 +156,7 @@
                             android:focusable="true"
                             app:state_filled="true"
                             app:viewType="rectangle"
-                            app:itemSpacing="20dp"
+                            app:itemSpacing="10dp"
                             app:lineWidth="2dp"
                             app:itemRadius="@dimen/corner_size_small"
                             android:enabled="true"

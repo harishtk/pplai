@@ -275,6 +275,7 @@ class AvatarResultFragment : Fragment() {
         val cont: Continuation = {
             WorkUtil.scheduleDownloadWorker(requireContext(), modelId)
             Timber.d("Download scheduled: $modelId")
+            context?.debugToast("Downloading.. check notifications")
             if (!ApplicationDependencies.getPersistentStore().isLogged) {
                 gotoHome()
             }
