@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
 import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.*
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.Commons
 import com.aiavatar.app.Constant
 import com.aiavatar.app.MainActivity
@@ -20,11 +21,14 @@ import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.commons.util.concurrent.ThreadSafeCounter
 import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.model.DownloadSessionWithFilesEntity
+import com.aiavatar.app.core.domain.model.DownloadSessionWithFiles
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.*
+import kotlinx.serialization.descriptors.PrimitiveKind
 import timber.log.Timber
 import java.io.File
 import java.lang.StringBuilder
@@ -64,15 +68,18 @@ class DownloadWorker @AssistedInject constructor(
             }
         }
 
-        val modelId = workerParameters.inputData.getString(MODEL_ID)
-            ?: return abortWork("No model id.")
+        val sessionId: Long = if (workerParameters.inputData.hasKeyWithValueOfType(SESSION_ID, Long::class.java)) {
+            workerParameters.inputData.getLong(SESSION_ID, -1)
+        } else {
+            return abortWork("No session id.")
+        }
 
-        val modelData = appDatabase.modelDao().getModelSync(modelId)
-            ?: return abortWork("No model data found")
+        val sessionWithFilesEntity: DownloadSessionWithFilesEntity = appDatabase.downloadSessionDao()
+            .getDownloadSessionSync(sessionId)
+            ?: return abortWork("No download session data found for session id $sessionId")
 
-        val modelAvatarEntities = appDatabase.modelAvatarDao().getModelAvatarsSync(modelId)
-        if (modelAvatarEntities.isEmpty()) {
-            return abortWork("No download session data found for model $modelId")
+        appDatabase.downloadSessionDao().apply {
+            updateDownloadWorkerId(sessionWithFilesEntity.downloadSessionEntity._id!!, workerId = id.toString())
         }
 
         setForegroundAsync(createForegroundInfo(0))
@@ -80,56 +87,58 @@ class DownloadWorker @AssistedInject constructor(
         val relativeDownloadPath = StringBuilder()
             .append(context.getString(R.string.app_name))
             .append(File.separator)
-            .append(modelData.name)
+            .append(sessionWithFilesEntity.downloadSessionEntity.folderName)
             .toString()
 
-        var failedCount: Int = 0
-        val jobs = modelAvatarEntities
+        var failedCount = 0
+        val jobs = sessionWithFilesEntity.downloadFilesEntity
             .filter { entity -> entity.downloaded == 0 }
-            .map { avatarFilesEntity ->
-            workerScope.launch {
-                kotlin.runCatching {
-                    val savedUri = StorageUtil.saveFile(
-                        context = context,
-                        url = avatarFilesEntity.remoteFile,
-                        relativePath = relativeDownloadPath,
-                        mimeType = Constant.MIME_TYPE_JPEG,
-                        displayName = Commons.getFileNameFromUrl(avatarFilesEntity.remoteFile),
-                    ) { progress, bytesDownloaded ->
-                        workerScope.launch {
-                            appDatabase.avatarFilesDao().updateDownloadProgress(
-                                id = avatarFilesEntity._id!!,
-                                progress
-                            )
-                            if (progress == 100) {
-                                appDatabase.avatarFilesDao().updateDownloadStatus(
-                                    id = avatarFilesEntity._id!!,
-                                    downloaded = true,
-                                    downloadedAt = System.currentTimeMillis(),
-                                    downloadSize = bytesDownloaded
+            .map { downloadFilesEntity ->
+                workerScope.launch {
+                    kotlin.runCatching {
+                        val savedUri = StorageUtil.saveFile(
+                            context = context,
+                            url = downloadFilesEntity.fileUriString,
+                            relativePath = relativeDownloadPath,
+                            mimeType = Constant.MIME_TYPE_JPEG,
+                            displayName = Commons.getFileNameFromUrl(downloadFilesEntity.fileUriString),
+                        ) { progress, bytesDownloaded ->
+                            workerScope.launch {
+                                appDatabase.downloadFilesDao().updateFileDownloadProgress(
+                                    id = downloadFilesEntity._id!!,
+                                    progress
+                                )
+                                if (progress == 100) {
+                                    appDatabase.downloadFilesDao().updateDownloadStatus(
+                                        id = downloadFilesEntity._id!!,
+                                        downloaded = true,
+                                        downloadedAt = System.currentTimeMillis(),
+                                        downloadSize = bytesDownloaded
+                                    )
+                                }
+                            }
+                        }
+
+                        appDatabase.downloadFilesDao().apply {
+                            if (savedUri != null) {
+                                updateDownloadedFileName(downloadFilesEntity._id!!, savedUri.toString())
+                            } else {
+                                failedCount++
+                                updateDownloadStatus(
+                                    id = downloadFilesEntity._id!!,
+                                    downloaded = false,
+                                    downloadedAt = 0L,
+                                    downloadSize = 0L
                                 )
                             }
                         }
-                    }
-
-                    appDatabase.avatarFilesDao().apply {
-                        if (savedUri != null) {
-                            updateLocalUri(avatarFilesEntity._id!!, savedUri.toString())
-                        } else {
-                            failedCount++
-                            updateDownloadStatus(
-                                id = avatarFilesEntity._id!!,
-                                downloaded = false,
-                                downloadedAt = 0L,
-                                downloadSize = 0L
-                            )
+                    }.onFailure { t ->
+                        if (BuildConfig.DEBUG) {
+                            Timber.e(t)
                         }
                     }
-                }.onFailure { t ->
-                    Timber.e(t)
                 }
             }
-        }
 
         totalDownloads = jobs.count()
         Timber.d("Downloading $totalDownloads images")
@@ -243,6 +252,16 @@ class DownloadWorker @AssistedInject constructor(
             return this
         }
 
+        fun setStatusId(statusId: String): Builder {
+            inputDataBuilder.putString(STATUS_ID, statusId)
+            return this
+        }
+
+        fun setDownloadSessionId(sessionId: Long): Builder {
+            inputDataBuilder.putLong(SESSION_ID, sessionId)
+            return this
+        }
+
         fun buildOneTimeRequest(): OneTimeWorkRequest {
             return OneTimeWorkRequestBuilder<DownloadWorker>()
                 .setConstraints(constraints)
@@ -254,6 +273,8 @@ class DownloadWorker @AssistedInject constructor(
 
     companion object {
         private const val MODEL_ID = "model_id"
+        private const val STATUS_ID = "status_id"
+        private const val SESSION_ID = "session_id"
 
         const val WORKER_NAME = "download_worker"
 

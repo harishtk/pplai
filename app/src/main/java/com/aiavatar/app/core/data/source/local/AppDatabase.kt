@@ -20,7 +20,8 @@ import com.aiavatar.app.feature.home.data.source.local.entity.ModelEntity
                 AvatarStatusEntity::class, AvatarFilesEntity::class,
                 CategoryEntity::class, CacheKeysEntity::class,
                 CatalogListEntity::class, ModelEntity::class,
-                LoginUserEntity::class, ModelAvatarEntity::class],
+                LoginUserEntity::class, ModelAvatarEntity::class,
+                DownloadSessionEntity::class, DownloadFilesEntity::class],
     version = 1,
     exportSchema = false
 )
@@ -45,6 +46,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun loginUserDao(): LoginUserDao
 
     abstract fun modelAvatarDao(): ModelAvatarDao
+
+    abstract fun downloadSessionDao(): DownloadSessionDao
+
+    abstract fun downloadFilesDao(): DownloadFilesDao
 
     companion object {
         @Volatile
@@ -74,6 +79,8 @@ abstract class AppDatabase : RoomDatabase() {
         const val TABLE_MODELS              = "models"
         const val TABLE_MODEL_AVATARS       = "model_avatars"
         const val TABLE_LOGIN_USER          = "login_user"
+        const val TABLE_DOWNLOAD_SESSION    = "download_session"
+        const val TABLE_DOWNLOAD_FILES      = "download_files"
 
         const val TABLE_CACHE_KEYS          = "cache_keys"
     }

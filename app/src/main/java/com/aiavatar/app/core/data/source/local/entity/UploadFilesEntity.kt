@@ -12,7 +12,7 @@ import com.aiavatar.app.core.domain.model.UploadFile
 
 @Entity(
     tableName = UploadFilesTable.name,
-    indices = [Index(name = "session_index", value = [UploadFilesTable.Columns.SESSION_ID])],
+    indices = [Index(name = "upload_session_index", value = [UploadFilesTable.Columns.SESSION_ID])],
     foreignKeys = [
         ForeignKey(
             entity = UploadSessionEntity::class,
