@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.LargePresetPreviewBinding
-import com.aiavatar.app.feature.home.domain.model.ListAvatar
+import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.presentation.catalog.SelectableAvatarUiModel
 import com.bumptech.glide.Glide
 
@@ -26,7 +26,7 @@ class CatalogPagerAdapter(
         val model = getItem(position)
         if (holder is ItemViewHolder) {
             model as SelectableAvatarUiModel.Item
-            holder.bind(model.listAvatar, model.selected, onCardClick)
+            holder.bind(model.modelAvatar, model.selected, onCardClick)
         }
     }
 
@@ -62,10 +62,10 @@ class CatalogPagerAdapter(
         private val binding: LargePresetPreviewBinding
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(listAvatar: ListAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
-            title.text = listAvatar.imageName
+        fun bind(listAvatar: ModelAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
+            title.text = listAvatar.remoteFile
             Glide.with(previewImage)
-                .load(listAvatar.imageName)
+                .load(listAvatar.remoteFile)
                 .placeholder(R.color.transparent_black)
                 .error(R.color.white)
                 .into(previewImage)
@@ -112,7 +112,7 @@ class CatalogPagerAdapter(
                 newItem: SelectableAvatarUiModel,
             ): Boolean {
                 return (oldItem is SelectableAvatarUiModel.Item && newItem is SelectableAvatarUiModel.Item &&
-                        oldItem.listAvatar.id == newItem.listAvatar.id)
+                        oldItem.modelAvatar._id == newItem.modelAvatar._id)
             }
 
             override fun areContentsTheSame(
@@ -120,7 +120,7 @@ class CatalogPagerAdapter(
                 newItem: SelectableAvatarUiModel,
             ): Boolean {
                 return (oldItem is SelectableAvatarUiModel.Item && newItem is SelectableAvatarUiModel.Item &&
-                        oldItem.listAvatar == newItem.listAvatar && oldItem.selected == newItem.selected)
+                        oldItem.modelAvatar == newItem.modelAvatar && oldItem.selected == newItem.selected)
             }
 
             override fun getChangePayload(

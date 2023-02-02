@@ -14,6 +14,8 @@ data class DownloadSessionEntity(
     val status: Int,
     @ColumnInfo("folder_name")
     val folderName: String,
+    @ColumnInfo("model_id")
+    val modelId: String
 ) {
     @ColumnInfo("id")
     @PrimaryKey(autoGenerate = true)
@@ -27,7 +29,8 @@ fun DownloadSessionEntity.toDownloadSession(): DownloadSession {
     return DownloadSession(
         createdAt = createdAt,
         status = DownloadSessionStatus.fromRawValue(status),
-        folderName = folderName
+        folderName = folderName,
+        modelId = modelId
     ).also {
         it.id = _id
         it.workerId = workerId
@@ -38,7 +41,8 @@ fun DownloadSession.toEntity(): DownloadSessionEntity {
     return DownloadSessionEntity(
         createdAt = createdAt,
         status = status.status,
-        folderName = folderName
+        folderName = folderName,
+        modelId = modelId
     ).also {
         it._id = id
         it.workerId = workerId
@@ -54,6 +58,7 @@ object DownloadSessionTable {
         const val ID                    = "id"
         const val FOLDER_NAME           = "folder_name"
         const val WORKER_ID             = "worker_id"
+        const val MODEL_ID              = "model_id"
     }
 }
 

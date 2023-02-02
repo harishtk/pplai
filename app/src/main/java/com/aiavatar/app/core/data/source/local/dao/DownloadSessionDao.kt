@@ -40,6 +40,10 @@ interface DownloadSessionDao {
     @Query("SELECT * FROM ${DownloadSessionTable.name} WHERE ${DownloadSessionTable.Columns.ID} = :id")
     suspend fun getDownloadSessionSync(id: Long): DownloadSessionWithFilesEntity?
 
+    @Transaction
+    @Query("SELECT * FROM ${DownloadSessionTable.name} WHERE ${DownloadSessionTable.Columns.MODEL_ID} = :modelId")
+    suspend fun getDownloadSessionSyncForModelIdSync(modelId: String): DownloadSessionWithFilesEntity?
+
     @Query("UPDATE ${DownloadSessionTable.name} " +
             "SET ${DownloadSessionTable.Columns.WORKER_ID} = :workerId " +
             "WHERE ${DownloadSessionTable.Columns.ID} = :sessionId")

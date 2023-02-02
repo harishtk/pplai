@@ -30,7 +30,7 @@ import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
-import com.aiavatar.app.feature.home.domain.model.ListAvatar
+import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
 import com.aiavatar.app.work.WorkUtil
@@ -256,9 +256,9 @@ class ModelDetailFragment : Fragment() {
                     if (jumpToImageName != null) {
                         avatarList.mapIndexed { index, avatarUiModel ->
                             val id =
-                                (avatarUiModel as? SelectableAvatarUiModel.Item)?.listAvatar?.imageName
+                                (avatarUiModel as? SelectableAvatarUiModel.Item)?.modelAvatar?.remoteFile
                             Timber.d("Compare: 1 id = $id  == jump = $jumpToId")
-                            if (avatarUiModel is SelectableAvatarUiModel.Item && avatarUiModel.listAvatar.imageName == jumpToImageName) {
+                            if (avatarUiModel is SelectableAvatarUiModel.Item && avatarUiModel.modelAvatar.remoteFile == jumpToImageName) {
                                 index
                             } else {
                                 -1
@@ -345,6 +345,11 @@ class ModelDetailFragment : Fragment() {
             catalogTitleFlow.collectLatest { catalogTitle ->
                 toolbarIncluded.toolbarTitle.text = catalogTitle
             }
+        }*/
+
+        /*val modelNameFlow = uiState.map { it. }
+        viewLifecycleOwner.lifecycleScope.launch {
+         asfd
         }*/
 
         toolbarIncluded.toolbarNavigationIcon.setOnClickListener {
@@ -482,7 +487,7 @@ class AvatarScrollAdapter(
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val model = getItem(position)
         model as SelectableAvatarUiModel.Item
-        holder.bind(model.listAvatar, model.selected, onCardClick)
+        holder.bind(model.modelAvatar, model.selected, onCardClick)
     }
 
     override fun onBindViewHolder(
@@ -520,11 +525,11 @@ class AvatarScrollAdapter(
         private val binding: ItemScrollerListBinding,
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(listAvatar: ListAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) =
+        fun bind(listAvatar: ModelAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) =
             with(binding) {
-                title.text = listAvatar.imageName
+                title.text = listAvatar.remoteFile
                 Glide.with(previewImage)
-                    .load(listAvatar.imageName)
+                    .load(listAvatar.remoteFile)
                     .placeholder(R.color.transparent_black)
                     .error(R.color.white)
                     .into(previewImage)
@@ -571,7 +576,7 @@ class AvatarScrollAdapter(
                 newItem: SelectableAvatarUiModel,
             ): Boolean {
                 return (oldItem is SelectableAvatarUiModel.Item && newItem is SelectableAvatarUiModel.Item &&
-                        oldItem.listAvatar.id == newItem.listAvatar.id)
+                        oldItem.modelAvatar._id == newItem.modelAvatar._id)
             }
 
             override fun areContentsTheSame(
@@ -579,7 +584,7 @@ class AvatarScrollAdapter(
                 newItem: SelectableAvatarUiModel,
             ): Boolean {
                 return (oldItem is SelectableAvatarUiModel.Item && newItem is SelectableAvatarUiModel.Item &&
-                        oldItem.listAvatar == newItem.listAvatar && oldItem.selected == newItem.selected)
+                        oldItem.modelAvatar == newItem.modelAvatar && oldItem.selected == newItem.selected)
             }
 
             override fun getChangePayload(

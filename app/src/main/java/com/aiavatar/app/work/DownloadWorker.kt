@@ -9,30 +9,26 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Environment
 import androidx.core.app.NotificationCompat
 import androidx.core.app.PendingIntentCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
-import androidx.navigation.NavDeepLinkBuilder
 import androidx.work.*
 import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.Commons
 import com.aiavatar.app.Constant
-import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.commons.util.concurrent.ThreadSafeCounter
 import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.DownloadFileStatus
+import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
 import com.aiavatar.app.core.data.source.local.model.DownloadSessionWithFilesEntity
-import com.aiavatar.app.core.domain.model.DownloadSessionWithFiles
-import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.*
-import kotlinx.serialization.descriptors.PrimitiveKind
 import timber.log.Timber
 import java.io.File
 import java.lang.StringBuilder
@@ -102,6 +98,9 @@ class DownloadWorker @AssistedInject constructor(
 
         }*/
 
+        appDatabase.downloadSessionDao().updateDownloadSessionStatus(
+            sessionWithFilesEntity.downloadSessionEntity._id!!, DownloadSessionStatus.PARTIALLY_DONE.status)
+
         var failedCount = 0
         val jobs = sessionWithFilesEntity.downloadFilesEntity
             .filter { entity -> entity.downloaded == 0 }
@@ -116,10 +115,16 @@ class DownloadWorker @AssistedInject constructor(
                             displayName = Commons.getFileNameFromUrl(downloadFilesEntity.fileUriString),
                         ) { progress, bytesDownloaded ->
                             workerScope.launch {
-                                appDatabase.downloadFilesDao().updateFileDownloadProgress(
-                                    id = downloadFilesEntity._id!!,
-                                    progress
-                                )
+                                appDatabase.downloadFilesDao().apply {
+                                    updateFileDownloadProgress(
+                                        id = downloadFilesEntity._id!!,
+                                        progress
+                                    )
+                                    updateFileStatus(
+                                        id = downloadFilesEntity._id!!,
+                                        DownloadFileStatus.DOWNLOADING.status
+                                    )
+                                }
                                 if (progress == 100) {
                                     appDatabase.downloadFilesDao().updateDownloadStatus(
                                         id = downloadFilesEntity._id!!,
@@ -134,6 +139,10 @@ class DownloadWorker @AssistedInject constructor(
                         appDatabase.downloadFilesDao().apply {
                             if (savedUri != null) {
                                 updateDownloadedFileName(downloadFilesEntity._id!!, savedUri.toString())
+                                updateFileStatus(
+                                    id = downloadFilesEntity._id!!,
+                                    DownloadFileStatus.COMPLETE.status
+                                )
                             } else {
                                 failedCount++
                                 updateDownloadStatus(
@@ -141,6 +150,10 @@ class DownloadWorker @AssistedInject constructor(
                                     downloaded = false,
                                     downloadedAt = 0L,
                                     downloadSize = 0L
+                                )
+                                updateFileStatus(
+                                    id = downloadFilesEntity._id!!,
+                                    DownloadFileStatus.FAILED.status
                                 )
                             }
                         }
@@ -159,6 +172,12 @@ class DownloadWorker @AssistedInject constructor(
             it.join()
             updateDownloadCounter()
         }
+
+        appDatabase.downloadSessionDao().updateDownloadSessionStatus(
+            sessionWithFilesEntity.downloadSessionEntity._id!!, DownloadSessionStatus.COMPLETE.status)
+        appDatabase.downloadSessionDao().updateDownloadWorkerId(
+            sessionWithFilesEntity.downloadSessionEntity._id!!, null
+        )
 
         Timber.d("Download failed for $failedCount files")
 

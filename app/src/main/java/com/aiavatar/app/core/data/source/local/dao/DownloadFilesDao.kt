@@ -17,11 +17,6 @@ interface DownloadFilesDao {
     @Query("SELECT * FROM ${DownloadFilesTable.name} WHERE ${DownloadFilesTable.Columns.SESSION_ID} = :sessionId")
     suspend fun getAllDownloadFilesSync(sessionId: Long): List<DownloadFilesEntity>
 
-    @Query("SELECT * FROM ${DownloadFilesTable.name} " +
-            "WHERE ${DownloadFilesTable.Columns.SESSION_ID} = :sessionId AND " +
-            "${DownloadFilesTable.Columns.LOCAL_URI_STRING} = :uriString")
-    suspend fun getDeviceFileForUriSync(sessionId: Long, uriString: String): DownloadFilesEntity?
-
     @Query("UPDATE ${DownloadFilesTable.name} " +
             "SET ${DownloadFilesTable.Columns.STATUS} = :status " +
             "WHERE ${DownloadFilesTable.Columns.ID} = :id")

@@ -1,6 +1,5 @@
 package com.aiavatar.app.feature.home.presentation.create
 
-import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -14,7 +13,6 @@ import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.*
-import com.aiavatar.app.core.domain.model.AvatarFile
 import com.aiavatar.app.core.domain.model.DownloadFile
 import com.aiavatar.app.core.domain.model.DownloadSession
 import com.aiavatar.app.core.domain.model.request.RenameModelRequest
@@ -22,7 +20,6 @@ import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.domain.model.ModelData
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
-import com.aiavatar.app.feature.home.domain.model.toAvatarFile
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.nullAsEmpty
 import com.pepulnow.app.data.LoadState
@@ -285,10 +282,29 @@ class AvatarResultViewModel @Inject constructor(
             val modelId  = uiState.value.modelId
             val statusId = uiState.value.avatarStatusId
 
+            if (modelId != null) {
+                val runningDownloadSession = appDatabase.downloadSessionDao().getDownloadSessionSyncForModelIdSync(
+                    modelId
+                )
+                if (runningDownloadSession?.downloadSessionEntity?.status ==
+                    DownloadSessionStatus.PARTIALLY_DONE.status) {
+                    val t = IllegalStateException("A download for this model is already in progress")
+                    setLoading(loadType, LoadState.Error(t))
+                    _uiState.update { state ->
+                        state.copy(
+                            exception = t,
+                            uiErrorText = UiText.DynamicString("Please wait.. a download is already in progress.")
+                        )
+                    }
+                    return@launch
+                }
+            }
+
             val downloadSession = DownloadSession(
                 createdAt = System.currentTimeMillis(),
                 status = DownloadSessionStatus.NOT_STARTED,
-                folderName = modelName
+                folderName = modelName,
+                modelId = modelId.nullAsEmpty()
             )
             appDatabase.downloadSessionDao().apply {
                 insert(downloadSession.toEntity()).let { id ->
@@ -302,7 +318,6 @@ class AvatarResultViewModel @Inject constructor(
                         DownloadFile(
                             sessionId = downloadSession.id!!,
                             fileUri = modelAvatarEntity.remoteFile.toUri(),
-                            localUri = Uri.EMPTY,
                             status = DownloadFileStatus.NOT_STARTED
                         )
                     }
@@ -312,7 +327,6 @@ class AvatarResultViewModel @Inject constructor(
                         DownloadFile(
                             sessionId = downloadSession.id!!,
                             fileUri = avatarFilesEntity.remoteFile.toUri(),
-                            localUri = Uri.EMPTY,
                             status = DownloadFileStatus.NOT_STARTED,
                         )
                     } ?: emptyList()

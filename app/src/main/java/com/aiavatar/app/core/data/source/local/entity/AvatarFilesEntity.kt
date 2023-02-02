@@ -80,6 +80,19 @@ fun AvatarFilesEntity.toModelAvatar(): ModelAvatar {
     }
 }
 
+fun AvatarFile.toModelAvatar(): ModelAvatar {
+    return ModelAvatar(
+        modelId = modelId,
+        remoteFile = remoteFile,
+        localUri = localUri,
+        downloaded = downloaded,
+        progress = progress
+    ).also {
+        it.downloadedAt = downloadedAt
+        it.downloadedSize = downloadedSize
+    }
+}
+
 fun AvatarFile.toEntity(): AvatarFilesEntity {
     return AvatarFilesEntity(
         modelId = modelId,

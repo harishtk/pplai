@@ -22,8 +22,6 @@ data class DownloadFilesEntity(
     val sessionId: Long,
     @ColumnInfo("file_uri_string")
     val fileUriString: String,
-    @ColumnInfo("local_uri_string")
-    val localUriString: String,
     @ColumnInfo("status")
     val status: Int,
     @ColumnInfo("downloaded")
@@ -49,7 +47,6 @@ fun DownloadFilesEntity.toDownloadFile(): DownloadFile {
     return DownloadFile(
         sessionId = sessionId,
         fileUri = fileUriString.toUri(),
-        localUri = localUriString.toUri(),
         status = DownloadFileStatus.fromRawValue(status),
         progress = progress,
         downloaded = downloaded,
@@ -65,7 +62,6 @@ fun DownloadFile.toEntity(): DownloadFilesEntity {
     return DownloadFilesEntity(
         sessionId = sessionId,
         fileUriString = fileUri.toString(),
-        localUriString = localUri.toString(),
         status = status.status,
         progress = progress,
         downloaded = downloaded
@@ -84,7 +80,6 @@ object DownloadFilesTable {
         const val ID                    = "id"
         const val SESSION_ID            = "session_id"
         const val FILE_URI_STRING       = "file_uri_string"
-        const val LOCAL_URI_STRING      = "local_uri_string"
         const val STATUS                = "status"
         const val PROGRESS              = "progress"
         const val DOWNLOADED            = "downloaded"
@@ -95,13 +90,13 @@ object DownloadFilesTable {
 }
 
 enum class DownloadFileStatus(val status: Int) {
-    NOT_STARTED(0), UPLOADING(1), COMPLETE(2), FAILED(3), UNKNOWN(-1);
+    NOT_STARTED(0), DOWNLOADING(1), COMPLETE(2), FAILED(3), UNKNOWN(-1);
 
     companion object  {
         fun fromRawValue(rawValue: Int): DownloadFileStatus {
             return when (rawValue) {
                 0 -> NOT_STARTED
-                1 -> UPLOADING
+                1 -> DOWNLOADING
                 2 -> COMPLETE
                 3 -> FAILED
                 else -> UNKNOWN

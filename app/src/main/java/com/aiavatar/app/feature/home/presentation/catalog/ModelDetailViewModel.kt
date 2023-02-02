@@ -1,6 +1,5 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
-import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,10 +11,7 @@ import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
-import com.aiavatar.app.core.data.source.local.entity.DownloadFileStatus
-import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
-import com.aiavatar.app.core.data.source.local.entity.toEntity
-import com.aiavatar.app.core.data.source.local.entity.toListAvatar
+import com.aiavatar.app.core.data.source.local.entity.*
 import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.DownloadFile
@@ -23,9 +19,10 @@ import com.aiavatar.app.core.domain.model.DownloadSession
 import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
-import com.aiavatar.app.feature.home.domain.model.ListAvatar
+import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import com.aiavatar.app.nullAsEmpty
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -161,7 +158,7 @@ class ModelDetailViewModel @Inject constructor(
                             avatarStatusWithFiles = avatarStatusWithFilesEntity.toAvatarStatusWithFiles(),
                             avatarList = avatarStatusWithFilesEntity.toAvatarStatusWithFiles()
                                 .avatarFiles
-                                .map { SelectableAvatarUiModel.Item(it.toListAvatar(), false) }
+                                .map { SelectableAvatarUiModel.Item(it.toModelAvatar(), false) }
                         )
                     }
                 }
@@ -247,7 +244,7 @@ class ModelDetailViewModel @Inject constructor(
 
         avatarsFetchJob?.cancel(CancellationException("New request")) // just in case
         avatarsFetchJob = viewModelScope.launch {
-            homeRepository.getAvatars(request).collectLatest { result ->
+            homeRepository.getAvatars2(request, forceRefresh = false).collectLatest { result ->
                 when (result) {
                     is Result.Loading -> setLoading(LoadType.REFRESH, LoadState.Loading())
                     is Result.Error -> {
@@ -372,7 +369,8 @@ class ModelDetailViewModel @Inject constructor(
             val downloadSession = DownloadSession(
                 createdAt = System.currentTimeMillis(),
                 status = DownloadSessionStatus.NOT_STARTED,
-                folderName = modelName
+                folderName = modelName,
+                modelId = modelId.nullAsEmpty()
             )
             appDatabase.downloadSessionDao().apply {
                 insert(downloadSession.toEntity()).let { id ->
@@ -386,7 +384,6 @@ class ModelDetailViewModel @Inject constructor(
                         DownloadFile(
                             sessionId = downloadSession.id!!,
                             fileUri = modelAvatarEntity.remoteFile.toUri(),
-                            localUri = Uri.EMPTY,
                             status = DownloadFileStatus.NOT_STARTED
                         )
                     }
@@ -453,5 +450,5 @@ interface ModelDetailUiEvent {
 }
 
 interface SelectableAvatarUiModel {
-    data class Item(val listAvatar: ListAvatar, val selected: Boolean) : SelectableAvatarUiModel
+    data class Item(val modelAvatar: ModelAvatar, val selected: Boolean) : SelectableAvatarUiModel
 }
