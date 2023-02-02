@@ -1,11 +1,14 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
+import android.content.Context
+import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aiavatar.app.BuildConfig
+import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.Result
+import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
@@ -20,7 +23,6 @@ import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.domain.model.ModelData
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.aiavatar.app.nullAsEmpty
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +31,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.File
+import java.lang.StringBuilder
 import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
@@ -113,11 +117,20 @@ class ModelDetailViewModel @Inject constructor(
         }
     }
 
-    fun createDownloadSession(modelName: String) {
-        createDownloadSessionInternal(modelName)
+    fun getSelectedAvatarPosition(): Int {
+        return selectedAvatarPosition
     }
 
-    fun saveModelName(modelName: String) = viewModelScope.launch {
+    fun createDownloadSession(modelName: String) {
+        TODO("Not supported")
+        // createDownloadSessionInternal(modelName)
+    }
+
+    fun downloadCurrentAvatar(context: Context) {
+        downloadCurrentAvatarInternal(context)
+    }
+
+    fun saveModelName(modelName: String, cont: Continuation = {}) = viewModelScope.launch {
         val modelId = getModelId()
         if (modelId != null) {
             val request = RenameModelRequest(
@@ -151,7 +164,7 @@ class ModelDetailViewModel @Inject constructor(
                         val affectedRows = appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
                         Timber.d("Update model name: affected $affectedRows rows")
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
-                        createDownloadSessionInternal(modelName, LoadType.ACTION)
+                        cont()
                     }
                 }
             }
@@ -246,6 +259,78 @@ class ModelDetailViewModel @Inject constructor(
     }
 
     /* Download session related */
+    private fun downloadCurrentAvatarInternal(context: Context) = viewModelScope.launch {
+        val modelAvatar = uiState.value.avatarList
+            .filterIsInstance<SelectableAvatarUiModel.Item>()
+            .find { uiModel -> uiModel.selected }
+            ?.modelAvatar
+        if (modelAvatar == null) {
+            sendEvent(ModelDetailUiEvent.ShowToast(UiText.DynamicString("Cannot download right now. Try later")))
+            return@launch
+        }
+
+        val modelName = uiState.value.modelData?.name ?: modelAvatar.modelId
+        val relativeDownloadPath = StringBuilder()
+            .append(context.getString(R.string.app_name))
+            .append(File.separator)
+            .append(modelName)
+            .toString()
+
+        sendEvent(ModelDetailUiEvent.ShowToast(UiText.DynamicString("Downloading..")))
+        _uiState.update { state ->
+            state.copy(
+                currentDownloadProgress = 0
+            )
+        }
+
+        val savedUri = StorageUtil.saveFile(
+            context = context,
+            url = modelAvatar.remoteFile,
+            relativePath = relativeDownloadPath,
+            mimeType = Constant.MIME_TYPE_JPEG,
+            displayName = Commons.getFileNameFromUrl(modelAvatar.remoteFile),
+        ) { progress, bytesDownloaded ->
+            Timber.d("Download: ${modelAvatar.remoteFile} progress = $progress downloaded = $bytesDownloaded")
+            _uiState.update { state ->
+                state.copy(
+                    currentDownloadProgress = progress
+                )
+            }
+            viewModelScope.launch {
+                appDatabase.modelAvatarDao().apply {
+                    updateDownloadProgress(modelAvatar._id!!, progress)
+                    if (progress == 100) {
+                        updateDownloadStatus(
+                            id = modelAvatar._id!!,
+                            downloaded = true,
+                            downloadedAt = System.currentTimeMillis(),
+                            downloadSize = bytesDownloaded
+                        )
+                    }
+                }
+            }
+        }
+        if (savedUri != null) {
+            sendEvent(ModelDetailUiEvent.DownloadComplete(savedUri))
+        } else {
+            appDatabase.modelAvatarDao().apply {
+                updateDownloadStatus(
+                    id = modelAvatar._id!!,
+                    downloaded = false,
+                    downloadedAt = 0,
+                    downloadSize = 0
+                )
+            }
+            sendEvent(ModelDetailUiEvent.ShowToast(UiText.DynamicString("Cannot download right now. Try later")))
+        }
+
+        _uiState.update { state ->
+            state.copy(
+                currentDownloadProgress = null
+            )
+        }
+    }
+
     private fun createDownloadSessionInternal(modelName: String, loadType: LoadType = LoadType.ACTION) {
         createDownloadSessionJob = viewModelScope.launch {
             setLoading(loadType, LoadState.Loading())
@@ -319,6 +404,7 @@ data class ModelDetailState(
     val modelId: String? = null,
     val modelData: ModelData? = null,
     val avatarList: List<SelectableAvatarUiModel> = emptyList(),
+    val currentDownloadProgress: Int? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
@@ -330,6 +416,7 @@ interface ModelDetailUiAction {
 interface ModelDetailUiEvent {
     data class ShowToast(val message: UiText) : ModelDetailUiEvent
     data class StartDownload(val downloadSessionId: Long) : ModelDetailUiEvent
+    data class DownloadComplete(val savedUri: Uri) : ModelDetailUiEvent
 }
 
 interface SelectableAvatarUiModel {

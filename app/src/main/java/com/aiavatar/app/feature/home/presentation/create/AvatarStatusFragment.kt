@@ -307,12 +307,10 @@ class AvatarStatusFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
                 // TODO: show loader
-                if (btnCreateAvatar.isVisible) {
-                    if (loadState.action is LoadState.Loading) {
-                        btnCreateAvatar.setSpinning()
-                    } else {
-                        btnCreateAvatar.cancelSpinning()
-                    }
+                if (loadState.action is LoadState.Loading) {
+                    btnCreateAvatar.setSpinning()
+                } else {
+                    btnCreateAvatar.cancelSpinning()
                 }
             }
         }

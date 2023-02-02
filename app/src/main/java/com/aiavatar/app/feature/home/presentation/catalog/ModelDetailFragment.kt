@@ -13,6 +13,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -29,7 +30,9 @@ import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.aiavatar.app.*
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
+import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
+import com.aiavatar.app.databinding.FragmentModelListBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
@@ -65,7 +68,6 @@ class ModelDetailFragment : Fragment() {
 
     private var isSettingsLaunched = false
 
-    private lateinit var from: String
     private var jumpToId: Long = -1
     private var jumpToImageName: String? = null
     private var jumpToPosition: Int = -1
@@ -107,7 +109,6 @@ class ModelDetailFragment : Fragment() {
             }
 
         arguments?.apply {
-            from = getString(Constant.EXTRA_FROM, "unknown")
             val modelId = getString(ARG_MODEL_ID, null)
             jumpToId = getLong(ARG_JUMP_TO_ID, -1L)
             jumpToImageName = getString(ARG_JUMP_TO_IMAGE_NAME, null)
@@ -134,10 +135,6 @@ class ModelDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentModelDetailBinding.bind(view)
 
-        if (savedInstanceState?.containsKey(Constant.EXTRA_FROM) == true) {
-            from = savedInstanceState.getString(Constant.EXTRA_FROM, "unknown")
-        }
-
         binding.bindState(
             uiState = viewModel.uiState,
             uiAction = viewModel.accept,
@@ -160,6 +157,9 @@ class ModelDetailFragment : Fragment() {
                     }
                     is ModelDetailUiEvent.StartDownload -> {
                         checkPermissionAndScheduleWorker(event.downloadSessionId)
+                    }
+                    is ModelDetailUiEvent.DownloadComplete -> {
+                        openGallery(event.savedUri)
                     }
                 }
             }
@@ -296,18 +296,14 @@ class ModelDetailFragment : Fragment() {
             }
         }
 
-        when (from) {
-            "result_preview" -> {
-                btnNext.text = getString(R.string.label_download)
-                icDownload.isVisible = false
-                icShare.isVisible = true
-            }
-            "my_models" -> {
-                btnNext.text = getString(R.string.label_recreate)
-                icDownload.isVisible = true
-                icShare.isVisible = true
-            }
-        }
+        btnNext.text = getString(R.string.label_recreate)
+        icDownload.isVisible = true
+        icShare.isVisible = true
+
+        bindDownloadProgress(
+            uiState = uiState,
+            uiAction = uiAction
+        )
 
         bindClick(
             uiState = uiState
@@ -329,7 +325,7 @@ class ModelDetailFragment : Fragment() {
             modelData ?: return@setOnClickListener
             if (modelData.renamed) {
                 // TODO: if model is renamed directly save the photos
-                viewModel.createDownloadSession(modelData.name)
+                viewModel.downloadCurrentAvatar(requireContext())
             } else {
                 context?.showToast("Getting folder name")
                 EditFolderNameDialog { typedName ->
@@ -341,7 +337,9 @@ class ModelDetailFragment : Fragment() {
                     }
                     // TODO: move 'save to gallery' to a foreground service
                     context?.showToast("Saving to $typedName")
-                    viewModel.saveModelName(typedName)
+                    viewModel.saveModelName(typedName) {
+                        viewModel.downloadCurrentAvatar(requireContext())
+                    }
                     null
                 }.show(childFragmentManager, "folder-name-dialog")
                 // checkPermissionAndScheduleWorker(uiState.value.modelId!!)
@@ -382,6 +380,27 @@ class ModelDetailFragment : Fragment() {
             try {
                 findNavController().navigateUp()
             } catch (ignore: Exception) {
+            }
+        }
+    }
+
+    private fun FragmentModelDetailBinding.bindDownloadProgress(
+        uiState: StateFlow<ModelDetailState>,
+        uiAction: (ModelDetailUiAction) -> Unit
+    ) {
+        val downloadProgressFlow = uiState.map { it.currentDownloadProgress }
+        viewLifecycleOwner.lifecycleScope.launch {
+            downloadProgressFlow.collectLatest { downloadProgress ->
+                Timber.d("downloadProgress: $downloadProgress")
+                if (downloadProgress != null) {
+                    icDownload.setImageResource(R.drawable.ic_download)
+                    icDownload.isEnabled = false
+                    downloadProgressBar.isVisible = true
+                } else {
+                    icDownload.setImageResource(R.drawable.ic_download_outline)
+                    icDownload.isEnabled = true
+                    downloadProgressBar.isVisible = false
+                }
             }
         }
     }
@@ -439,11 +458,6 @@ class ModelDetailFragment : Fragment() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString(Constant.EXTRA_FROM, from)
-    }
-
     private fun checkStoragePermission(): Boolean {
         return storagePermissions.all {
             ContextCompat.checkSelfPermission(requireContext(), it) ==
@@ -482,6 +496,22 @@ class ModelDetailFragment : Fragment() {
 
     private fun askStoragePermission() {
         storagePermissionLauncher.launch(storagePermissions)
+    }
+
+    private fun openGallery(uri: Uri) {
+        try {
+            val galleryIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, Constant.MIME_TYPE_IMAGE)
+            }
+            if (galleryIntent.resolveActivity(requireActivity().packageManager) != null) {
+                startActivity(galleryIntent)
+            } else {
+                throw IllegalStateException("Unable to open downloaded file!")
+            }
+        } catch (e: Exception) {
+            context?.showToast("Unable to perform this action!")
+            Timber.e(e)
+        }
     }
 
     override fun onResume() {

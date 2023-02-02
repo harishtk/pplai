@@ -16,6 +16,10 @@ fun Fragment.setNavigationResult(result: Bundle?, key: String = "result") {
     findNavController().previousBackStackEntry?.savedStateHandle?.set(key, result)
 }
 
+fun <T> Fragment.clearNavigationResult(key: String = "result") {
+    findNavController().currentBackStackEntry?.savedStateHandle?.remove<T>(key)
+}
+
 class AutoClearedValue<T : Any>(val fragment: Fragment) : ReadWriteProperty<Fragment, T> {
     private var _value: T? = null
 

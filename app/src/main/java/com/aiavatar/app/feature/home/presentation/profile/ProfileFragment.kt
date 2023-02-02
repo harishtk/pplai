@@ -25,6 +25,7 @@ import com.aiavatar.app.databinding.ItemModelListBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
+import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
@@ -223,10 +224,13 @@ class ProfileFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 /*getNavigationResultFlow<Boolean>(LoginFragment.LOGIN_RESULT)?.collectLatest { isLoggedIn ->
-                    if (isLoggedIn != null && isLoggedIn != true) {
-                        safeCall { findNavController().navigateUp() }
+                    if (isLoggedIn != null) {
+                        if (isLoggedIn != true) {
+                            safeCall { findNavController().navigateUp() }
+                        }
+                        clearNavigationResult<Boolean>(LoginFragment.LOGIN_RESULT)
                     }
                 }*/
             }
