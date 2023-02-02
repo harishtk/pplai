@@ -15,7 +15,7 @@ data class DownloadSessionWithFilesEntity(
     val downloadFilesEntity: List<DownloadFilesEntity>
 )
 
-fun DownloadSessionWithFilesEntity.toUploadSessionWithFiles(): DownloadSessionWithFiles {
+fun DownloadSessionWithFilesEntity.toDownloadSessionWithFiles(): DownloadSessionWithFiles {
     return DownloadSessionWithFiles(
         downloadSession = downloadSessionEntity.toDownloadSession(),
         downloadFiles = downloadFilesEntity.map { it.toDownloadFile() }

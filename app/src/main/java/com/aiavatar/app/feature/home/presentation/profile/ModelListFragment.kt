@@ -1,4 +1,4 @@
-package com.aiavatar.app.feature.home.presentation.create
+package com.aiavatar.app.feature.home.presentation.profile
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -12,23 +12,19 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.DiffUtil.ItemCallback
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.*
-import com.aiavatar.app.commons.util.HapticUtil
-import com.aiavatar.app.commons.util.cancelSpinning
-import com.aiavatar.app.commons.util.setSpinning
-import com.aiavatar.app.commons.util.shakeNow
-import com.aiavatar.app.databinding.FragmentAvatarResultBinding
+import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
+import com.aiavatar.app.databinding.FragmentModelListBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
-import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
@@ -38,13 +34,12 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
- * TODO: 1. If storage permission is not granted, show a blocking notification to get the same.
+ * TODO: show download progress
  */
 @AndroidEntryPoint
-class AvatarResultFragment : Fragment() {
+class ModelListFragment : Fragment() {
 
-    private val sharedViewModel: SharedViewModel by activityViewModels()
-    private val viewModel: AvatarResultViewModel by viewModels()
+    private val viewModel: ModelListViewModel by viewModels()
 
     private val storagePermissions: Array<String> = arrayOf(
         Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -58,8 +53,9 @@ class AvatarResultFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         arguments?.apply {
-            getString(Constant.ARG_STATUS_ID, null)?.let { statusId ->
-                viewModel.setAvatarStatusId(statusId)
+            getString(Constant.ARG_MODEL_ID, null)?.let { modelId ->
+                Timber.d("Args: modelId = $modelId")
+                viewModel.setModelId(modelId)
             }
         }
         viewModel.refresh()
@@ -94,17 +90,18 @@ class AvatarResultFragment : Fragment() {
             }
     }
 
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_avatar_result, container, false)
+        return inflater.inflate(R.layout.fragment_model_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentAvatarResultBinding.bind(view)
+        val binding = FragmentModelListBinding.bind(view)
 
         binding.bindState(
             uiState = viewModel.uiState,
@@ -113,18 +110,18 @@ class AvatarResultFragment : Fragment() {
         )
     }
 
-    private fun FragmentAvatarResultBinding.bindState(
-        uiState: StateFlow<AvatarResultState>,
-        uiAction: (AvatarResultUiAction) -> Unit,
-        uiEvent: SharedFlow<AvatarResultUiEvent>,
+    private fun FragmentModelListBinding.bindState(
+        uiState: StateFlow<ModelListState>,
+        uiAction: (ModelListUiAction) -> Unit,
+        uiEvent: SharedFlow<ModelListUiEvent>,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             uiEvent.collectLatest { event ->
                 when (event) {
-                    is AvatarResultUiEvent.ShowToast -> {
+                    is ModelListUiEvent.ShowToast -> {
                         context?.showToast(event.message.asString(requireContext()))
                     }
-                    is AvatarResultUiEvent.StartDownload -> {
+                    is ModelListUiEvent.StartDownload -> {
                         checkPermissionAndScheduleWorker(event.downloadSessionId)
                     }
                 }
@@ -149,21 +146,21 @@ class AvatarResultFragment : Fragment() {
                     if (e != null) {
                         Timber.e(e)
                         uiErr?.let { uiText -> context?.showToast(uiText.asString(requireContext())) }
-                        uiAction(AvatarResultUiAction.ErrorShown(e))
+                        uiAction(ModelListUiAction.ErrorShown(e))
                     }
                 }
             }
         }
 
-        val callback = object : AvatarResultAdapter.Callback {
-            override fun onItemClick(position: Int, data: AvatarResultUiModel.AvatarItem) {
-                gotoAvatarPreview(position, data)
+        val callback = object : ModelListAdapter2.Callback {
+            override fun onItemClick(position: Int, data: ModelListUiModel2.AvatarItem) {
+                gotoModelDetail(position, data)
             }
         }
 
-        val adapter = AvatarResultAdapter(callback)
+        val adapter = ModelListAdapter2(callback)
 
-        val avatarResultListFlow = uiState.map { it.avatarResultList }
+        val avatarResultListFlow = uiState.map { it.modelResultList }
             .distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
             avatarResultListFlow.collectLatest { avatarResultList ->
@@ -179,9 +176,10 @@ class AvatarResultFragment : Fragment() {
             }
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
+                Timber.d("Load state: $loadState")
                 progressBar.isVisible = loadState.refresh is LoadState.Loading &&
                         adapter.itemCount <= 0
-                if (loadState.action is LoadState.Loading) {
+                /*if (loadState.action is LoadState.Loading) {
                     btnNext.setSpinning()
                 } else {
                     btnNext.cancelSpinning()
@@ -189,9 +187,14 @@ class AvatarResultFragment : Fragment() {
                         btnNext.shakeNow()
                         HapticUtil.createError(requireContext())
                     }
-                }
+                }*/
             }
         }
+
+        bindDownloadProgress(
+            uiState = uiState,
+            uiAction = uiAction
+        )
 
         bindClick(
             uiState = uiState,
@@ -199,21 +202,19 @@ class AvatarResultFragment : Fragment() {
         )
     }
 
-    private fun FragmentAvatarResultBinding.bindClick(
-        uiState: StateFlow<AvatarResultState>,
-        uiAction: (AvatarResultUiAction) -> Unit,
+    private fun FragmentModelListBinding.bindClick(
+        uiState: StateFlow<ModelListState>,
+        uiAction: (ModelListUiAction) -> Unit,
     ) {
-        icDownload.isVisible = false
-
-        btnNext.idleText = getString(R.string.label_download)
-        btnNext.setOnClickListener {
-            val avatarStatus = uiState.value.avatarStatus ?: return@setOnClickListener
+        icDownload.isVisible = true
+        icDownload.setOnClickListener {
+            val modelData = uiState.value.modelData ?: return@setOnClickListener
             if (ApplicationDependencies.getPersistentStore().isLogged) {
-                if (avatarStatus.paid) {
+                if (modelData.paid) {
                     // TODO: get folder name
-                    if (avatarStatus.modelRenamedByUser) {
+                    if (modelData.renamed) {
                         // TODO: if model is renamed directly save the photos
-                        viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                        viewModel.createDownloadSession(modelData.name)
                     } else {
                         context?.debugToast("Getting folder name")
                         EditFolderNameDialog { typedName ->
@@ -237,7 +238,7 @@ class AvatarResultFragment : Fragment() {
                             .build()
                         val args = Bundle().apply {
                             putString(Constant.EXTRA_FROM, "login")
-                            putString(Constant.ARG_MODEL_ID, avatarStatus.modelId)
+                            putString(Constant.ARG_MODEL_ID, modelData.id)
                         }
                         navigate(R.id.subscription_plans, args, navOpts)
                     }
@@ -246,7 +247,7 @@ class AvatarResultFragment : Fragment() {
                 findNavController().apply {
                     val args = bundleOf(
                         Constant.EXTRA_FROM to "avatar_result",
-                        Constant.ARG_MODEL_ID to avatarStatus.modelId
+                        Constant.ARG_MODEL_ID to modelData.id
                     )
                     val navOpts = defaultNavOptsBuilder()
                         .setPopUpTo(R.id.avatar_result, inclusive = false, saveState = true)
@@ -256,10 +257,48 @@ class AvatarResultFragment : Fragment() {
             }
         }
 
+        btnNext.text = getString(R.string.label_recreate)
+        btnNext.setOnClickListener {
+            uiState.value.modelId?.let { modelId ->
+                gotoPlans(modelId)
+            }
+        }
+
         icShare.isVisible = true
         icShare.setOnClickListener { }
 
         btnClose.setOnClickListener { findNavController().navigateUp() }
+    }
+
+    private fun FragmentModelListBinding.bindDownloadProgress(
+        uiState: StateFlow<ModelListState>,
+        uiAction: (ModelListUiAction) -> Unit
+    ) {
+        val downloadStatusFlow = uiState.map { it.downloadStatus }
+        viewLifecycleOwner.lifecycleScope.launch {
+            downloadStatusFlow.collectLatest { downloadStatus ->
+                when (downloadStatus) {
+                    DownloadSessionStatus.NOT_STARTED,
+                    DownloadSessionStatus.PARTIALLY_DONE,
+                    DownloadSessionStatus.UNKNOWN -> {
+                        icDownload.setImageResource(R.drawable.ic_download)
+                        icDownload.isEnabled = false
+                        downloadProgressBar.isVisible = true
+                    }
+                    DownloadSessionStatus.COMPLETE,
+                    DownloadSessionStatus.FAILED -> {
+                        icDownload.setImageResource(R.drawable.ic_download_outline)
+                        icDownload.isEnabled = true
+                        downloadProgressBar.isVisible = false
+                    }
+                    null -> {
+                        icDownload.setImageResource(R.drawable.ic_download_outline)
+                        icDownload.isEnabled = true
+                        downloadProgressBar.isVisible = false
+                    }
+                }
+            }
+        }
     }
 
     private fun checkFolderName(name: String) {
@@ -271,6 +310,7 @@ class AvatarResultFragment : Fragment() {
             WorkUtil.scheduleDownloadWorker(requireContext(), downloadSessionId)
             Timber.d("Download scheduled: $downloadSessionId")
             context?.debugToast("Downloading.. check notifications")
+            viewModel.observeDownloadStatus(downloadSessionId)
             /*if (!ApplicationDependencies.getPersistentStore().isLogged) {
                 gotoHome()
             }*/
@@ -293,9 +333,10 @@ class AvatarResultFragment : Fragment() {
         }
     }
 
-    private fun gotoAvatarPreview(position: Int, data: AvatarResultUiModel.AvatarItem) {
-        Timber.d("gotoAvatarPreview: ${data.avatar._id}")
-        val statusId = viewModel.getStatusId()
+    private fun gotoModelDetail(position: Int, data: ModelListUiModel2.AvatarItem) {
+        Timber.d("gotoModelDetail: ${data.avatar._id}")
+        val modelId = viewModel.getModelId()
+
         try {
             findNavController().apply {
                 val navOpts = defaultNavOptsBuilder()
@@ -303,13 +344,26 @@ class AvatarResultFragment : Fragment() {
                     .build()
                 val args = Bundle().apply {
                     putString(Constant.EXTRA_FROM, "result_preview")
-                    statusId?.let { putString(AvatarPreviewFragment.ARG_STATUS_ID, it) }
-                    data.avatar._id?.let { putLong(AvatarPreviewFragment.ARG_JUMP_TO_ID, it) }
-                    putString(AvatarPreviewFragment.ARG_JUMP_TO_IMAGE_NAME, data.avatar.remoteFile)
+                    modelId?.let { putString(ModelDetailFragment.ARG_MODEL_ID, it) }
+                    data.avatar._id?.let { putLong(ModelDetailFragment.ARG_JUMP_TO_ID, it) }
+                    putString(ModelDetailFragment.ARG_JUMP_TO_IMAGE_NAME, data.avatar.remoteFile)
                 }
-                navigate(R.id.avatar_preview, args, navOpts)
+                navigate(R.id.model_detail, args, navOpts)
             }
         } catch (ignore: Exception) {
+        }
+    }
+
+    private fun gotoPlans(modelId: String) = safeCall {
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder()
+                .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
+                .build()
+            val args = Bundle().apply {
+                putString(Constant.EXTRA_FROM, "login")
+                putString(Constant.ARG_MODEL_ID, modelId)
+            }
+            navigate(R.id.subscription_plans, args, navOpts)
         }
     }
 
@@ -326,9 +380,9 @@ class AvatarResultFragment : Fragment() {
 
 }
 
-class AvatarResultAdapter(
+class ModelListAdapter2(
     private val callback: Callback,
-) : ListAdapter<AvatarResultUiModel, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+) : ListAdapter<ModelListUiModel2, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return ItemViewHolder.from(parent)
     }
@@ -336,7 +390,7 @@ class AvatarResultAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val model = getItem(position)
         if (holder is ItemViewHolder) {
-            model as AvatarResultUiModel.AvatarItem
+            model as ModelListUiModel2.AvatarItem
             holder.bind(model, callback)
         }
     }
@@ -345,7 +399,7 @@ class AvatarResultAdapter(
         private val binding: ItemSquareImageBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(data: AvatarResultUiModel.AvatarItem, callback: Callback) = with(binding) {
+        fun bind(data: ModelListUiModel2.AvatarItem, callback: Callback) = with(binding) {
             Glide.with(view1)
                 .load(data.avatar.remoteFile)
                 .placeholder(R.drawable.loading_animation)
@@ -369,26 +423,28 @@ class AvatarResultAdapter(
     }
 
     interface Callback {
-        fun onItemClick(position: Int, data: AvatarResultUiModel.AvatarItem)
+        fun onItemClick(position: Int, data: ModelListUiModel2.AvatarItem)
     }
 
     companion object {
 
-        val DIFF_CALLBACK = object : ItemCallback<AvatarResultUiModel>() {
+        val DIFF_CALLBACK = object : DiffUtil.ItemCallback<ModelListUiModel2>() {
             override fun areItemsTheSame(
-                oldItem: AvatarResultUiModel,
-                newItem: AvatarResultUiModel,
+                oldItem: ModelListUiModel2,
+                newItem: ModelListUiModel2,
             ): Boolean {
-                return (oldItem is AvatarResultUiModel.AvatarItem && newItem is AvatarResultUiModel.AvatarItem &&
+                return (oldItem is ModelListUiModel2.AvatarItem && newItem is ModelListUiModel2.AvatarItem &&
                         oldItem.avatar._id == newItem.avatar._id)
             }
 
             override fun areContentsTheSame(
-                oldItem: AvatarResultUiModel,
-                newItem: AvatarResultUiModel,
+                oldItem: ModelListUiModel2,
+                newItem: ModelListUiModel2,
             ): Boolean {
                 return true
             }
         }
+
+
     }
 }

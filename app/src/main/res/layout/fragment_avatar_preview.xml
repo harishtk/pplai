@@ -59,17 +59,6 @@
             app:layout_constraintStart_toStartOf="@id/catalog_preview_pager"
             app:layout_constraintEnd_toEndOf="@id/catalog_preview_pager" />
 
-        <!--<me.relex.circleindicator.CircleIndicator3
-            android:id="@+id/circle_indicator"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:padding="5dp"
-            android:layout_marginVertical="16dp"
-            android:visibility="visible"
-            app:layout_constraintTop_toBottomOf="@id/catalog_preview_pager"
-            app:layout_constraintStart_toStartOf="@id/catalog_preview_pager"
-            app:layout_constraintEnd_toEndOf="@id/catalog_preview_pager"/>-->
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/avatar_scroller_list"
             android:layout_width="match_parent"

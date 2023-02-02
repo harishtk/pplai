@@ -7,7 +7,17 @@ import com.aiavatar.app.core.domain.model.DownloadFile
 
 @Entity(
     tableName = DownloadFilesTable.name,
-    indices = [Index(name = "download_session_index", value = [DownloadFilesTable.Columns.SESSION_ID])],
+    indices = [
+        Index(
+            name = "download_session_index",
+            value = [DownloadFilesTable.Columns.SESSION_ID]
+        ),
+        Index(
+            name = "download_file_uri_index",
+            value = [DownloadFilesTable.Columns.FILE_URI_STRING],
+            unique = true
+        )
+    ],
     foreignKeys = [
         ForeignKey(
             entity = DownloadSessionEntity::class,
@@ -77,22 +87,22 @@ object DownloadFilesTable {
     const val name: String = AppDatabase.TABLE_DOWNLOAD_FILES
 
     object Columns {
-        const val ID                    = "id"
-        const val SESSION_ID            = "session_id"
-        const val FILE_URI_STRING       = "file_uri_string"
-        const val STATUS                = "status"
-        const val PROGRESS              = "progress"
-        const val DOWNLOADED            = "downloaded"
-        const val DOWNLOADED_FILENAME   = "downloaded_filename"
-        const val DOWNLOADED_AT         = "downloaded_at"
-        const val DOWNLOADED_SIZE       = "downloaded_size"
+        const val ID = "id"
+        const val SESSION_ID = "session_id"
+        const val FILE_URI_STRING = "file_uri_string"
+        const val STATUS = "status"
+        const val PROGRESS = "progress"
+        const val DOWNLOADED = "downloaded"
+        const val DOWNLOADED_FILENAME = "downloaded_filename"
+        const val DOWNLOADED_AT = "downloaded_at"
+        const val DOWNLOADED_SIZE = "downloaded_size"
     }
 }
 
 enum class DownloadFileStatus(val status: Int) {
     NOT_STARTED(0), DOWNLOADING(1), COMPLETE(2), FAILED(3), UNKNOWN(-1);
 
-    companion object  {
+    companion object {
         fun fromRawValue(rawValue: Int): DownloadFileStatus {
             return when (rawValue) {
                 0 -> NOT_STARTED

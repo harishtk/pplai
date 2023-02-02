@@ -1,18 +1,11 @@
-package com.aiavatar.app.feature.home.presentation.catalog
+package com.aiavatar.app.feature.home.presentation.create
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.net.Uri
+import android.content.Context
 import android.os.Bundle
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -25,21 +18,20 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.CompositePageTransformer
 import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
-import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.aiavatar.app.*
-import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
+import com.aiavatar.app.databinding.FragmentAvatarPreviewBinding
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
+import com.aiavatar.app.databinding.LargePresetPreviewBinding
+import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
+import com.aiavatar.app.feature.home.presentation.catalog.*
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.feature.home.presentation.util.AutoCenterLayoutManger
 import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
-import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
-import com.zhpan.indicator.enums.IndicatorSlideMode
-import com.zhpan.indicator.enums.IndicatorStyle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -47,25 +39,10 @@ import timber.log.Timber
 import kotlin.math.abs
 
 @AndroidEntryPoint
-class ModelDetailFragment : Fragment() {
+class AvatarPreviewFragment : Fragment() {
 
-    private var _binding: FragmentModelDetailBinding? = null
-    private val binding: FragmentModelDetailBinding
-        get() = _binding!!
+    private val viewModel: AvatarPreviewViewModel by viewModels()
 
-    private val viewModel: ModelDetailViewModel by viewModels()
-
-    private val storagePermissions: Array<String> = arrayOf(
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
-    )
-
-    private lateinit var storagePermissionLauncher: ActivityResultLauncher<Array<String>>
-    private var mStoragePermissionContinuation: Continuation? = null
-
-    private var isSettingsLaunched = false
-
-    private lateinit var from: String
     private var jumpToId: Long = -1
     private var jumpToImageName: String? = null
     private var jumpToPosition: Int = -1
@@ -75,47 +52,15 @@ class ModelDetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        storagePermissionLauncher =
-            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result: Map<String, Boolean> ->
-                val deniedList: List<String> = result.filter { !it.value }.map { it.key }
-                when {
-                    deniedList.isNotEmpty() -> {
-                        val map = deniedList.groupBy { permission ->
-                            if (shouldShowRequestPermissionRationale(permission)) {
-                                Constant.PERMISSION_DENIED
-                            } else {
-                                Constant.PERMISSION_PERMANENTLY_DENIED
-                            }
-                        }
-                        map[Constant.PERMISSION_DENIED]?.let {
-                            requireContext().showToast("Storage permission is required to upload photos")
-                            // TODO: show storage rationale
-                            showStoragePermissionRationale(false)
-                        }
-                        map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
-                            requireContext().showToast("Storage permission is required to upload photos")
-                            // TODO: show storage rationale permanent
-                            showStoragePermissionRationale(true)
-                        }
-                    }
-
-                    else -> {
-                        mStoragePermissionContinuation?.invoke()
-                        mStoragePermissionContinuation = null
-                    }
-                }
-            }
-
         arguments?.apply {
-            from = getString(Constant.EXTRA_FROM, "unknown")
-            val modelId = getString(ARG_MODEL_ID, null)
-            jumpToId = getLong(ARG_JUMP_TO_ID, -1L)
-            jumpToImageName = getString(ARG_JUMP_TO_IMAGE_NAME, null)
+            val modelId = getString(ModelDetailFragment.ARG_MODEL_ID, null)
+            val statusId = getString(ModelDetailFragment.ARG_STATUS_ID, null)
+            jumpToImageName = getString(ModelDetailFragment.ARG_JUMP_TO_IMAGE_NAME, null)
 
-            Timber.d("Args: model id = $modelId jumpTo = $jumpToId")
+            Timber.d("Args: model id = $modelId status id = $statusId jumpTo = $jumpToId")
 
-            if (modelId?.isNotBlank() == true) {
-                viewModel.setModelId(modelId)
+            if (statusId?.isNotBlank() == true) {
+                viewModel.setStatusId(statusId)
             }
 
             viewModel.refresh()
@@ -125,19 +70,16 @@ class ModelDetailFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_model_detail, container, false)
+        return inflater.inflate(R.layout.fragment_avatar_preview, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentModelDetailBinding.bind(view)
+        val binding = FragmentAvatarPreviewBinding.bind(view)
 
-        if (savedInstanceState?.containsKey(Constant.EXTRA_FROM) == true) {
-            from = savedInstanceState.getString(Constant.EXTRA_FROM, "unknown")
-        }
-
+        // TODO: bind view
         binding.bindState(
             uiState = viewModel.uiState,
             uiAction = viewModel.accept,
@@ -147,25 +89,22 @@ class ModelDetailFragment : Fragment() {
         handleBackPressed()
     }
 
-    private fun FragmentModelDetailBinding.bindState(
-        uiState: StateFlow<ModelDetailState>,
-        uiAction: (ModelDetailUiAction) -> Unit,
-        uiEvent: SharedFlow<ModelDetailUiEvent>,
+    private fun FragmentAvatarPreviewBinding.bindState(
+        uiState: StateFlow<AvatarPreviewState>,
+        uiAction: (AvatarPreviewUiAction) -> Unit,
+        uiEvent: SharedFlow<AvatarPreviewUiEvent>
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             uiEvent.collectLatest { event ->
                 when (event) {
-                    is ModelDetailUiEvent.ShowToast -> {
+                    is AvatarPreviewUiEvent.ShowToast -> {
                         context?.showToast(event.message.asString(requireContext()))
-                    }
-                    is ModelDetailUiEvent.StartDownload -> {
-                        checkPermissionAndScheduleWorker(event.downloadSessionId)
                     }
                 }
             }
         }
 
-        val catalogPresetAdapter = CatalogPagerAdapter(requireContext())
+        val catalogPresetAdapter = AvatarPreviewPagerAdapter(requireContext())
 
         val pageTransformer = CompositePageTransformer().apply {
             addTransformer(MarginPageTransformer(80))
@@ -191,16 +130,6 @@ class ModelDetailFragment : Fragment() {
         val indicatorSizePx = resources.getDimensionPixelSize(R.dimen.tab_indicator_size)
         val normalColor = resources.getColor(R.color.grey_divider, null)
         val checkedColor = resources.getColor(R.color.white, null)
-        binding.indicatorView.apply {
-            setSliderColor(checkedColor, checkedColor)
-            // setCheckedSlideWidth((indicatorSizePx * 2).toFloat())
-            // setSliderWidth(indicatorSizePx.toFloat())
-            setSliderWidth(indicatorSizePx.toFloat(), (indicatorSizePx * 3).toFloat())
-            setSliderHeight(indicatorSizePx.toFloat())
-            setSlideMode(IndicatorSlideMode.SCALE)
-            setIndicatorStyle(IndicatorStyle.ROUND_RECT)
-            notifyDataChanged()
-        }
 
         // TODO: get catalog detail list
         val autoCenterLayoutManger = AutoCenterLayoutManger(
@@ -210,7 +139,7 @@ class ModelDetailFragment : Fragment() {
         )
         avatarScrollerList.layoutManager = autoCenterLayoutManger
 
-        catalogPreviewPager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
+        catalogPreviewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 // setUpCurrentIndicator(position)
@@ -292,22 +221,11 @@ class ModelDetailFragment : Fragment() {
                             }
                     }
                 }
-                setUpIndicator(avatarList.size)
             }
         }
-
-        when (from) {
-            "result_preview" -> {
-                btnNext.text = getString(R.string.label_download)
-                icDownload.isVisible = false
-                icShare.isVisible = true
-            }
-            "my_models" -> {
-                btnNext.text = getString(R.string.label_recreate)
-                icDownload.isVisible = true
-                icShare.isVisible = true
-            }
-        }
+        btnNext.text = getString(R.string.label_download)
+        icDownload.isVisible = false
+        icShare.isVisible = true
 
         bindClick(
             uiState = uiState
@@ -318,42 +236,69 @@ class ModelDetailFragment : Fragment() {
         )
     }
 
-    private fun FragmentModelDetailBinding.bindClick(uiState: StateFlow<ModelDetailState>) {
+    private fun FragmentAvatarPreviewBinding.bindClick(uiState: StateFlow<AvatarPreviewState>) {
         icShare.setOnClickListener {
             context?.showToast("Coming soon!")
         }
 
-        icDownload.setOnClickListener {
-            val modelData = uiState.value.modelData
-            Timber.d("avatarStatus: $modelData")
-            modelData ?: return@setOnClickListener
-            if (modelData.renamed) {
-                // TODO: if model is renamed directly save the photos
-                viewModel.createDownloadSession(modelData.name)
+        icDownload.isVisible = false
+
+        btnNext.text = getString(R.string.label_download)
+        btnNext.setOnClickListener {
+            val avatarStatus = uiState.value.avatarStatusWithFiles?.avatarStatus ?: return@setOnClickListener
+            if (ApplicationDependencies.getPersistentStore().isLogged) {
+                if (avatarStatus.paid) {
+                    // TODO: get folder name
+                    if (avatarStatus.modelRenamedByUser) {
+                        // TODO: if model is renamed directly save the photos
+                        viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                    } else {
+                        context?.debugToast("Getting folder name")
+                        EditFolderNameDialog { typedName ->
+                            if (typedName.isBlank()) {
+                                return@EditFolderNameDialog "Name cannot be empty!"
+                            }
+                            if (typedName.length < 4) {
+                                return@EditFolderNameDialog "Name too short"
+                            }
+                            // TODO: move 'save to gallery' to a foreground service
+                            context?.showToast("Saving to $typedName")
+                            viewModel.saveModelName(typedName)
+                            null
+                        }.show(childFragmentManager, "folder-name-dialog")
+                    }
+                } else {
+                    // TODO: goto payment
+                    findNavController().apply {
+                        val navOpts = defaultNavOptsBuilder()
+                            .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
+                            .build()
+                        val args = Bundle().apply {
+                            putString(Constant.EXTRA_FROM, "login")
+                            putString(Constant.ARG_MODEL_ID, avatarStatus.modelId)
+                        }
+                        navigate(R.id.subscription_plans, args, navOpts)
+                    }
+                }
             } else {
-                context?.showToast("Getting folder name")
-                EditFolderNameDialog { typedName ->
-                    if (typedName.isBlank()) {
-                        return@EditFolderNameDialog "Name cannot be empty!"
-                    }
-                    if (typedName.length < 4) {
-                        return@EditFolderNameDialog "Name too short"
-                    }
-                    // TODO: move 'save to gallery' to a foreground service
-                    context?.showToast("Saving to $typedName")
-                    viewModel.saveModelName(typedName)
-                    null
-                }.show(childFragmentManager, "folder-name-dialog")
-                // checkPermissionAndScheduleWorker(uiState.value.modelId!!)
+                findNavController().apply {
+                    val args = bundleOf(
+                        Constant.EXTRA_FROM to "avatar_result",
+                        Constant.ARG_MODEL_ID to avatarStatus.modelId
+                    )
+                    val navOpts = defaultNavOptsBuilder()
+                        .setPopUpTo(R.id.avatar_result, inclusive = false, saveState = true)
+                        .build()
+                    navigate(R.id.login_fragment, args, navOpts)
+                }
             }
         }
 
-        btnNext.setOnClickListener {
-            context?.showToast("Coming soon!")
-        }
+        icShare.isVisible = true
+        icShare.setOnClickListener { }
     }
 
-    private fun FragmentModelDetailBinding.bindToolbar(uiState: StateFlow<ModelDetailState>) {
+    private fun FragmentAvatarPreviewBinding.bindToolbar(uiState: StateFlow<AvatarPreviewState>) {
         /*val catalogTitleFlow = uiState.mapNotNull { it.category?.categoryName }
         viewLifecycleOwner.lifecycleScope.launch {
             catalogTitleFlow.collectLatest { catalogTitle ->
@@ -361,13 +306,14 @@ class ModelDetailFragment : Fragment() {
             }
         }*/
 
-        val modelDataFlow = uiState.map { it.modelData }
+        val avatarStatusWithFilesFlow = uiState.map { it.avatarStatusWithFiles }
         viewLifecycleOwner.lifecycleScope.launch {
-            modelDataFlow.collectLatest { modelData ->
-                if (modelData != null) {
+            avatarStatusWithFilesFlow.collectLatest { avatarStatusWithFiles ->
+                Timber.d("status: $avatarStatusWithFiles")
+                if (avatarStatusWithFiles != null) {
                     toolbarIncluded.toolbarTitle.apply {
                         isVisible = true
-                        text = modelData.name
+                        text = avatarStatusWithFiles.avatarStatus.modelName
                     }
                 } else {
                     toolbarIncluded.toolbarTitle.apply {
@@ -383,112 +329,6 @@ class ModelDetailFragment : Fragment() {
                 findNavController().navigateUp()
             } catch (ignore: Exception) {
             }
-        }
-    }
-
-    private fun setUpIndicator(count: Int) {
-        binding.indicatorView.setPageSize(count)
-        binding.indicatorView.notifyDataChanged()
-        /*val indicators = arrayOfNulls<View>(count)
-        *//*val displayMetrics = Resources.getSystem().displayMetrics
-        val tabIndicatorWidth = displayMetrics.widthPixels * 0.1
-        val tabIndicatorHeight = tabIndicatorWidth * 0.1*//*
-        val tabIndicatorWidth = resources.getDimensionPixelSize(R.dimen.tab_indicator_size)
-        val tabIndicatorHeight = resources.getDimensionPixelSize(R.dimen.tab_indicator_size)
-        val layoutParams: LinearLayout.LayoutParams =
-            LinearLayout.LayoutParams(tabIndicatorWidth.toInt(), tabIndicatorHeight.toInt(), 1f)
-        if (binding.pagerIndicators.orientation == LinearLayout.HORIZONTAL) {
-            layoutParams.setMargins(10, 0, 10, 0)
-        } else {
-            layoutParams.setMargins(0, 10, 0, 10)
-        }
-
-//        View(requireContext()).apply {
-//            this.background = ResourcesCompat.getDrawable(resources, R.drawable.grey_curved_bg, null)
-//            this.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.white, null))
-//            this.layoutParams = layoutParams
-//            this.layoutParams.width = tabIndicatorWidth * 2
-//        }.also { maskedIndicator ->
-//            binding.pagerIndicators.addView(maskedIndicator)
-//        }
-
-        for (i in indicators.indices) {
-            indicators[i] = View(requireContext())
-            indicators[i]?.apply {
-                // this.setImageResource(R.drawable.grey_curved_bg)
-                this.background = ResourcesCompat.getDrawable(resources, R.drawable.grey_curved_bg, null)
-                this.backgroundTintList = (resources.getColorStateList(R.color.selector_indicator, null))
-                this.layoutParams = layoutParams
-            }
-            binding.pagerIndicators.addView(indicators[i])
-        }*/
-    }
-
-    private fun checkPermissionAndScheduleWorker(downloadSessionId: Long) {
-        val cont: Continuation = {
-            WorkUtil.scheduleDownloadWorker(requireContext(), downloadSessionId)
-            context?.showToast("Downloading.. check notifications")
-            Timber.d("Download scheduled: $downloadSessionId")
-        }
-
-        if (checkStoragePermission()) {
-            cont()
-        } else {
-            mStoragePermissionContinuation = cont
-            askStoragePermission()
-        }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString(Constant.EXTRA_FROM, from)
-    }
-
-    private fun checkStoragePermission(): Boolean {
-        return storagePermissions.all {
-            ContextCompat.checkSelfPermission(requireContext(), it) ==
-                    PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    private fun showStoragePermissionRationale(openSettings: Boolean) {
-        /* Simple permission rationale dialog */
-        SimpleDialog(
-            context = requireContext(),
-            popupIcon = R.drawable.ic_files_permission,
-            titleText = getString(R.string.permissions_required),
-            message = getString(R.string.files_permission_des),
-            positiveButtonText = "Settings",
-            positiveButtonAction = {
-                if (openSettings) {
-                    /* go to settings */ openSettings()
-                } else {
-                    askStoragePermission()
-                }
-            },
-            cancellable = true,
-            showCancelButton = true
-        ).show()
-    }
-
-    private fun openSettings() {
-        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val uri: Uri = Uri.fromParts("package", requireActivity().packageName, null)
-        intent.data = uri
-        startActivity(intent)
-        isSettingsLaunched = true
-    }
-
-    private fun askStoragePermission() {
-        storagePermissionLauncher.launch(storagePermissions)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (isSettingsLaunched) {
-            // gotoCamera()
-            isSettingsLaunched = false
         }
     }
 
@@ -509,8 +349,6 @@ class ModelDetailFragment : Fragment() {
     }
 
     companion object {
-        val TAG = ModelDetailFragment::class.java.simpleName
-
         private const val SMOOTH_SCROLL_THRESHOLD = 20
 
         const val ARG_MODEL_ID = "com.aiavatar.app.args.MODEL_ID"
@@ -646,6 +484,134 @@ class AvatarScrollAdapter(
                 return updatePayload
             }
 
+        }
+    }
+}
+
+class AvatarPreviewPagerAdapter(
+    private val context: Context,
+    private val onCardClick: (position: Int) -> Unit = { }
+): ListAdapter<SelectableAvatarUiModel, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return ItemViewHolder.from(parent)
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val model = getItem(position)
+        if (holder is ItemViewHolder) {
+            model as SelectableAvatarUiModel.Item
+            holder.bind(model.modelAvatar, model.selected, onCardClick)
+        }
+    }
+
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        if (payloads.isNotEmpty()) {
+            if (isValidPayload(payloads)) {
+                val bundle = (payloads.firstOrNull() as? Bundle) ?: kotlin.run {
+                    super.onBindViewHolder(holder, position, payloads); return
+                }
+                if (bundle.containsKey(SELECTION_TOGGLE_PAYLOAD)) {
+                    (holder as? ItemViewHolder)?.toggleSelection(bundle.getBoolean(
+                        SELECTION_TOGGLE_PAYLOAD, false))
+                }
+            } else {
+                super.onBindViewHolder(holder, position, payloads)
+            }
+        } else {
+            super.onBindViewHolder(holder, position, payloads)
+        }
+    }
+
+    private fun isValidPayload(payloads: MutableList<Any>?): Boolean {
+        return (payloads?.firstOrNull() as? Bundle)?.keySet()?.any {
+            it == SELECTION_TOGGLE_PAYLOAD
+        } ?: false
+    }
+
+    class ItemViewHolder private constructor(
+        private val binding: LargePresetPreviewBinding
+    ) : RecyclerView.ViewHolder(binding.root), Recyclable {
+
+        fun bind(listAvatar: ModelAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
+            title.text = listAvatar.remoteFile
+            Glide.with(previewImage)
+                .load(listAvatar.remoteFile)
+                .placeholder(R.color.transparent_black)
+                .error(R.color.white)
+                .into(previewImage)
+
+            // toggleSelection(selected)
+
+            previewImage.setOnClickListener { onCardClick(adapterPosition) }
+        }
+
+        fun toggleSelection(selected: Boolean) = with(binding) {
+            previewImage.alpha = if (selected) {
+                1.0F
+            } else {
+                0.0F
+            }
+        }
+
+        override fun onViewRecycled() {
+            binding.previewImage.let { imageView ->
+                Glide.with(imageView).clear(null)
+                imageView.setImageDrawable(null)
+            }
+        }
+
+        companion object {
+            fun from(parent: ViewGroup): ItemViewHolder {
+                val itemView = LayoutInflater.from(parent.context).inflate(
+                    R.layout.large_preset_preview,
+                    parent,
+                    false
+                )
+                val binding = LargePresetPreviewBinding.bind(itemView)
+                return ItemViewHolder(binding)
+            }
+        }
+    }
+
+    companion object {
+        private const val SELECTION_TOGGLE_PAYLOAD = "selection_toggle"
+
+        val DIFF_CALLBACK = object : DiffUtil.ItemCallback<SelectableAvatarUiModel>() {
+            override fun areItemsTheSame(
+                oldItem: SelectableAvatarUiModel,
+                newItem: SelectableAvatarUiModel,
+            ): Boolean {
+                return (oldItem is SelectableAvatarUiModel.Item && newItem is SelectableAvatarUiModel.Item &&
+                        oldItem.modelAvatar._id == newItem.modelAvatar._id)
+            }
+
+            override fun areContentsTheSame(
+                oldItem: SelectableAvatarUiModel,
+                newItem: SelectableAvatarUiModel,
+            ): Boolean {
+                return (oldItem is SelectableAvatarUiModel.Item && newItem is SelectableAvatarUiModel.Item &&
+                        oldItem.modelAvatar == newItem.modelAvatar && oldItem.selected == newItem.selected)
+            }
+
+            override fun getChangePayload(
+                oldItem: SelectableAvatarUiModel,
+                newItem: SelectableAvatarUiModel
+            ): Any? {
+                /*val updatePayload = bundleOf()
+                when {
+                    oldItem is SelectableAvatarUiModel.Item && newItem is SelectableAvatarUiModel.Item -> {
+                        if (oldItem.selected != newItem.selected) {
+                            updatePayload.putBoolean(SELECTION_TOGGLE_PAYLOAD, newItem.selected)
+                        }
+                    }
+                }
+                return updatePayload*/
+                return null
+            }
         }
     }
 }

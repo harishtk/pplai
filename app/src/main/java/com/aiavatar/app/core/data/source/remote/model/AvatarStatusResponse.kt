@@ -35,6 +35,8 @@ data class AvatarStatusDto(
     val modelId: String,
     @SerializedName("eta")
     val eta: Int,
+    @SerializedName("modelName")
+    val modelName: String?
 )
 
 fun AvatarStatusDto.toAvatarStatus(): AvatarStatus {
@@ -48,6 +50,7 @@ fun AvatarStatusDto.toAvatarStatus(): AvatarStatus {
         eta = eta
     ).also {
         it.avatarStatusId = id
+        it.modelName = modelName
     }
 }
 

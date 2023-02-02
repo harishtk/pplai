@@ -25,7 +25,6 @@ import com.aiavatar.app.databinding.ItemModelListBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
-import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.pepulnow.app.data.LoadState
@@ -35,7 +34,6 @@ import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
-import kotlin.math.log
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment() {
@@ -111,7 +109,7 @@ class ProfileFragment : Fragment() {
                 if (data.modelList.statusId != "0") {
                     gotoAvatarStatus(statusId)
                 } else {
-                    gotoAvatarResult(data.modelList.modelData?.id!!)
+                    gotoModelListResult(data.modelList.modelData?.id!!)
                 }
             }
         }
@@ -140,6 +138,9 @@ class ProfileFragment : Fragment() {
                         swipeRefreshLayout.isRefreshing = false
                     }
                 }
+
+                retryButton.isVisible = loadState.refresh is LoadState.Error &&
+                        adapter.itemCount <= 0
             }
         }
 
@@ -266,14 +267,14 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun gotoAvatarResult(modelId: String) = safeCall {
+    private fun gotoModelListResult(modelId: String) = safeCall {
         findNavController().apply {
             val navOptions = defaultNavOptsBuilder().build()
             val args = Bundle().apply {
                 putString(Constant.EXTRA_FROM, "result_preview")
                 putString(Constant.ARG_MODEL_ID, modelId)
             }
-            navigate(R.id.avatar_result, args, navOptions)
+            navigate(R.id.model_list, args, navOptions)
         }
     }
 
@@ -291,7 +292,9 @@ class ProfileFragment : Fragment() {
         val modelId = data.modelList.modelData?.id!!
         try {
             findNavController().apply {
-                val navOpts = defaultNavOptsBuilder().build()
+                val navOpts = defaultNavOptsBuilder()
+                    .setPopExitAnim(R.anim.slide_out_right)
+                    .build()
                 val args = Bundle().apply {
                     putString(Constant.EXTRA_FROM, from)
                     putString(ModelDetailFragment.ARG_MODEL_ID, modelId)

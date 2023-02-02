@@ -1,9 +1,8 @@
-package com.aiavatar.app.feature.home.presentation.catalog
+package com.aiavatar.app.feature.home.presentation.create
 
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
@@ -12,13 +11,14 @@ import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.*
+import com.aiavatar.app.core.data.source.local.model.toAvatarStatusWithFiles
+import com.aiavatar.app.core.domain.model.AvatarStatusWithFiles
 import com.aiavatar.app.core.domain.model.DownloadFile
 import com.aiavatar.app.core.domain.model.DownloadSession
+import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
-import com.aiavatar.app.feature.home.domain.model.ModelData
-import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.nullAsEmpty
 import com.pepulnow.app.data.LoadState
@@ -34,22 +34,22 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class ModelDetailViewModel @Inject constructor(
+class AvatarPreviewViewModel @Inject constructor(
     private val appRepository: AppRepository,
     private val homeRepository: HomeRepository,
     private val appDatabase: AppDatabase,
 ): ViewModel() {
 
-    private val _uiState = MutableStateFlow<ModelDetailState>(ModelDetailState())
-    val uiState: StateFlow<ModelDetailState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<AvatarPreviewState>(AvatarPreviewState())
+    val uiState: StateFlow<AvatarPreviewState> = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<ModelDetailUiEvent>()
+    private val _uiEvent = MutableSharedFlow<AvatarPreviewUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
     private var selectedAvatarPosition: Int = 0
     private val selectedToggleFlow = MutableStateFlow(false)
 
-    val accept: (ModelDetailUiAction) -> Unit
+    val accept: (AvatarPreviewUiAction) -> Unit
 
     private var avatarsFetchJob: Job? = null
     private var avatarStatusJob: Job? = null
@@ -81,12 +81,32 @@ class ModelDetailViewModel @Inject constructor(
             }
         }.launchIn(viewModelScope)
 
+        uiState.mapNotNull { it.statusId }
+            .distinctUntilChanged()
+            .flatMapLatest { statusId ->
+                appDatabase.avatarStatusDao().getAvatarStatus(statusId = statusId)
+            }.onEach { avatarStatusWithFilesEntity ->
+                Timber.d("onEach: 1")
+                if (avatarStatusWithFilesEntity != null) {
+                    val avatarResultList = avatarStatusWithFilesEntity.avatarFilesEntity.map {
+                        SelectableAvatarUiModel.Item(it.toModelAvatar(), selected = false)
+                    }
+                    _uiState.update { state ->
+                        state.copy(
+                            avatarStatusWithFiles = avatarStatusWithFilesEntity.toAvatarStatusWithFiles(),
+                            avatarList = avatarResultList
+                        )
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+
         accept = { uiAction -> onUiAction(uiAction) }
     }
 
-    private fun onUiAction(action: ModelDetailUiAction) {
+    private fun onUiAction(action: AvatarPreviewUiAction) {
         when (action) {
-            is ModelDetailUiAction.ErrorShown -> {
+            is AvatarPreviewUiAction.ErrorShown -> {
                 _uiState.update { state ->
                     state.copy(
                         exception = null,
@@ -98,17 +118,17 @@ class ModelDetailViewModel @Inject constructor(
     }
 
     fun refresh() {
-        uiState.value.modelId?.let { modelId ->
-            val request = GetAvatarsRequest(modelId = modelId)
-            getModelDetail(modelId)
-            getAvatarsForModel(request)
+        uiState.value.statusId?.let { statusId ->
+            val request = AvatarStatusRequest(id = statusId)
+            getStatus(request)
+            // getAvatarsForStatus(statusId)
         }
     }
 
-    fun setModelId(modelId: String) {
+    fun setStatusId(statusId: String) {
         _uiState.update { state ->
             state.copy(
-                modelId = modelId
+                statusId = statusId
             )
         }
     }
@@ -167,7 +187,7 @@ class ModelDetailViewModel @Inject constructor(
     }
 
     fun getModelId(): String? {
-        return uiState.value.modelId
+        return uiState.value.avatarStatusWithFiles?.avatarStatus?.modelId
     }
 
     fun toggleSelection(position: Int) {
@@ -176,41 +196,17 @@ class ModelDetailViewModel @Inject constructor(
         selectedToggleFlow.update { selectedToggleFlow.value.not() }
     }
 
-    private fun getModelDetail(modelId: String) {
-        modelDetailFetchJob?.cancel(CancellationException("New request"))
-        modelDetailFetchJob = viewModelScope.launch {
-            homeRepository.getModel2(modelId).collectLatest { result ->
-                when (result) {
-                    is Result.Loading -> { /* Noop */ }
-                    is Result.Error -> {
-                        // Something went wrong
-                    }
-                    is Result.Success -> {
-                        _uiState.update { state ->
-                            state.copy(
-                                modelData = result.data
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun getAvatarsForModel(request: GetAvatarsRequest) {
-        if (avatarsFetchJob?.isActive == true) {
-            val t = IllegalStateException("A fetch job is already active. Ignoring request")
-            if (BuildConfig.DEBUG) {
-                Timber.w(t)
-            }
+    private fun getStatus(request: AvatarStatusRequest) {
+        if (avatarStatusJob?.isActive == true) {
+            val t = IllegalStateException("A status request job is already active. Ignoring request.")
+            Timber.e(t)
             return
         }
-
-        avatarsFetchJob?.cancel(CancellationException("New request")) // just in case
-        avatarsFetchJob = viewModelScope.launch {
-            homeRepository.getAvatars2(request, forceRefresh = false).collectLatest { result ->
+        avatarStatusJob?.cancel(CancellationException("New request")) // just in case
+        avatarStatusJob = viewModelScope.launch {
+            appRepository.avatarStatus(request).collectLatest { result ->
                 when (result) {
-                    is Result.Loading -> setLoading(LoadType.REFRESH, LoadState.Loading())
+                    is Result.Loading -> setLoading(LoadType.ACTION, LoadState.Loading())
                     is Result.Error -> {
                         when (result.exception) {
                             is ApiException -> {
@@ -230,26 +226,82 @@ class ModelDetailViewModel @Inject constructor(
                                 }
                             }
                         }
-                        setLoading(LoadType.REFRESH, LoadState.Error(result.exception))
+                        setLoading(LoadType.ACTION, LoadState.Error(result.exception))
                     }
                     is Result.Success -> {
-                        setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
-                        _uiState.update { state ->
+                        setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
+
+                        /*_uiState.update { state ->
                             state.copy(
-                                avatarList = result.data.map { SelectableAvatarUiModel.Item(it, false) }
+                                avatarStatusWithFiles = result.data
                             )
-                        }
+                        }*/
+
+                        /*val avatarStatus = result.data.avatarStatus
+                        when (avatarStatus.modelStatus) {
+                            "training_processing" -> {
+                                // TODO: update UI
+                            }
+                            "avatar_processing" -> {
+                                val progress = (avatarStatus.generatedAiCount.toFloat() / avatarStatus.totalAiCount)
+                                    .coerceIn(0.0F, 1.0F)
+                                *//*_uiState.update { state ->
+                                    state.copy(
+                                        progressHint = "${avatarStatus.generatedAiCount}/${avatarStatus.totalAiCount}"
+                                    )
+                                }*//*
+                            }
+                            "completed" -> {
+                                *//*ApplicationDependencies.getPersistentStore().apply {
+                                    setProcessingModel(false)
+                                    setGuestUserId("")
+                                }
+                                appDatabase.uploadSessionDao().apply {
+                                    updateUploadSessionStatus(
+                                        uiState.value.sessionId!!,
+                                        UploadSessionStatus.CREATING_MODEL.status
+                                    )
+                                    updateUploadSessionModelId(
+                                        uiState.value.sessionId!!,
+                                        result.data.statusId
+                                    )
+                                }*//*
+                            }
+                        }*/
+                        // sendEvent(Step3UiEvent.NextScreen)
                     }
                 }
             }
         }
     }
 
+    private fun getAvatarsForStatus(statusId: String) {
+        avatarStatusJob?.cancel(CancellationException("Refresh"))
+        avatarStatusJob = uiState.mapNotNull { it.statusId }
+            .flatMapLatest { statusId ->
+                appDatabase.avatarStatusDao().getAvatarStatus(statusId = statusId)
+            }.onEach { avatarStatusWithFilesEntity ->
+                Timber.d("onEach: 1")
+                if (avatarStatusWithFilesEntity != null) {
+                    val avatarResultList = avatarStatusWithFilesEntity.avatarFilesEntity.map {
+                        SelectableAvatarUiModel.Item(it.toModelAvatar(), selected = false)
+                    }
+                    _uiState.update { state ->
+                        state.copy(
+                            avatarStatusWithFiles = avatarStatusWithFilesEntity.toAvatarStatusWithFiles(),
+                            avatarList = avatarResultList
+                        )
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
     /* Download session related */
     private fun createDownloadSessionInternal(modelName: String, loadType: LoadType = LoadType.ACTION) {
         createDownloadSessionJob = viewModelScope.launch {
             setLoading(loadType, LoadState.Loading())
-            val modelId  = uiState.value.modelId
+            val modelId  = uiState.value.avatarStatusWithFiles?.avatarStatus?.modelId
 
             val downloadSession = DownloadSession(
                 createdAt = System.currentTimeMillis(),
@@ -281,7 +333,7 @@ class ModelDetailViewModel @Inject constructor(
                 appDatabase.downloadFilesDao().insertAll(
                     downloadFiles.map(DownloadFile::toEntity)
                 )
-                sendEvent(ModelDetailUiEvent.StartDownload(downloadSessionId = downloadSession.id!!))
+                sendEvent(AvatarPreviewUiEvent.StartDownload(downloadSessionId = downloadSession.id!!))
                 setLoading(loadType, LoadState.NotLoading.Complete)
             } else {
                 val t = IllegalStateException("Nothing to download")
@@ -300,7 +352,7 @@ class ModelDetailViewModel @Inject constructor(
         _uiState.update { it.copy(loadState = newLoadState) }
     }
 
-    private fun sendEvent(newEvent: ModelDetailUiEvent) = viewModelScope.launch {
+    private fun sendEvent(newEvent: AvatarPreviewUiEvent) = viewModelScope.launch {
         _uiEvent.emit(newEvent)
     }
 
@@ -314,22 +366,22 @@ class ModelDetailViewModel @Inject constructor(
 
 }
 
-data class ModelDetailState(
+data class AvatarPreviewState(
     val loadState: LoadStates = LoadStates.IDLE,
-    val modelId: String? = null,
-    val modelData: ModelData? = null,
+    val statusId: String? = null,
+    val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val avatarList: List<SelectableAvatarUiModel> = emptyList(),
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
 
-interface ModelDetailUiAction {
-    data class ErrorShown(val e: Exception) : ModelDetailUiAction
+interface AvatarPreviewUiAction {
+    data class ErrorShown(val e: Exception) : AvatarPreviewUiAction
 }
 
-interface ModelDetailUiEvent {
-    data class ShowToast(val message: UiText) : ModelDetailUiEvent
-    data class StartDownload(val downloadSessionId: Long) : ModelDetailUiEvent
+interface AvatarPreviewUiEvent {
+    data class ShowToast(val message: UiText) : AvatarPreviewUiEvent
+    data class StartDownload(val downloadSessionId: Long) : AvatarPreviewUiEvent
 }
 
 interface SelectableAvatarUiModel {
