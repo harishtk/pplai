@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -12,6 +13,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
+import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.FragmentMoreCatalogBinding
@@ -20,6 +23,7 @@ import com.aiavatar.app.feature.home.domain.model.CatalogList
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.safeCall
 import com.bumptech.glide.Glide
+import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -80,6 +84,21 @@ class MoreCatalogFragment : Fragment() {
             }
         }
 
+        val loadStateFlow = uiState.map { it.loadState }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                val emptyList = adapter.itemCount <= 0
+                progressBar.isVisible = loadState.refresh is LoadState.Loading &&
+                        emptyList
+                retryButton.isVisible = loadState.refresh is LoadState.Error &&
+                        emptyList
+                if (loadState.refresh is LoadState.Error) {
+                    HapticUtil.createError(requireContext())
+                    retryButton.shakeNow()
+                }
+            }
+        }
+
         bindClick(
             uiState = uiState
         )
@@ -92,6 +111,10 @@ class MoreCatalogFragment : Fragment() {
     private fun FragmentMoreCatalogBinding.bindClick(uiState: StateFlow<MoreCatalogState>) {
         btnNext.setOnClickListener {
             gotoUploadSteps()
+        }
+
+        retryButton.setOnClickListener {
+            viewModel.retry()
         }
     }
 

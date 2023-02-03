@@ -16,6 +16,7 @@
         android:rotation="180"
         style="@style/Widget.App.ImageButton"
         app:tint="?attr/colorOnPrimary"
+        android:contentDescription="@string/content_description_go_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@id/left_barrier"

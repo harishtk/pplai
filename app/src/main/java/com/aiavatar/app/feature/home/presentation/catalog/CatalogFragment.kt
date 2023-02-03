@@ -14,7 +14,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
+import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.core.domain.util.BuenoCacheException
 import com.aiavatar.app.databinding.FragmentCatalogBinding
 import com.aiavatar.app.di.ApplicationDependencies
@@ -160,8 +162,11 @@ class CatalogFragment : Fragment() {
                         swipeRefreshLayout.isRefreshing = false
                     }
                 }
-                if (loadState.refresh is LoadState.Loading) {
-                    retryButton.isVisible = false
+                retryButton.isVisible = loadState.refresh is LoadState.Error
+                        && avatarsAdapter.itemCount <= 0
+                if (loadState.refresh is LoadState.Error) {
+                    HapticUtil.createError(requireContext())
+                    retryButton.shakeNow()
                 }
             }
         }

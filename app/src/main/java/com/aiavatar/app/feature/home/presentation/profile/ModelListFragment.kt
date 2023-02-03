@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
+import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
 import com.aiavatar.app.databinding.FragmentModelListBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
@@ -177,6 +179,12 @@ class ModelListFragment : Fragment() {
                 Timber.d("Load state: $loadState")
                 progressBar.isVisible = loadState.refresh is LoadState.Loading &&
                         adapter.itemCount <= 0
+                retryButton.isVisible = loadState.refresh is LoadState.Error &&
+                        adapter.itemCount <= 0
+                if (loadState.refresh is LoadState.Error) {
+                    HapticUtil.createError(requireContext())
+                    retryButton.shakeNow()
+                }
                 /*if (loadState.action is LoadState.Loading) {
                     btnNext.setSpinning()
                 } else {
@@ -247,6 +255,8 @@ class ModelListFragment : Fragment() {
         icShare.setOnClickListener { }
 
         btnClose.setOnClickListener { findNavController().navigateUp() }
+
+        retryButton.setOnClickListener { viewModel.refresh() }
     }
 
     private fun FragmentModelListBinding.bindDownloadProgress(
@@ -284,13 +294,24 @@ class ModelListFragment : Fragment() {
         val modelDataFlow = uiState.map { it.modelData }
         viewLifecycleOwner.lifecycleScope.launch {
             modelDataFlow.collectLatest { modelData ->
-                if (modelData != null) {
-                    title.text = modelData.name.ifEmpty { getString(R.string.label_result) }
-                } else {
-                    title.text = getString(R.string.label_result)
+                toolbarIncluded.apply {
+                    if (modelData != null) {
+                        toolbarTitle.apply {
+                            isVisible = true
+                            text = modelData.name.ifEmpty { getString(R.string.label_result) }
+                        }
+                    } else {
+                        toolbarTitle.apply {
+                            isVisible = true
+                            text = getString(R.string.label_result)
+                        }
+                    }
                 }
+
             }
         }
+
+        toolbarIncluded.toolbarNavigationIcon.setOnClickListener { findNavController().navigateUp() }
     }
 
     private fun checkFolderName(name: String) {
@@ -335,7 +356,6 @@ class ModelListFragment : Fragment() {
                     .setPopExitAnim(R.anim.slide_out_right)
                     .build()
                 val args = Bundle().apply {
-                    putString(Constant.EXTRA_FROM, "result_preview")
                     modelId?.let { putString(ModelDetailFragment.ARG_MODEL_ID, it) }
                     data.avatar._id?.let { putLong(ModelDetailFragment.ARG_JUMP_TO_ID, it) }
                     putString(ModelDetailFragment.ARG_JUMP_TO_IMAGE_NAME, data.avatar.remoteFile)
@@ -352,7 +372,6 @@ class ModelListFragment : Fragment() {
                 .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
                 .build()
             val args = Bundle().apply {
-                putString(Constant.EXTRA_FROM, "login")
                 putString(Constant.ARG_MODEL_ID, modelId)
             }
             navigate(R.id.subscription_plans, args, navOpts)

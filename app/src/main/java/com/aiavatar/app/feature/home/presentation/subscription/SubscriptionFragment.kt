@@ -14,10 +14,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
-import com.aiavatar.app.commons.util.ResolvableException
-import com.aiavatar.app.commons.util.cancelSpinning
-import com.aiavatar.app.commons.util.setSpinning
-import com.aiavatar.app.commons.util.shakeNow
+import com.aiavatar.app.commons.util.*
+import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.databinding.FragmentSubscriptionBinding
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
@@ -54,7 +52,7 @@ class SubscriptionFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.fragment_subscription, container, false)
     }
@@ -75,7 +73,7 @@ class SubscriptionFragment : Fragment() {
     private fun FragmentSubscriptionBinding.bindState(
         uiState: StateFlow<SubscriptionState>,
         uiAction: (SubscriptionUiAction) -> Unit,
-        uiEvent: SharedFlow<SubscriptionUiEvent>
+        uiEvent: SharedFlow<SubscriptionUiEvent>,
     ) {
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             uiEvent.collectLatest { event ->
@@ -91,7 +89,11 @@ class SubscriptionFragment : Fragment() {
                                 Constant.ARG_STATUS_ID to event.statusId
                             )
                             val navOpts = defaultNavOptsBuilder()
-                                .setPopUpTo(R.id.subscription_plans, inclusive = true, saveState = false)
+                                .setPopUpTo(
+                                    R.id.subscription_plans,
+                                    inclusive = true,
+                                    saveState = false
+                                )
                                 .build()
                             navigate(R.id.subscriptionSuccess, args, navOpts)
                         }
@@ -126,19 +128,6 @@ class SubscriptionFragment : Fragment() {
             }
         }
 
-        val loadStateFlow = uiState.map { it.loadState }
-            .distinctUntilChangedBy { it.refresh }
-        viewLifecycleOwner.lifecycleScope.launch {
-            loadStateFlow.collectLatest { loadState ->
-                progressBar.isVisible = loadState.refresh is LoadState.Loading
-                if (loadState.action is LoadState.Loading) {
-                    btnNext.setSpinning()
-                } else {
-                    btnNext.cancelSpinning()
-                }
-            }
-        }
-
         val subscriptionAdapterCallback = object : SubscriptionPlanAdapter.Callback {
             override fun onItemClick(position: Int) {
                 // Noop
@@ -150,6 +139,29 @@ class SubscriptionFragment : Fragment() {
             }
         }
         val subscriptionPlanAdapter = SubscriptionPlanAdapter(subscriptionAdapterCallback)
+
+        val loadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChangedBy { it.refresh }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                val emptyList = subscriptionPlanAdapter.itemCount <= 0
+                progressBar.isVisible = loadState.refresh is LoadState.Loading
+                retryButton.isVisible = loadState.refresh is LoadState.Error &&
+                        emptyList
+
+                if (loadState.action is LoadState.Loading) {
+                    btnNext.setSpinning()
+                } else {
+                    if (loadState.refresh is LoadState.Error) {
+                        if (retryButton.isVisible) {
+                            HapticUtil.createError(requireContext())
+                            retryButton.shakeNow()
+                        }
+                    }
+                    btnNext.cancelSpinning()
+                }
+            }
+        }
 
         bindList(
             adapter = subscriptionPlanAdapter,
@@ -164,7 +176,7 @@ class SubscriptionFragment : Fragment() {
 
     private fun FragmentSubscriptionBinding.bindList(
         adapter: SubscriptionPlanAdapter,
-        uiState: StateFlow<SubscriptionState>
+        uiState: StateFlow<SubscriptionState>,
     ) {
         packageList.adapter = adapter
 
@@ -173,22 +185,28 @@ class SubscriptionFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             subscriptionPlansListFlow.collectLatest { subscriptionPlansList ->
                 adapter.submitList(subscriptionPlansList)
+
+                btnNext.isVisible = subscriptionPlansList.isNotEmpty()
             }
         }
     }
 
     private fun FragmentSubscriptionBinding.bindClick(
         uiState: StateFlow<SubscriptionState>,
-        uiAction: (SubscriptionUiAction) -> Unit
+        uiAction: (SubscriptionUiAction) -> Unit,
     ) {
         btnNext.setOnClickListener {
             uiAction(SubscriptionUiAction.NextClick)
         }
 
         btnClose.setOnClickListener {
-            try { findNavController().navigateUp() }
-            catch (ignore: Exception) {}
+            try {
+                findNavController().navigateUp()
+            } catch (ignore: Exception) {
+            }
         }
+
+        retryButton.setOnClickListener { viewModel.refresh() }
     }
 
     private fun setupObservers() {

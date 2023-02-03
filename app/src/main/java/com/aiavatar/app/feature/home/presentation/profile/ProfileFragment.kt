@@ -18,12 +18,15 @@ import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
+import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.databinding.FragmentProfileBinding
 import com.aiavatar.app.databinding.ItemAvatarStatusBinding
 import com.aiavatar.app.databinding.ItemModelListBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
+import com.aiavatar.app.feature.home.presentation.create.UploadStep2FragmentDirections
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
@@ -135,6 +138,10 @@ class ProfileFragment : Fragment() {
                     emptyListContainer.isVisible = false
                     progressBar.isVisible = adapter.itemCount <= 0
                 } else {
+                    if (loadState.refresh is LoadState.Error) {
+                        HapticUtil.createError(requireContext())
+                        retryButton.shakeNow()
+                    }
                     progressBar.isVisible = false
                     emptyListContainer.isVisible = adapter.itemCount <= 0
                 }
@@ -290,8 +297,6 @@ class ProfileFragment : Fragment() {
     private fun gotoSettings() {
         findNavController().apply {
             val navOpts = NavOptions.Builder()
-                .setEnterAnim(R.anim.slide_in_right)
-                .setExitAnim(R.anim.slide_out_right)
                 .build()
             navigate(ProfileFragmentDirections.actionProfileToSettings())
         }
@@ -299,9 +304,9 @@ class ProfileFragment : Fragment() {
 
     private fun gotoModelListResult(modelId: String) = safeCall {
         findNavController().apply {
-            val navOptions = defaultNavOptsBuilder().build()
+            val navOptions = defaultNavOptsBuilder()
+                .build()
             val args = Bundle().apply {
-                putString(Constant.EXTRA_FROM, "result_preview")
                 putString(Constant.ARG_MODEL_ID, modelId)
             }
             navigate(R.id.model_list, args, navOptions)
@@ -453,7 +458,6 @@ class ModelListAdapter(
     ) : ViewHolder(binding.root) {
 
         fun bind(data: ProfileListUiModel.Item, callback: Callback) = with(binding) {
-            Timber.d("bind() data = $data")
             title.text = data.modelListWithModel.model?.name
             description.text = "${data.modelListWithModel.model?.totalCount} creations"
             Glide.with(imageView)

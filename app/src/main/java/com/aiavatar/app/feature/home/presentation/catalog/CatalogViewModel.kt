@@ -114,6 +114,14 @@ class CatalogViewModel @Inject constructor(
                                     )
                                 }
                             }
+                            else -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
+                                    )
+                                }
+                            }
                         }
                         setLoadState(LoadType.REFRESH, LoadState.Error(result.exception))
                     }

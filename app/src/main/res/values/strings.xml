@@ -91,6 +91,7 @@
     <string name="minutes_more">few minutes ago</string>
     <string name="label_result">Result</string>
     <string name="content_description_delete_photo">Delete Photo</string>
+    <string name="content_description_go_back">Go back</string>
 
     <plurals name="hours_ago">
         <item quantity="one">@string/hours_single</item>

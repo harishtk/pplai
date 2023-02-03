@@ -97,7 +97,6 @@ class ProfileViewModel @Inject constructor(
                         setLoading(loadType, LoadState.Error(result.exception))
                     }
                     is Result.Success -> {
-                        setLoading(loadType, LoadState.NotLoading.Complete)
                         result.data.let {
                             _uiState.update { state ->
                                 state.copy(
@@ -107,6 +106,7 @@ class ProfileViewModel @Inject constructor(
                                 )
                             }
                         }
+                        setLoading(loadType, LoadState.NotLoading.Complete)
                     }
                 }
             }

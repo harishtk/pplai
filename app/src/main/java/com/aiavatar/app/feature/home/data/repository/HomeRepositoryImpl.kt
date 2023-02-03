@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.home.data.repository
 
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.commons.util.NetworkResultParser
 import com.aiavatar.app.commons.util.Result
@@ -28,6 +29,7 @@ import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -518,10 +520,7 @@ class HomeRepositoryImpl @Inject constructor(
     override fun getMyModels(forceRefresh: Boolean): Flow<Result<List<ModelListWithModel>>> = flow {
         val cache = observeAllModelListItem().first()
 
-        if (forceRefresh) {
-            if (cache.isNotEmpty()) {
-                localDataSource.deleteAllModelListItem()
-            }
+        if (cache.isEmpty() && forceRefresh) {
             emit(Result.Loading)
             when (val result = refreshAllModelInternal()) {
                 is Result.Error -> {

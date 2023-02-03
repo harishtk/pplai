@@ -212,6 +212,14 @@ class ModelListViewModel @Inject constructor(
                                     )
                                 }
                             }
+                            else -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
+                                    )
+                                }
+                            }
                         }
                         setLoading(LoadType.REFRESH, LoadState.Error(result.exception))
                     }
