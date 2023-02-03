@@ -143,7 +143,6 @@ class ProfileFragment : Fragment() {
                         retryButton.shakeNow()
                     }
                     progressBar.isVisible = false
-                    emptyListContainer.isVisible = adapter.itemCount <= 0
                 }
 
                 if (swipeRefreshLayout.isRefreshing) {
@@ -182,6 +181,8 @@ class ProfileFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             modelListUiModelsFlow.collectLatest { modelList ->
                 adapter.submitList(modelList)
+
+                emptyListContainer.isVisible = modelList.isEmpty()
             }
         }
     }

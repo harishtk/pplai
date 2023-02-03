@@ -8,6 +8,7 @@ import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.Lifecycle
@@ -46,6 +47,11 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
     override fun onCreate(savedInstanceState: Bundle?) {
         AppStartup.getInstance().onCriticalRenderEventStart()
         super.onCreate(savedInstanceState)
+
+        lifecycleScope.launch {
+            AppCompatDelegate.setDefaultNightMode(ApplicationDependencies.getPersistentStore().userPreferredTheme)
+        }
+
         installSplashScreen()
         checkSecureMode()
         setContentView(R.layout.activity_main)
@@ -261,6 +267,16 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
         const val DEFAULT_UI_RENDER_WAIT_TIME = 50L
 
+        const val THEME_MODE_AUTO   = 0
+        const val THEME_MODE_LIGHT  = 1
+        const val THEME_MODE_DARK   = 2
+
+        val THEME_MAP = mapOf<Int, Int>(
+            THEME_MODE_AUTO to R.drawable.baseline_auto_mode_24,
+            THEME_MODE_LIGHT to R.drawable.baseline_light_mode_24,
+            THEME_MODE_DARK to R.drawable.baseline_dark_mode_24
+        )
+
         public fun getThumbnail(stream: String): String {
             return "${BuildConfig.THUMBNAIL_BASE_URL}${stream}/thumbnail_05.jpg".also {
                 Timber.d("Thumb: id=$stream url=$it")
@@ -268,3 +284,4 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         }
     }
 }
+

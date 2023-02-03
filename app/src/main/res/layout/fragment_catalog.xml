@@ -100,6 +100,14 @@
                         android:visibility="gone"
                         tools:visibility="gone"/>
 
+                    <ImageView android:id="@+id/iv_theme"
+                        style="@style/Widget.App.ImageButton"
+                        android:layout_width="@dimen/large_icon_size"
+                        android:layout_height="@dimen/large_icon_size"
+                        android:layout_margin="@dimen/touchable_padding_large"
+                        android:src="@drawable/baseline_auto_mode_24"
+                        android:layout_gravity="center"/>
+
                     <FrameLayout android:id="@+id/profile_container"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"

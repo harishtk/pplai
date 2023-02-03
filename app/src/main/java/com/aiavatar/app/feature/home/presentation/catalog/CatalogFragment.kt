@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -165,8 +166,10 @@ class CatalogFragment : Fragment() {
                 retryButton.isVisible = loadState.refresh is LoadState.Error
                         && avatarsAdapter.itemCount <= 0
                 if (loadState.refresh is LoadState.Error) {
-                    HapticUtil.createError(requireContext())
-                    retryButton.shakeNow()
+                    if (loadState.refresh.error !is BuenoCacheException) {
+                        HapticUtil.createError(requireContext())
+                        retryButton.shakeNow()
+                    }
                 }
             }
         }
@@ -250,8 +253,49 @@ class CatalogFragment : Fragment() {
             }
         }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            ApplicationDependencies.getPersistentStore().apply {
+                MainActivity.THEME_MAP[userPreferredTheme]?.let { resId ->
+                    ivTheme.setImageResource(resId)
+                }
+            }
+        }
+
+        ivTheme.isVisible = BuildConfig.DEBUG
+        ivTheme.setOnClickListener {
+            toggleTheme()?.let { resId ->
+                ivTheme.setImageResource(resId)
+            }
+        }
+
         profileContainer.setOnClickListener {
             gotoProfile()
+        }
+    }
+
+    private fun toggleTheme(): Int? {
+        ApplicationDependencies.getPersistentStore().apply {
+            val newTheme = (userPreferredTheme + 1) % MainActivity.THEME_MAP.size
+            setUserPreferredTheme(newTheme)
+            val mode = when (newTheme) {
+                MainActivity.THEME_MODE_AUTO -> {
+                    context?.showToast("Auto")
+                    AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                }
+                MainActivity.THEME_MODE_DARK -> {
+                    context?.showToast("Dark mode")
+                    AppCompatDelegate.MODE_NIGHT_YES
+                }
+                MainActivity.THEME_MODE_LIGHT -> {
+                    context?.showToast("Light mode")
+                    AppCompatDelegate.MODE_NIGHT_NO
+                }
+                else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            }
+            AppCompatDelegate.setDefaultNightMode(mode)
+            Timber.d("Theme: $mode")
+
+            return MainActivity.THEME_MAP[newTheme]
         }
     }
 

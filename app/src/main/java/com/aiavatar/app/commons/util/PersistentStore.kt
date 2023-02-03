@@ -2,10 +2,12 @@ package com.aiavatar.app.commons.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.google.firebase.crashlytics.internal.model.CrashlyticsReport.Session.User
 import java.util.*
 
 /**
@@ -51,6 +53,9 @@ class PersistentStore private constructor(
 
     val socialImage: String?
         get() = getAppPreferences().getString(UserPreferenceKeys.SOCIAL_IMAGE, null)
+
+    val userPreferredTheme: Int
+        get() = getAppPreferences().getInt(UserPreferenceKeys.USER_PREFERRED_THEME, DEFAULT_USER_PREFERRED_THEME)
 
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
@@ -117,6 +122,11 @@ class PersistentStore private constructor(
         return this
     }
 
+    fun setUserPreferredTheme(theme: Int): PersistentStore {
+        getAppPreferences().edit { putInt(UserPreferenceKeys.USER_PREFERRED_THEME, theme) }
+        return this
+    }
+
     fun logout() {
         setUserId(null)
         setDeviceToken("")
@@ -127,6 +137,7 @@ class PersistentStore private constructor(
         setProcessingModel(false)
         setUploadStepSkipped(false)
         setOnboardPresented(false)
+        setUserPreferredTheme(DEFAULT_USER_PREFERRED_THEME)
     }
 
     fun resetPreferences() {
@@ -184,6 +195,8 @@ class PersistentStore private constructor(
         private const val APP_PREFERENCES_NAME = "ai_avatar_preferences"
         private const val SECURED_KEY_ALIAS = "ai_avatar_secured_store"
 
+        private const val DEFAULT_USER_PREFERRED_THEME = 0
+
         object UserPreferenceKeys {
             const val DEVICE_TOKEN: String = "device_token"
             const val USER_ID: String = "user_id"
@@ -196,6 +209,7 @@ class PersistentStore private constructor(
             const val UPLOADING_PHOTOS = "uploading_photos"
             const val CURRENT_AVATAR_STATUS_ID = "current_avatar_status_id"
             const val UPLOAD_STEP_SKIPPED: String = "upload_step_skipped"
+            const val USER_PREFERRED_THEME = "user_preferred_theme"
         }
 
         object AppEssentialKeys {
