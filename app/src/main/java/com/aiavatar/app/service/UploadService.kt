@@ -74,13 +74,6 @@ class UploadService : CoroutineService() {
         return START_NOT_STICKY
     }
 
-    private fun prepareUpload() {
-        runBlocking {
-            // TODO: perform upload
-            // delay(15000)
-        }
-    }
-
     private fun notifyUploadComplete(context: Context) {
         val channelId = context.getString(R.string.upload_notification_channel_id)
 
@@ -103,7 +96,6 @@ class UploadService : CoroutineService() {
 
         val channelId = context.getString(R.string.upload_notification_channel_id)
 
-        // TODO: show notification
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
         val notification = notificationBuilder.setOngoing(true)
             .setSmallIcon(R.mipmap.ic_launcher)

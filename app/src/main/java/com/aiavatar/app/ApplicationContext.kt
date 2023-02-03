@@ -86,7 +86,6 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
         Timber.d("App is foregrounded")
         socketKeepAliveJob?.cancel(CancellationException("App is now visible."))
         // initializeSocketIfRequired()
-        // TODO: -done- send user engage
         userEngageStartTime = System.currentTimeMillis()
     }
 
@@ -97,7 +96,6 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
         val userAwayArgs = bundleOf(
             Constant.EXTRA_ENGAGED_TIME to engagedTime
         )
-        // TODO: -done- send user away
         /*socketKeepAliveJob = applicationScope.launch {
             delay(SOCKET_KEEP_ALIVE_TIMEOUT)
             ApplicationDependencies.getAppWebSocket().disconnect()

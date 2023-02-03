@@ -36,6 +36,7 @@ import com.aiavatar.app.core.domain.model.ModelStatus
 import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
+import com.aiavatar.app.service.MyFirebaseMessagingService
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.aiavatar.app.work.UploadWorker
 import com.pepulnow.app.data.LoadState
@@ -226,6 +227,8 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
+
+                            dismissModelStatusNotification()
                         }
                         ModelStatus.TRAINING_FAILED -> {
                             // TODO: retry uploading fresh images
@@ -613,6 +616,11 @@ class AvatarStatusFragment : Fragment() {
     private fun dismissUploadStatusNotification() {
         ServiceUtil.getNotificationManager(requireContext())
             .cancel(UPLOAD_STATUS_NOTIFICATION_ID)
+    }
+
+    private fun dismissModelStatusNotification() {
+        ServiceUtil.getNotificationManager(requireContext())
+            .cancel(MyFirebaseMessagingService.AVATAR_STATUS_NOTIFICATION_ID)
     }
 
     private fun getFormattedTime(etaSeconds: Int): String {

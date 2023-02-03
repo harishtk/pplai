@@ -108,6 +108,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setContentText(messageModel.content)
             .setContentIntent(pendingIntent)
             .build()
+
         ServiceUtil.getNotificationManager(this)
             .notify(AVATAR_STATUS_NOTIFICATION_ID, notification)
     }

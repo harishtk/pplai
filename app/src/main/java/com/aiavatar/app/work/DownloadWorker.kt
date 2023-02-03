@@ -217,13 +217,6 @@ class DownloadWorker @AssistedInject constructor(
 
         val channelId = context.getString(R.string.download_notification_channel_id)
 
-        // TODO: add pending intent to view the downloads
-        /*val contentIntent = NavDeepLinkBuilder(context)
-            .setGraph(R.navigation.home_nav_graph)
-            .setDestination(R.id.catalog_list)
-            .setComponentName(MainActivity::class.java)
-            .createPendingIntent()*/
-
         val galleryIntent = Intent().apply {
             action = Intent.ACTION_VIEW
             type = Constant.MIME_TYPE_IMAGE
