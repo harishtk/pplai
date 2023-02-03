@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.home.domain.repository
 
 import com.aiavatar.app.commons.util.Result
+import com.aiavatar.app.feature.home.data.model.ModelListWithModelEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.ModelAvatarEntity
 import com.aiavatar.app.feature.home.domain.model.*
 import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
@@ -21,7 +22,7 @@ interface HomeRepository {
 
     fun generateAvatar(generateAvatarRequest: GenerateAvatarRequest): Flow<Result<Long>>
 
-    fun getMyModels(): Flow<Result<List<ModelList>>>
+    fun getMyModels(forceRefresh: Boolean): Flow<Result<List<ModelListWithModel>>>
 
     fun getModel(modelId: String): Flow<Result<ModelData>>
 

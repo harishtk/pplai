@@ -9,6 +9,8 @@ import com.aiavatar.app.commons.util.net.EmptyResponseException
 import com.aiavatar.app.core.data.source.local.CacheLocalDataSource
 import com.aiavatar.app.core.data.source.local.entity.modify
 import com.aiavatar.app.core.domain.util.BuenoCacheException
+import com.aiavatar.app.feature.home.data.model.ModelListWithModelEntity
+import com.aiavatar.app.feature.home.data.model.toModelListWithModel
 import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
 import com.aiavatar.app.feature.home.data.source.local.entity.*
 import com.aiavatar.app.feature.home.data.source.remote.HomeRemoteDataSource
@@ -16,10 +18,7 @@ import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPlanDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.asDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.toSubscriptionPlan
 import com.aiavatar.app.feature.home.data.source.remote.model.GetAvatarsResponse
-import com.aiavatar.app.feature.home.data.source.remote.model.dto.toCatalogDetailData
-import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelData
-import com.aiavatar.app.feature.home.data.source.remote.model.dto.toModelList
-import com.aiavatar.app.feature.home.data.source.remote.model.dto.toPurchasePlanData
+import com.aiavatar.app.feature.home.data.source.remote.model.dto.*
 import com.aiavatar.app.feature.home.data.source.remote.model.toCatalogList
 import com.aiavatar.app.feature.home.data.source.remote.model.toCategory
 import com.aiavatar.app.feature.home.data.source.remote.model.toListAvatar
@@ -61,6 +60,13 @@ class HomeRepositoryImpl @Inject constructor(
         return localDataSource.observeAllCatalogList(catalogName)
             .map { list ->
                 list.map(CatalogListEntity::toCatalogList)
+            }
+    }
+
+    private fun observeAllModelListItem(): Flow<List<ModelListWithModel>> {
+        return localDataSource.observeAllModelListItem()
+            .map { list ->
+                list.map(ModelListWithModelEntity::toModelListWithModel)
             }
     }
 
@@ -147,20 +153,27 @@ class HomeRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun refreshAllModelInternal(): Result<List<ModelData>> {
+    private suspend fun refreshAllModelInternal(): Result<List<ModelListItem>> {
         val networkResult = remoteDataSource.getMyModelsSync()
         return when (networkResult) {
             is NetworkResult.Loading -> Result.Loading
             is NetworkResult.Success -> {
                 if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                    val modelData: List<ModelData>? = networkResult.data?.data?.models?.mapNotNull {
-                        it.modelDataDto?.toModelData(it.statusId)
-                    }
-                    if (modelData != null) {
-                        localDataSource.deleteAllModels()
-                        localDataSource.insertAllModel(modelData.map { it.toEntity() })
+                    val modelItemListDto = networkResult.data?.data?.models
 
-                        Result.Success(modelData)
+                    if (modelItemListDto != null) {
+                        val modelItemList = modelItemListDto.map(ModelListDto::toModelListItem)
+                        localDataSource.deleteAllModelListItem()
+                        localDataSource.insertAllModelListItem(
+                            modelItemList.map(ModelListItem::toEntity)
+                        )
+
+                        val modelEntities = modelItemListDto.mapNotNull { it.modelDataDto?.toModelData(it.statusId) }
+                            .map(ModelData::toEntity)
+                        Timber.d("Models: $modelEntities")
+                        localDataSource.insertAllModel(modelEntities)
+
+                        Result.Success(modelItemList)
                     } else {
                         emptyResponse(networkResult)
                     }
@@ -502,28 +515,27 @@ class HomeRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getMyModels(): Flow<Result<List<ModelList>>> {
-        return remoteDataSource.getMyModels().map { networkResult ->
-            when (networkResult) {
-                is NetworkResult.Loading -> Result.Loading
-                is NetworkResult.Success -> {
-                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                        val modelList = networkResult.data.data?.models?.map { it.toModelList() }
-                        if (modelList != null) {
-                            Result.Success(modelList)
-                        } else {
-                            val cause = EmptyResponseException("No data")
-                            Result.Error(ApiException(cause))
-                        }
-                    } else {
-                        val cause =
-                            BadResponseException("Unexpected response code ${networkResult.code}")
-                        Result.Error(ApiException(cause))
-                    }
+    override fun getMyModels(forceRefresh: Boolean): Flow<Result<List<ModelListWithModel>>> = flow {
+        val cache = observeAllModelListItem().first()
+
+        if (forceRefresh) {
+            if (cache.isNotEmpty()) {
+                localDataSource.deleteAllModelListItem()
+            }
+            emit(Result.Loading)
+            when (val result = refreshAllModelInternal()) {
+                is Result.Error -> {
+                    emit(result)
                 }
-                else -> parseErrorNetworkResult(networkResult)
+                else -> {
+                    /* Noop */
+                }
             }
         }
+
+        emitAll(
+            observeAllModelListItem().map { Result.Success(it) }
+        )
     }
 
     override fun getAvatars(getAvatarsRequest: GetAvatarsRequest): Flow<Result<List<ListAvatar>>> {

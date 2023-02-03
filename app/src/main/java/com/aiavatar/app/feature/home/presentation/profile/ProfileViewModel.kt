@@ -3,23 +3,19 @@ package com.aiavatar.app.feature.home.presentation.profile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
-import com.aiavatar.app.databinding.FragmentForceUpdateBinding
-import com.aiavatar.app.feature.home.domain.model.ModelList
+import com.aiavatar.app.feature.home.domain.model.ModelListWithModel
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.aiavatar.app.nullAsEmpty
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
@@ -56,8 +52,8 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun refresh() {
-        refreshInternal(forceRefresh = true)
+    fun refresh(forceRefresh: Boolean) {
+        refreshInternal(forceRefresh)
     }
 
     private fun refreshInternal(forceRefresh: Boolean) {
@@ -76,7 +72,7 @@ class ProfileViewModel @Inject constructor(
         modelsFetchJob?.cancel(CancellationException("New request")) // just in case
         modelsFetchJob = viewModelScope.launch {
             setLoading(loadType, LoadState.Loading())
-            homeRepository.getMyModels().collectLatest { result ->
+            homeRepository.getMyModels(forceRefresh).collectLatest { result ->
                 when (result) {
                     is Result.Loading -> setLoading(loadType, LoadState.Loading())
                     is Result.Error -> {
@@ -105,8 +101,8 @@ class ProfileViewModel @Inject constructor(
                         result.data.let {
                             _uiState.update { state ->
                                 state.copy(
-                                    modelListUiModels = it.map { modelData ->
-                                        ModelListUiModel.Item(modelList = modelData)
+                                    profileListUiModels = it.map { modelData ->
+                                        ProfileListUiModel.Item(modelListWithModel = modelData)
                                     }
                                 )
                             }
@@ -133,7 +129,7 @@ class ProfileViewModel @Inject constructor(
 
 data class ProfileState(
     val loadState: LoadStates = LoadStates.IDLE,
-    val modelListUiModels: List<ModelListUiModel> = emptyList(),
+    val profileListUiModels: List<ProfileListUiModel> = emptyList(),
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
@@ -146,6 +142,6 @@ interface ProfileUiEvent {
     data class ShowToast(val message: UiText) : ProfileUiEvent
 }
 
-interface ModelListUiModel {
-    data class Item(val modelList: ModelList) : ModelListUiModel
+interface ProfileListUiModel {
+    data class Item(val modelListWithModel: ModelListWithModel) : ProfileListUiModel
 }

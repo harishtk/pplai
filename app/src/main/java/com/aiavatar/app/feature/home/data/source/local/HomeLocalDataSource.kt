@@ -1,16 +1,26 @@
 package com.aiavatar.app.feature.home.data.source.local
 
 import com.aiavatar.app.core.data.source.local.AppDatabase
-import com.aiavatar.app.feature.home.data.source.local.entity.CatalogListEntity
-import com.aiavatar.app.feature.home.data.source.local.entity.CategoryEntity
-import com.aiavatar.app.feature.home.data.source.local.entity.ModelAvatarEntity
-import com.aiavatar.app.feature.home.data.source.local.entity.ModelEntity
+import com.aiavatar.app.feature.home.data.model.ModelListWithModelEntity
+import com.aiavatar.app.feature.home.data.source.local.entity.*
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class HomeLocalDataSource @Inject constructor(
     private val database: AppDatabase
 ) {
+
+    fun observeAllModelListItem(): Flow<List<ModelListWithModelEntity>> {
+        return database.modelListItemDao().getAllModelList()
+    }
+
+    suspend fun insertAllModelListItem(modelListItemEntities: List<ModelListItemEntity>) {
+        database.modelListItemDao().insertAll(modelListItemEntities)
+    }
+
+    suspend fun deleteAllModelListItem() {
+        database.modelListItemDao().deleteAll()
+    }
 
     fun observeModelAvatars(modelId: String): Flow<List<ModelAvatarEntity>> =
         database.modelAvatarDao().getModelAvatars(modelId)

@@ -2,6 +2,7 @@ package com.aiavatar.app.feature.home.presentation.profile
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,7 +34,6 @@ import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
-import java.lang.Math.abs
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment() {
@@ -110,18 +110,18 @@ class ProfileFragment : Fragment() {
         }
 
         val callback = object : ModelListAdapter.Callback {
-            override fun onItemClick(position: Int, data: ModelListUiModel.Item) {
-                val statusId = data.modelList.statusId
-                if (data.modelList.statusId != "0") {
+            override fun onItemClick(position: Int, data: ProfileListUiModel.Item) {
+                val statusId = data.modelListWithModel.modelListItem.statusId
+                if (statusId != "0") {
                     gotoAvatarStatus(statusId)
                 } else {
-                    gotoModelListResult(data.modelList.modelData?.id!!)
+                    gotoModelListResult(data.modelListWithModel.model?.id!!)
                 }
             }
         }
 
         swipeRefreshLayout.setOnRefreshListener {
-            viewModel.refresh()
+            viewModel.refresh(true)
         }
 
         val adapter = ModelListAdapter(callback)
@@ -170,7 +170,7 @@ class ProfileFragment : Fragment() {
     ) {
         modelListView.adapter = adapter
 
-        val modelListUiModelsFlow = uiState.map { it.modelListUiModels }
+        val modelListUiModelsFlow = uiState.map { it.profileListUiModels }
             .distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
             modelListUiModelsFlow.collectLatest { modelList ->
@@ -181,7 +181,7 @@ class ProfileFragment : Fragment() {
 
     private fun FragmentProfileBinding.bindClick(uiState: StateFlow<ProfileState>) {
         retryButton.setOnClickListener {
-            viewModel.refresh()
+            viewModel.refresh(true)
         }
     }
 
@@ -241,7 +241,7 @@ class ProfileFragment : Fragment() {
                     gotoLogin()
                 } else {
                     if (loginUser.userId != null) {
-                        viewModel.refresh()
+                        viewModel.refresh(false)
                     }
                 }
             }
@@ -318,8 +318,8 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun gotoModelDetail(from: String, position: Int, data: ModelListUiModel.Item) {
-        val modelId = data.modelList.modelData?.id!!
+    private fun gotoModelDetail(from: String, position: Int, data: ProfileListUiModel.Item) {
+        val modelId = data.modelListWithModel.model?.id!!
         try {
             findNavController().apply {
                 val navOpts = defaultNavOptsBuilder()
@@ -370,7 +370,7 @@ class ProfileFragment : Fragment() {
     @Subscribe
     public fun onNewNotificationEvent(event: NewNotificationEvent) {
         if (event.hint == "avatar_status") {
-            viewModel.refresh()
+            viewModel.refresh(true)
         }
     }
 
@@ -381,7 +381,7 @@ class ProfileFragment : Fragment() {
 
 class ModelListAdapter(
     private val callback: Callback,
-) : ListAdapter<ModelListUiModel, ViewHolder>(DIFF_CALLBACK) {
+) : ListAdapter<ProfileListUiModel, ViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return when (viewType) {
@@ -396,7 +396,7 @@ class ModelListAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val model = getItem(position)
         when (model) {
-            is ModelListUiModel.Item -> {
+            is ProfileListUiModel.Item -> {
                 when (holder) {
                     is ModelListAdapter.ItemViewHolder -> {
                         holder.bind(data = model, callback)
@@ -411,8 +411,8 @@ class ModelListAdapter(
 
     override fun getItemViewType(position: Int): Int {
         return when (val model = getItem(position)) {
-            is ModelListUiModel.Item -> {
-                if (model.modelList.statusId != "0") {
+            is ProfileListUiModel.Item -> {
+                if (model.modelListWithModel.modelListItem.statusId != "0") {
                     VIEW_TYPE_THINKING
                 } else {
                     VIEW_TYPE_ITEM
@@ -428,7 +428,7 @@ class ModelListAdapter(
         private val binding: ItemAvatarStatusBinding,
     ) : ViewHolder(binding.root) {
 
-        fun bind(data: ModelListUiModel.Item, callback: Callback) = with(binding) {
+        fun bind(data: ProfileListUiModel.Item, callback: Callback) = with(binding) {
             title.text = "Generating.."
             description.isVisible = false
 
@@ -452,11 +452,12 @@ class ModelListAdapter(
         private val binding: ItemModelListBinding,
     ) : ViewHolder(binding.root) {
 
-        fun bind(data: ModelListUiModel.Item, callback: Callback) = with(binding) {
-            title.text = data.modelList.modelData?.name
-            description.text = "${data.modelList.modelData?.totalCount} creations"
+        fun bind(data: ProfileListUiModel.Item, callback: Callback) = with(binding) {
+            Timber.d("bind() data = $data")
+            title.text = data.modelListWithModel.model?.name
+            description.text = "${data.modelListWithModel.model?.totalCount} creations"
             Glide.with(imageView)
-                .load(data.modelList.modelData?.latestImage)
+                .load(data.modelListWithModel.model?.latestImage)
                 .placeholder(R.color.transparent_black)
                 .error(R.color.white)
                 .into(imageView)
@@ -480,25 +481,25 @@ class ModelListAdapter(
     }
 
     interface Callback {
-        fun onItemClick(position: Int, data: ModelListUiModel.Item)
+        fun onItemClick(position: Int, data: ProfileListUiModel.Item)
     }
 
     companion object {
         private const val VIEW_TYPE_ITEM = 0
         private const val VIEW_TYPE_THINKING = 1
 
-        private val DIFF_CALLBACK = object : ItemCallback<ModelListUiModel>() {
+        private val DIFF_CALLBACK = object : ItemCallback<ProfileListUiModel>() {
             override fun areItemsTheSame(
-                oldItem: ModelListUiModel,
-                newItem: ModelListUiModel,
+                oldItem: ProfileListUiModel,
+                newItem: ProfileListUiModel,
             ): Boolean {
-                return (oldItem is ModelListUiModel.Item && newItem is ModelListUiModel.Item &&
-                        oldItem.modelList.modelData?.id == newItem.modelList.modelData?.id)
+                return (oldItem is ProfileListUiModel.Item && newItem is ProfileListUiModel.Item &&
+                        oldItem.modelListWithModel.model?.id == newItem.modelListWithModel.model?.id)
             }
 
             override fun areContentsTheSame(
-                oldItem: ModelListUiModel,
-                newItem: ModelListUiModel,
+                oldItem: ProfileListUiModel,
+                newItem: ProfileListUiModel,
             ): Boolean {
                 return false
             }
