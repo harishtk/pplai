@@ -19,6 +19,7 @@ import androidx.viewpager2.widget.CompositePageTransformer
 import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.FragmentAvatarPreviewBinding
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
@@ -43,9 +44,8 @@ class AvatarPreviewFragment : Fragment() {
 
     private val viewModel: AvatarPreviewViewModel by viewModels()
 
-    private var jumpToId: Long = -1
-    private var jumpToImageName: String? = null
-    private var jumpToPosition: Int = -1
+    private var jumpToId: Long? = null
+    private var jumpToPosition: Int? = null
 
     private var previousPosition: Int = -1
 
@@ -55,7 +55,7 @@ class AvatarPreviewFragment : Fragment() {
         arguments?.apply {
             val modelId = getString(ModelDetailFragment.ARG_MODEL_ID, null)
             val statusId = getString(ModelDetailFragment.ARG_STATUS_ID, null)
-            jumpToImageName = getString(ModelDetailFragment.ARG_JUMP_TO_IMAGE_NAME, null)
+            // jumpToImageName = getString(ModelDetailFragment.ARG_JUMP_TO_IMAGE_NAME, null)
 
             Timber.d("Args: model id = $modelId status id = $statusId jumpTo = $jumpToId")
 
@@ -154,7 +154,6 @@ class AvatarPreviewFragment : Fragment() {
                 if (position == jumpToPosition) {
                     jumpToPosition = -1
                     jumpToId = -1
-                    jumpToImageName = null
                 }
                 Timber.d("Jump to Id: $jumpToPosition")
                 previousPosition = position
@@ -185,6 +184,9 @@ class AvatarPreviewFragment : Fragment() {
         }
 
         val scrollerAdapter = AvatarScrollAdapter { clickedPosition ->
+            if (previousPosition != clickedPosition) {
+                HapticUtil.createOneShot(requireContext())
+            }
             catalogPreviewPager.setCurrentItem(clickedPosition, true)
         }
         avatarScrollerList.adapter = scrollerAdapter
@@ -196,12 +198,12 @@ class AvatarPreviewFragment : Fragment() {
                 scrollerAdapter.submitList(avatarList)
                 catalogPresetAdapter.submitList(avatarList) {
                     Timber.d("Jump to Id: $jumpToId")
-                    if (jumpToImageName != null) {
+                    if (jumpToId != null) {
                         avatarList.mapIndexed { index, avatarUiModel ->
                             val id =
-                                (avatarUiModel as? SelectableAvatarUiModel.Item)?.modelAvatar?.remoteFile
+                                (avatarUiModel as? SelectableAvatarUiModel.Item)?.modelAvatar?._id
                             Timber.d("Compare: 1 id = $id  == jump = $jumpToId")
-                            if (avatarUiModel is SelectableAvatarUiModel.Item && avatarUiModel.modelAvatar.remoteFile == jumpToImageName) {
+                            if (avatarUiModel is SelectableAvatarUiModel.Item && avatarUiModel.modelAvatar._id == jumpToId) {
                                 index
                             } else {
                                 -1
@@ -214,7 +216,7 @@ class AvatarPreviewFragment : Fragment() {
                                 jumpToPosition = _jumpToPosition
                                 Timber.d("Jump to position: $jumpToPosition")
                                 try {
-                                    catalogPreviewPager.setCurrentItem(jumpToPosition, false)
+                                    catalogPreviewPager.setCurrentItem(_jumpToPosition, false)
                                 } catch (e: Exception) {
                                     Timber.d(e)
                                 }

@@ -30,6 +30,7 @@ import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.aiavatar.app.*
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
+import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
@@ -222,8 +223,8 @@ class ModelDetailFragment : Fragment() {
                 }
 
                 if (position == jumpToPosition) {
-                    jumpToPosition = -1
-                    jumpToId = -1
+                    jumpToPosition = null
+                    jumpToId = null
                 }
                 Timber.d("Jump to Id: $jumpToPosition")
                 previousPosition = position
@@ -254,6 +255,9 @@ class ModelDetailFragment : Fragment() {
         }
 
         val scrollerAdapter = AvatarScrollAdapter { clickedPosition ->
+            if (previousPosition != clickedPosition) {
+                HapticUtil.createOneShot(requireContext())
+            }
             catalogPreviewPager.setCurrentItem(clickedPosition, true)
         }
         avatarScrollerList.adapter = scrollerAdapter
@@ -683,7 +687,7 @@ class AvatarScrollAdapter(
                 newItem: SelectableAvatarUiModel,
             ): Boolean {
                 return (oldItem is SelectableAvatarUiModel.Item && newItem is SelectableAvatarUiModel.Item &&
-                        oldItem.modelAvatar == newItem.modelAvatar && oldItem.selected == newItem.selected)
+                        modelAvatarEquals(oldItem.modelAvatar, newItem.modelAvatar) && oldItem.selected == newItem.selected)
             }
 
             override fun getChangePayload(
@@ -701,6 +705,10 @@ class AvatarScrollAdapter(
                 return updatePayload
             }
 
+            private fun modelAvatarEquals(old: ModelAvatar, new: ModelAvatar): Boolean {
+                return (old._id == new._id &&
+                        old.remoteFile == new.remoteFile)
+            }
         }
     }
 }

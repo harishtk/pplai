@@ -295,7 +295,6 @@ class AvatarResultFragment : Fragment() {
                     putString(Constant.EXTRA_FROM, "result_preview")
                     statusId?.let { putString(AvatarPreviewFragment.ARG_STATUS_ID, it) }
                     data.avatar._id?.let { putLong(AvatarPreviewFragment.ARG_JUMP_TO_ID, it) }
-                    putString(AvatarPreviewFragment.ARG_JUMP_TO_IMAGE_NAME, data.avatar.remoteFile)
                 }
                 navigate(R.id.avatar_preview, args, navOpts)
             }

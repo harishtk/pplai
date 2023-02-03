@@ -241,7 +241,7 @@ class ProfileFragment : Fragment() {
                     gotoLogin()
                 } else {
                     if (loginUser.userId != null) {
-                        viewModel.refresh(false)
+                        viewModel.refresh(true)
                     }
                 }
             }

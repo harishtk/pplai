@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -22,7 +21,6 @@ import com.aiavatar.app.*
 import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
 import com.aiavatar.app.databinding.FragmentModelListBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
-import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.work.WorkUtil
@@ -191,6 +189,10 @@ class ModelListFragment : Fragment() {
             }
         }
 
+        bindToolbar(
+            uiState = uiState
+        )
+
         bindDownloadProgress(
             uiState = uiState,
             uiAction = uiAction
@@ -273,6 +275,19 @@ class ModelListFragment : Fragment() {
                         icDownload.isEnabled = true
                         downloadProgressBar.isVisible = false
                     }
+                }
+            }
+        }
+    }
+
+    private fun FragmentModelListBinding.bindToolbar(uiState: StateFlow<ModelListState>) {
+        val modelDataFlow = uiState.map { it.modelData }
+        viewLifecycleOwner.lifecycleScope.launch {
+            modelDataFlow.collectLatest { modelData ->
+                if (modelData != null) {
+                    title.text = modelData.name.ifEmpty { getString(R.string.label_result) }
+                } else {
+                    title.text = getString(R.string.label_result)
                 }
             }
         }
