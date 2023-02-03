@@ -31,15 +31,6 @@ class UserViewModel @Inject constructor(
 
     val loginUser = appDatabase.loginUserDao().getLoginUser()
         .map { it?.toLoginUser() }
-        /*.shareIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            replay = 0
-        )*/
-
-    private fun readFromPrefs(): String? {
-        return ApplicationDependencies.getPersistentStore().userId
-    }
 
     private var autoLoginJob: Job? = null
 

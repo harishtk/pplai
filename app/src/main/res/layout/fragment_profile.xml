@@ -16,8 +16,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fitsSystemWindows="true"
-            app:contentScrim="?attr/colorSecondary"
-            app:layout_scrollFlags="noScroll|enterAlways">
+            app:contentScrim="?attr/colorPrimary"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -67,10 +67,12 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:contentInsetStart="0dp"
-                app:layout_collapseMode="pin">
+                app:layout_collapseMode="pin"
+                app:layout_collapseParallaxMultiplier="0.5">
 
                 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     android:layout_width="match_parent"
@@ -103,7 +105,7 @@
 
                     <TextView
                         android:id="@+id/toolbar_title"
-                        style="@style/TextStyle.Small.Bold"
+                        style="@style/TextStyle.VerySmall.Bold"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         tools:text="@string/app_name"
@@ -112,7 +114,8 @@
                         app:layout_constraintEnd_toStartOf="@id/right_barrier"
                         app:layout_constrainedWidth="true"
                         app:layout_constraintHorizontal_bias="0.0"
-                        app:layout_constraintBottom_toBottomOf="parent" />
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:visibility="visible"/>
 
                     <androidx.constraintlayout.widget.Barrier
                         android:id="@+id/right_barrier"
@@ -135,7 +138,7 @@
                             android:layout_width="@dimen/large_icon_size"
                             android:layout_height="@dimen/large_icon_size"
                             android:layout_margin="@dimen/inset_large"
-                            android:src="@drawable/ic_settings_filled"
+                            android:src="@drawable/ic_settings_transparent_rounded"
                             android:background="@drawable/ripple_rounded"
                             android:contentDescription="@string/content_description_settings"
                             android:visibility="visible"
@@ -148,6 +151,8 @@
             </com.google.android.material.appbar.MaterialToolbar>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+
 
     </com.google.android.material.appbar.AppBarLayout>
 

@@ -10,9 +10,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.*
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
@@ -35,6 +33,7 @@ import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
+import java.lang.Math.abs
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment() {
@@ -62,6 +61,12 @@ class ProfileFragment : Fragment() {
 
         setupObservers()
         handleBackPressed()
+
+        viewLifecycleOwner.lifecycle.addObserver(object : LifecycleEventObserver {
+            override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                Timber.d("Profile lifecycle state: $event")
+            }
+        })
     }
 
     private fun FragmentProfileBinding.bindState(
@@ -182,7 +187,21 @@ class ProfileFragment : Fragment() {
 
     private fun FragmentProfileBinding.bindAppbar(uiState: StateFlow<ProfileState>) {
         appbarLayout.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
-            // Timber.d("Offset: $verticalOffset total: ${appBarLayout.totalScrollRange}")
+            val delta = (kotlin.math.abs(verticalOffset)) / appBarLayout.totalScrollRange.toFloat()
+            // Timber.d("Offset: $verticalOffset total: ${appBarLayout.totalScrollRange} delta = $delta")
+
+            (1.0F - delta).let { scale ->
+                profileImageExpanded.scaleX = scale
+                profileImageExpanded.scaleY = scale
+            }
+
+            if (delta > 0.91f) {
+                toolbarTitle.isVisible = true
+                textUsernameExpanded.visibility = View.INVISIBLE
+            } else {
+                toolbarTitle.isVisible = false
+                textUsernameExpanded.visibility = View.VISIBLE
+            }
         }
 
         toolbarSettings.setOnClickListener { gotoSettings() }
@@ -192,19 +211,24 @@ class ProfileFragment : Fragment() {
             } catch (ignore: Exception) {
             }
         }
-        textUsernameExpanded.text = getString(
-            R.string.username_with_prefix,
-            ApplicationDependencies.getPersistentStore().username
-        )
-        ApplicationDependencies.getPersistentStore().apply {
-            if (isLogged) {
-                Glide.with(profileImageExpanded)
-                    .load(socialImage)
-                    .placeholder(R.drawable.profile_placeholder)
-                    .error(R.drawable.profile_placeholder)
-                    .into(profileImageExpanded)
-            } else {
-                profileImageExpanded.setImageResource(R.drawable.profile_placeholder)
+        viewLifecycleOwner.lifecycleScope.launch {
+            getString(
+                R.string.username_with_prefix,
+                ApplicationDependencies.getPersistentStore().username
+            ).let { formattedUsername ->
+                textUsernameExpanded.text = formattedUsername
+                toolbarTitle.text = formattedUsername
+            }
+            ApplicationDependencies.getPersistentStore().apply {
+                if (isLogged) {
+                    Glide.with(profileImageExpanded)
+                        .load(socialImage)
+                        .placeholder(R.drawable.profile_placeholder)
+                        .error(R.drawable.profile_placeholder)
+                        .into(profileImageExpanded)
+                } else {
+                    profileImageExpanded.setImageResource(R.drawable.profile_placeholder)
+                }
             }
         }
     }
@@ -267,7 +291,7 @@ class ProfileFragment : Fragment() {
                 .setEnterAnim(R.anim.slide_in_right)
                 .setExitAnim(R.anim.slide_out_right)
                 .build()
-            navigate(R.id.action_profile_to_settings, null, navOpts)
+            navigate(ProfileFragmentDirections.actionProfileToSettings())
         }
     }
 

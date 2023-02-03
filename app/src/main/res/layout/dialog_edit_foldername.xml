@@ -22,7 +22,7 @@
                 android:layout_width="@dimen/large_icon_size"
                 android:layout_height="@dimen/large_icon_size"
                 android:layout_margin="@dimen/inset_small"
-                android:src="@drawable/cancel_trasparent_rounded"
+                android:src="@drawable/cancel_transparent_rounded"
                 android:background="@drawable/ripple_rounded"
                 android:contentDescription="@string/content_description_close"
                 app:layout_constraintStart_toStartOf="parent"
