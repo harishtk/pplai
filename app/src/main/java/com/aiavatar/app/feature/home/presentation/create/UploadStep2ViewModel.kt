@@ -17,12 +17,14 @@ import com.aiavatar.app.core.data.source.local.entity.UploadSessionEntity
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.feature.home.domain.model.SelectedMediaItem
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import com.aiavatar.app.mapButReplace
 import com.pepulnow.app.data.LoadState
 import com.pepulnow.app.data.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
@@ -42,8 +44,6 @@ class UploadStep2ViewModel @Inject constructor(
     val uiEvent = _uiEvent.asSharedFlow()
 
     init {
-        val pickedUrisFlow = uiState.map { it.pickedUris }
-
         /*combine(
             selectedToggleFlow,
             pickedUrisFlow,
@@ -72,6 +72,17 @@ class UploadStep2ViewModel @Inject constructor(
         }.launchIn(viewModelScope)*/
     }
 
+    fun deletePhoto(uri: Uri) {
+        Timber.d("deletePhoto: $uri")
+        val newPreviewModelList = uiState.value.previewModelList
+            .filterIsInstance<UploadPreviewUiModel.Item>()
+            .filterNot { uiModel ->
+                uiModel.selectedMediaItem.uri == uri
+            }
+
+        setPickedUris(newPreviewModelList, append = false)
+    }
+
     fun restoreUploadSession() = viewModelScope.launch {
         val cachedSessionId: Long = savedStateHandle[KEY_CACHED_UPLOAD_SESSION_ID] ?: return@launch
         val uploadSessionWithFilesEntity = appDatabase.uploadSessionDao().getUploadSessionSync(cachedSessionId)
@@ -79,11 +90,10 @@ class UploadStep2ViewModel @Inject constructor(
             ?.map { entity ->
                 entity.localUriString.toUri()
             }?.let { pickedUris ->
-                val restoredFaceMap = HashMap<String, Boolean>()
-                pickedUris.onEach { uri -> restoredFaceMap[uri.toString()] = true }
-                setPickedUris(pickedUris, restoredFaceMap)
+                setPickedUris(
+                    pickedUris.map { UploadPreviewUiModel.Item(SelectedMediaItem(it), selected = true) }
+                )
             }
-
     }
 
     fun setCachedSessionId(sessionId: Long) {
@@ -106,7 +116,8 @@ class UploadStep2ViewModel @Inject constructor(
         pickedUris: List<Uri>,
         completion: (removed: Int, normalizedList: List<Uri>) -> Unit,
     ) = viewModelScope.launch {
-        val originalList = uiState.value.pickedUris
+        val originalList = uiState.value.previewModelList.filterIsInstance<UploadPreviewUiModel.Item>()
+            .map { it.selectedMediaItem.uri }
         val combinedUris = originalList.toMutableList().apply {
             addAll(pickedUris)
         }
@@ -117,21 +128,16 @@ class UploadStep2ViewModel @Inject constructor(
         completion(removed, normalizedList)
     }
 
-    fun setPickedUris(pickedUris: List<Uri>, faceResult: HashMap<String, Boolean>) {
+    fun setPickedUris(newPreviewModelList: List<UploadPreviewUiModel.Item>, append: Boolean = true) {
         // TODO: -done- process the result
-        // TODO:
-        val newPickedUris = uiState.value.pickedUris.toMutableList().apply {
-            addAll(pickedUris)
-        }
-        val pickedModelList = pickedUris.map { uri ->
-            val model = SelectedMediaItem(uri)
-            UploadPreviewUiModel.Item(model, selected = faceResult[uri.toString()] == true)
-        }
+        // TODO: clean this sheet!
+
         var remainingPhotoCount = 0
         val newModelList = uiState.value.previewModelList
             .filterNot { it is UploadPreviewUiModel.Placeholder }
             .toMutableList().apply {
-                addAll(pickedModelList)
+                if (!append) { clear() }
+                addAll(newPreviewModelList)
                 val selectedCount = count { model ->
                     model is UploadPreviewUiModel.Item && model.selected
                 }
@@ -142,7 +148,6 @@ class UploadStep2ViewModel @Inject constructor(
             }
         _uiState.update { state ->
             state.copy(
-                pickedUris = newPickedUris,
                 previewModelList = newModelList,
                 remainingPhotoCount = remainingPhotoCount
             )
@@ -241,7 +246,6 @@ class UploadStep2ViewModel @Inject constructor(
 data class UploadStep2State(
     val loadState: LoadStates = LoadStates.IDLE,
     val detectingFaces: Boolean = false,
-    val pickedUris: List<Uri> = emptyList(),
     val previewModelList: List<UploadPreviewUiModel> = emptyList(),
     val remainingPhotoCount: Int = MAX_IMAGE_COUNT,
     val exception: Exception? = null,
@@ -255,7 +259,6 @@ interface UploadStep2UiEvent {
 interface UploadPreviewUiModel {
     data class Item(val selectedMediaItem: SelectedMediaItem, val selected: Boolean) :
         UploadPreviewUiModel
-
     data class Placeholder(val position: Int) : UploadPreviewUiModel
 }
 

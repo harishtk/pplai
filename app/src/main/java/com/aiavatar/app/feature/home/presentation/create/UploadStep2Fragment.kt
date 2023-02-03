@@ -40,8 +40,8 @@ import com.aiavatar.app.databinding.FragmentUploadStep2Binding
 import com.aiavatar.app.databinding.ItemExamplePhotoBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewBinding
 import com.aiavatar.app.databinding.ItemUploadPreviewPlaceholderBinding
+import com.aiavatar.app.feature.home.domain.model.SelectedMediaItem
 import com.aiavatar.app.viewmodels.SharedViewModel
-import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
@@ -183,7 +183,9 @@ class UploadStep2Fragment : Fragment() {
             }
         }
 
-        val shouldShowExamplesFlow = uiState.map { it.pickedUris.isEmpty() }
+        val shouldShowExamplesFlow =  uiState.map {
+            it.previewModelList.filterIsInstance<UploadPreviewUiModel.Item>()
+        }.map { it.isEmpty() }
             .distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
             shouldShowExamplesFlow.collectLatest { shouldShowExamples ->
@@ -202,8 +204,12 @@ class UploadStep2Fragment : Fragment() {
                 }
             }
 
-            override fun onPlaceholerClick(position: Int) {
+            override fun onPlaceholderClick(position: Int) {
                 launchPhotoPicker()
+            }
+
+            override fun onDeleteClick(position: Int, model: UploadPreviewUiModel.Item) {
+                viewModel.deletePhoto(model.selectedMediaItem.uri)
             }
 
         }
@@ -243,7 +249,10 @@ class UploadStep2Fragment : Fragment() {
             } else {
                 launchPhotoPicker()
             }*/
-            if (uiState.value.pickedUris.isNotEmpty()) {
+            val picked = uiState.value.previewModelList
+                .filterIsInstance<UploadPreviewUiModel.Item>()
+                .count { it.selected }
+            if (picked > 0) {
                 viewModel.startUpload(requireContext())
             } else {
                 launchPhotoPicker()
@@ -270,13 +279,13 @@ class UploadStep2Fragment : Fragment() {
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
+        /*viewLifecycleOwner.lifecycleScope.launch {
             uiState.map { it.pickedUris }.collectLatest { uris ->
                 if (!isFaceDetectionRunning) {
                     // detectFacesInternal(uris)
                 }
             }
-        }
+        }*/
 
         val faceDetectionRunningFlow = uiState.map { it.detectingFaces }
             .distinctUntilChanged()
@@ -333,6 +342,7 @@ class UploadStep2Fragment : Fragment() {
 
     private fun detectFacesInternal(pickedUris: List<Uri>) =
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            // TODO: Clean this sheet
             isFaceDetectionRunning = true
             viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
             val result = HashMap<String, Boolean>()
@@ -349,13 +359,17 @@ class UploadStep2Fragment : Fragment() {
             }
             runBlocking(Dispatchers.IO) {
                 countDownLatch.await(1, TimeUnit.MINUTES)
-                taskList.onEachIndexed { index, task ->
+                val previewModelList = taskList.mapIndexed { index, task ->
                     val trackedIds = task.result.mapNotNull { it.trackingId }.distinct()
                     result[pickedUris[index].toString()] = task.result.isNotEmpty()/* &&
                         trackedIds.size == 1*/
                     Timber.d("Detecting: id = $index faces $trackedIds")
+                    UploadPreviewUiModel.Item(
+                        SelectedMediaItem(pickedUris[index]),
+                        selected = task.result.isNotEmpty()
+                    )
                 }
-                viewModel.setPickedUris(pickedUris, result)
+                viewModel.setPickedUris(previewModelList)
                 Timber.d("Detected Faces: $result")
             }
             isFaceDetectionRunning = false
@@ -512,9 +526,12 @@ class UploadPreviewAdapter(
                 view1.strokeColor = null
                 view1.strokeWidth = 0f
 
+                ivClose.isVisible = true
+
                 toggleSelection(selected)
 
                 view1.setOnClickListener { callback.onItemClick(adapterPosition, data) }
+                ivClose.setOnClickListener { callback.onDeleteClick(adapterPosition, data) }
             }
 
         fun toggleSelection(selected: Boolean) = with(binding) {
@@ -570,7 +587,7 @@ class UploadPreviewAdapter(
 
             root.setOnClickListener {
                 view1.touchInteractFeedback()
-                callback.onPlaceholerClick(adapterPosition)
+                callback.onPlaceholderClick(adapterPosition)
             }
         }
 
@@ -597,7 +614,8 @@ class UploadPreviewAdapter(
 
     interface Callback {
         fun onItemClick(position: Int, model: UploadPreviewUiModel.Item)
-        fun onPlaceholerClick(position: Int)
+        fun onDeleteClick(position: Int, model: UploadPreviewUiModel.Item)
+        fun onPlaceholderClick(position: Int)
     }
 
     companion object {
