@@ -225,7 +225,6 @@ class ModelListFragment : Fragment() {
                                 return@EditFolderNameDialog "Name too short"
                             }
                             // TODO: move 'save to gallery' to a foreground service
-                            context?.showToast("Saving to $typedName")
                             viewModel.saveModelName(typedName)
                             null
                         }.show(childFragmentManager, "folder-name-dialog")

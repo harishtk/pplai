@@ -1,6 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <style name="Widget.App.Snackbar" parent="Widget.MaterialComponents.Snackbar">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Snackbar</item>
+        <item name="actionTextColorAlpha">1</item>
+    </style>
+
+    <style name="Widget.App.SnackbarButton" parent="Widget.MaterialComponents.Button.TextButton.Snackbar">
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Snackbar" parent="">
+        <item name="colorPrimary">@color/yellow_200</item>
+        <item name="colorSurface">@color/blue_grey_700</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="snackbarButtonStyle">@style/Base.TextAppearance.Bold</item>
+    </style>
+
+    <style name="Widget.App.SnackbarText" parent="">
+        <item name="android:textAppearance">@style/TextStyle.VerySmall</item>
+    </style>
+
     <style name="Widget.App.LinearProgressIndicator" parent="Widget.MaterialComponents.LinearProgressIndicator">
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.LinearProgressIndicator</item>
         <item name="trackHeight">6dp</item>
@@ -87,6 +107,9 @@
         <item name="android:focusable">true</item>
         <item name="background">@drawable/ripple_rounded</item>
         <item name="android:background">@drawable/ripple_rounded</item>
+        <item name="android:tint">?attr/colorOnPrimary</item>
+        <item name="tint">?attr/colorOnPrimary</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.ImageButton</item>
     </style>
 
     <style name="Widget.App.Button" parent="Widget.MaterialComponents.Button">

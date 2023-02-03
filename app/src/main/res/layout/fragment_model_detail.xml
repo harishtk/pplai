@@ -120,11 +120,11 @@
             android:visibility="visible"/>
 
         <ImageView android:id="@+id/ic_download"
+            style="@style/Widget.App.ImageButton"
             android:layout_width="@dimen/xxlarge_icon_size"
             android:layout_height="@dimen/xxlarge_icon_size"
             android:layout_margin="@dimen/default_touchable_inset"
             android:src="@drawable/ic_download_outline"
-            android:background="@drawable/ripple_rounded"
             android:contentDescription="@string/content_description_download"
             app:layout_constraintStart_toEndOf="@id/btn_next"
             app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
@@ -143,11 +143,11 @@
             tools:visibility="visible" />
 
         <ImageView android:id="@+id/ic_share"
+            style="@style/Widget.App.ImageButton"
             android:layout_width="@dimen/xxlarge_icon_size"
             android:layout_height="@dimen/xxlarge_icon_size"
             android:layout_margin="@dimen/default_touchable_inset"
             android:src="@drawable/ic_share_outline"
-            android:background="@drawable/ripple_rounded"
             android:contentDescription="@string/content_description_download"
             app:layout_constraintStart_toEndOf="@id/ic_download"
             app:layout_constraintTop_toBottomOf="@id/bottom_barrier"

@@ -19,4 +19,8 @@
         <item name="isLightTheme">false</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <style name="ThemeOverlay.App.ImageButton" parent="">
+        <item name="colorOnPrimary">@color/white</item>
+    </style>
 </resources>

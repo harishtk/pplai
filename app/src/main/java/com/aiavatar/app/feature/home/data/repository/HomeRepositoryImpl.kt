@@ -29,8 +29,6 @@ import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.aiavatar.app.ifNullAlso
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -246,8 +244,31 @@ class HomeRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getModel2(modelId: String): Flow<Result<ModelData>> {
-        return observeModel(modelId)
+    override fun getModel2(modelId: String): Flow<Result<ModelData>> = flow {
+        val cache = observeModel(modelId).first()
+
+        if (cache == null) {
+            emit(Result.Loading)
+            when (val result = refreshModelInternal(modelId)) {
+                is Result.Success -> {
+                    localDataSource.apply {
+                        insertModel(result.data.toEntity())
+                    }
+                }
+                is Result.Error -> {
+                    emit(result)
+                }
+                is Result.Loading -> {
+                    /* Noop */
+                }
+            }
+        }
+
+        emitAll(
+            observeModel(modelId)
+                .map { Result.Success(it!!) }
+        )
+        /*observeModel(modelId)
             .onEach { modelData ->
                 if (modelData == null) {
                     // Model data not available in cache, get from remote
@@ -266,7 +287,7 @@ class HomeRepositoryImpl @Inject constructor(
             }
             .catch { t ->
                 emit(Result.Error(t as Exception))
-            }
+            }*/
     }
 
     // TODO: [forceRefresh] will not work as expected

@@ -3,6 +3,7 @@ package com.aiavatar.app.feature.home.presentation.catalog
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -68,9 +69,8 @@ class ModelDetailFragment : Fragment() {
 
     private var isSettingsLaunched = false
 
-    private var jumpToId: Long = -1
-    private var jumpToImageName: String? = null
-    private var jumpToPosition: Int = -1
+    private var jumpToId: Long? = null
+    private var jumpToPosition: Int? = null
 
     private var previousPosition: Int = -1
 
@@ -111,7 +111,6 @@ class ModelDetailFragment : Fragment() {
         arguments?.apply {
             val modelId = getString(ARG_MODEL_ID, null)
             jumpToId = getLong(ARG_JUMP_TO_ID, -1L)
-            jumpToImageName = getString(ARG_JUMP_TO_IMAGE_NAME, null)
 
             Timber.d("Args: model id = $modelId jumpTo = $jumpToId")
 
@@ -159,7 +158,7 @@ class ModelDetailFragment : Fragment() {
                         checkPermissionAndScheduleWorker(event.downloadSessionId)
                     }
                     is ModelDetailUiEvent.DownloadComplete -> {
-                        openGallery(event.savedUri)
+                        handleDownloadComplete(event.savedUri)
                     }
                 }
             }
@@ -225,7 +224,6 @@ class ModelDetailFragment : Fragment() {
                 if (position == jumpToPosition) {
                     jumpToPosition = -1
                     jumpToId = -1
-                    jumpToImageName = null
                 }
                 Timber.d("Jump to Id: $jumpToPosition")
                 previousPosition = position
@@ -266,13 +264,14 @@ class ModelDetailFragment : Fragment() {
             avatarListFlow.collectLatest { avatarList ->
                 scrollerAdapter.submitList(avatarList)
                 catalogPresetAdapter.submitList(avatarList) {
+                    // TODO: refactor
                     Timber.d("Jump to Id: $jumpToId")
-                    if (jumpToImageName != null) {
+                    if (jumpToId != null) {
                         avatarList.mapIndexed { index, avatarUiModel ->
                             val id =
-                                (avatarUiModel as? SelectableAvatarUiModel.Item)?.modelAvatar?.remoteFile
+                                (avatarUiModel as? SelectableAvatarUiModel.Item)?.modelAvatar?._id
                             Timber.d("Compare: 1 id = $id  == jump = $jumpToId")
-                            if (avatarUiModel is SelectableAvatarUiModel.Item && avatarUiModel.modelAvatar.remoteFile == jumpToImageName) {
+                            if (avatarUiModel is SelectableAvatarUiModel.Item && avatarUiModel.modelAvatar._id == jumpToId) {
                                 index
                             } else {
                                 -1
@@ -285,7 +284,7 @@ class ModelDetailFragment : Fragment() {
                                 jumpToPosition = _jumpToPosition
                                 Timber.d("Jump to position: $jumpToPosition")
                                 try {
-                                    catalogPreviewPager.setCurrentItem(jumpToPosition, false)
+                                    catalogPreviewPager.setCurrentItem(_jumpToPosition, false)
                                 } catch (e: Exception) {
                                     Timber.d(e)
                                 }
@@ -336,7 +335,6 @@ class ModelDetailFragment : Fragment() {
                         return@EditFolderNameDialog "Name too short"
                     }
                     // TODO: move 'save to gallery' to a foreground service
-                    context?.showToast("Saving to $typedName")
                     viewModel.saveModelName(typedName) {
                         viewModel.downloadCurrentAvatar(requireContext())
                     }
@@ -405,6 +403,28 @@ class ModelDetailFragment : Fragment() {
         }
     }
 
+    private fun FragmentModelDetailBinding.handleDownloadComplete(
+        savedUri: Uri
+    ) {
+        sdkBelowQ {
+            MediaScannerConnection.scanFile(
+                requireContext(),
+                arrayOf(savedUri.toString()),
+                arrayOf(Constant.MIME_TYPE_IMAGE)
+            ) { path, uri ->
+                Timber.v("Gallery refreshed path = $path uri = $uri")
+            }
+        }
+        root.showSnack(
+            "Saved to Gallery",
+            actionTitle = "View",
+            isLong = true,
+            actionCallback = {
+                openGallery(savedUri)
+            }
+        )
+    }
+
     private fun setUpIndicator(count: Int) {
         binding.indicatorView.setPageSize(count)
         binding.indicatorView.notifyDataChanged()
@@ -446,7 +466,12 @@ class ModelDetailFragment : Fragment() {
     private fun checkPermissionAndScheduleWorker(downloadSessionId: Long) {
         val cont: Continuation = {
             WorkUtil.scheduleDownloadWorker(requireContext(), downloadSessionId)
-            context?.showToast("Downloading.. check notifications")
+            val modelName = viewModel.uiState.value.modelData?.name
+            if (modelName != null) {
+                context?.showToast("Saving to $modelName")
+            } else {
+                context?.showToast("Saving..")
+            }
             Timber.d("Download scheduled: $downloadSessionId")
         }
 
