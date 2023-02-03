@@ -247,11 +247,6 @@ class CatalogFragment : Fragment() {
 
         profileContainer.setOnClickListener {
             gotoProfile()
-            /*if (ApplicationDependencies.getPersistentStore().isLogged) {
-                gotoProfile()
-            } else {
-                gotoLogin()
-            }*/
         }
     }
 

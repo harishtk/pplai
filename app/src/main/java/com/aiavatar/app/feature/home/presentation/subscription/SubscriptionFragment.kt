@@ -8,20 +8,21 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
-import com.aiavatar.app.Constant
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.databinding.FragmentSubscriptionBinding
-import com.aiavatar.app.defaultNavOptsBuilder
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
-import com.aiavatar.app.showToast
+import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
+import com.aiavatar.app.viewmodels.UserViewModel
 import com.pepulnow.app.data.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
@@ -37,6 +38,7 @@ import timber.log.Timber
 @AndroidEntryPoint
 class SubscriptionFragment : Fragment() {
 
+    private val userViewModel: UserViewModel by viewModels()
     private val viewModel: SubscriptionViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,6 +68,8 @@ class SubscriptionFragment : Fragment() {
             uiAction = viewModel.accept,
             uiEvent = viewModel.uiEvent
         )
+
+        setupObservers()
     }
 
     private fun FragmentSubscriptionBinding.bindState(
@@ -184,6 +188,47 @@ class SubscriptionFragment : Fragment() {
         btnClose.setOnClickListener {
             try { findNavController().navigateUp() }
             catch (ignore: Exception) {}
+        }
+    }
+
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            userViewModel.loginUser.collectLatest { loginUser ->
+                if (loginUser == null) {
+                    gotoLogin()
+                } else {
+                    if (loginUser.userId != null) {
+                        viewModel.refresh()
+                    }
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                getNavigationResultFlow<Boolean>(LoginFragment.LOGIN_RESULT)?.collectLatest { isLoggedIn ->
+                    if (isLoggedIn != null) {
+                        Timber.d("Login result: $isLoggedIn")
+                        /*if (isLoggedIn != true) {
+                            safeCall { findNavController().navigateUp() }
+                        }*/
+                        clearNavigationResult<Boolean>(LoginFragment.LOGIN_RESULT)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun gotoLogin() {
+        Timber.d("User login: opening login..")
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder().build()
+            val args = Bundle().apply {
+                /* 'popup' means this page, the one who fired it expects the result */
+                putString(Constant.EXTRA_FROM, "popup")
+                putInt(Constant.EXTRA_POP_ID, R.id.subscription_plans)
+            }
+            navigate(R.id.login_fragment, args, navOpts)
         }
     }
 }

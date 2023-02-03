@@ -85,8 +85,6 @@ class SubscriptionViewModel @Inject constructor(
         }.launchIn(viewModelScope)
 
         accept = { uiAction -> onUiAction(uiAction) }
-
-        refreshInternal()
     }
 
     private fun onUiAction(uiAction: SubscriptionUiAction) {
@@ -113,6 +111,10 @@ class SubscriptionViewModel @Inject constructor(
                 startPurchaseFlowInternal()
             }
         }
+    }
+
+    fun refresh() {
+        refreshInternal()
     }
 
     fun setModelId(modelId: String) {

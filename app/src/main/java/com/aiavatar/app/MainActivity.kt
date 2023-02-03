@@ -78,6 +78,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         lifecycleScope.launch { StorageUtil.cleanUp(applicationContext) }
 
         val restartHint = intent.extras?.getString("restart_hint", "")
+        // TODO: read login data from [UserViewModel]
         if (ApplicationDependencies.getPersistentStore().isLogged) {
             if (restartHint != "from_login") {
                 userViewModel.autoLogin()

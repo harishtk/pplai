@@ -249,14 +249,15 @@ class ProfileFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                /*getNavigationResultFlow<Boolean>(LoginFragment.LOGIN_RESULT)?.collectLatest { isLoggedIn ->
+                getNavigationResultFlow<Boolean>(LoginFragment.LOGIN_RESULT)?.collectLatest { isLoggedIn ->
+                    Timber.d("Login result: $isLoggedIn")
                     if (isLoggedIn != null) {
-                        if (isLoggedIn != true) {
+                        /*if (isLoggedIn != true) {
                             safeCall { findNavController().navigateUp() }
-                        }
+                        }*/
                         clearNavigationResult<Boolean>(LoginFragment.LOGIN_RESULT)
                     }
-                }*/
+                }
             }
         }
     }
@@ -279,7 +280,8 @@ class ProfileFragment : Fragment() {
             val navOpts = defaultNavOptsBuilder().build()
             val args = Bundle().apply {
                 /* 'popup' means previous page, the one who fired it expects the result */
-                putString(Constant.EXTRA_FROM, "profile")
+                putString(Constant.EXTRA_FROM, "popup")
+                putInt(Constant.EXTRA_POP_ID, R.id.profile)
             }
             navigate(R.id.login_fragment, args, navOpts)
         }

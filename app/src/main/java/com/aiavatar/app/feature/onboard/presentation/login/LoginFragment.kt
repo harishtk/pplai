@@ -90,7 +90,7 @@ class LoginFragment : Fragment() {
         Timber.d("From: $from")
 
         savedStateHandle = when (from) {
-            "profile" -> findNavController().previousBackStackEntry?.savedStateHandle
+            "popup" -> findNavController().previousBackStackEntry?.savedStateHandle
             else -> null
         }
         savedStateHandle?.set(LOGIN_RESULT, false)
@@ -155,7 +155,7 @@ class LoginFragment : Fragment() {
                                     navigate(R.id.upload_step_1, args, navOpts)
                                 }
                             }
-                            "profile" -> { /* 'popup' means previous page, the one who fired it expects the result */
+                            "popup" -> { /* 'popup' means previous page, the one who fired it expects the result */
                                 savedStateHandle?.set(LOGIN_RESULT, true)
                                 findNavController().popBackStack()
                             }
@@ -432,16 +432,25 @@ class LoginFragment : Fragment() {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     if (!viewModel.handleBackPressed()) {
+                        val popId = arguments?.getInt(Constant.EXTRA_POP_ID, -1)
                         findNavController().apply {
-                            when (from) {
-                                "profile" -> {
-                                    popBackStack(R.id.profile, true)
-                                }
-                                else -> {
+                            if (popId != null) {
+                                if (!popBackStack(popId, true)) {
                                     if (!navigateUp()) {
                                         activity?.finish()
                                     }
                                 }
+                            } else {
+                                /*when (from) {
+                                    "profile" -> {
+                                        popBackStack(R.id.profile, true)
+                                    }
+                                    else -> {
+                                        if (!navigateUp()) {
+                                            activity?.finish()
+                                        }
+                                    }
+                                }*/
                             }
                         }
                     }

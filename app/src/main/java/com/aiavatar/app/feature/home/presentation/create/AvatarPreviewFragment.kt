@@ -246,51 +246,29 @@ class AvatarPreviewFragment : Fragment() {
         btnNext.text = getString(R.string.label_download)
         btnNext.setOnClickListener {
             val avatarStatus = uiState.value.avatarStatusWithFiles?.avatarStatus ?: return@setOnClickListener
-            if (ApplicationDependencies.getPersistentStore().isLogged) {
-                if (avatarStatus.paid) {
-                    // TODO: get folder name
-                    if (avatarStatus.modelRenamedByUser) {
-                        // TODO: if model is renamed directly save the photos
-                        viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
-                    } else {
-                        context?.debugToast("Getting folder name")
-                        EditFolderNameDialog { typedName ->
-                            if (typedName.isBlank()) {
-                                return@EditFolderNameDialog "Name cannot be empty!"
-                            }
-                            if (typedName.length < 4) {
-                                return@EditFolderNameDialog "Name too short"
-                            }
-                            // TODO: move 'save to gallery' to a foreground service
-                            context?.showToast("Saving to $typedName")
-                            viewModel.saveModelName(typedName)
-                            null
-                        }.show(childFragmentManager, "folder-name-dialog")
-                    }
+            if (avatarStatus.paid) {
+                // TODO: get folder name
+                if (avatarStatus.modelRenamedByUser) {
+                    // TODO: if model is renamed directly save the photos
+                    viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
                 } else {
-                    // TODO: goto payment
-                    findNavController().apply {
-                        val navOpts = defaultNavOptsBuilder()
-                            .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
-                            .build()
-                        val args = Bundle().apply {
-                            putString(Constant.EXTRA_FROM, "login")
-                            putString(Constant.ARG_MODEL_ID, avatarStatus.modelId)
+                    context?.debugToast("Getting folder name")
+                    EditFolderNameDialog { typedName ->
+                        if (typedName.isBlank()) {
+                            return@EditFolderNameDialog "Name cannot be empty!"
                         }
-                        navigate(R.id.subscription_plans, args, navOpts)
-                    }
+                        if (typedName.length < 4) {
+                            return@EditFolderNameDialog "Name too short"
+                        }
+                        // TODO: move 'save to gallery' to a foreground service
+                        context?.showToast("Saving to $typedName")
+                        viewModel.saveModelName(typedName)
+                        null
+                    }.show(childFragmentManager, "folder-name-dialog")
                 }
             } else {
-                findNavController().apply {
-                    val args = bundleOf(
-                        Constant.EXTRA_FROM to "avatar_result",
-                        Constant.ARG_MODEL_ID to avatarStatus.modelId
-                    )
-                    val navOpts = defaultNavOptsBuilder()
-                        .setPopUpTo(R.id.avatar_result, inclusive = false, saveState = true)
-                        .build()
-                    navigate(R.id.login_fragment, args, navOpts)
-                }
+                // TODO: goto payment
+                gotoPlans(avatarStatus.modelId)
             }
         }
 
@@ -329,6 +307,19 @@ class AvatarPreviewFragment : Fragment() {
                 findNavController().navigateUp()
             } catch (ignore: Exception) {
             }
+        }
+    }
+
+    private fun gotoPlans(modelId: String) = safeCall {
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder()
+                .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
+                .build()
+            val args = Bundle().apply {
+                putString(Constant.EXTRA_FROM, "avatar_result")
+                putString(Constant.ARG_MODEL_ID, modelId)
+            }
+            navigate(R.id.subscription_plans, args, navOpts)
         }
     }
 

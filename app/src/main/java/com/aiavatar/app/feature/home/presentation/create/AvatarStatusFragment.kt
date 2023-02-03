@@ -51,6 +51,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
+import kotlin.math.log
 
 @AndroidEntryPoint
 class AvatarStatusFragment : Fragment() {
@@ -396,12 +397,16 @@ class AvatarStatusFragment : Fragment() {
             }
         }
 
-        if (ApplicationDependencies.getPersistentStore().isLogged) {
-            btnClose.isVisible = true
-            btnClose.setOnClickListener { activity?.onBackPressedDispatcher?.onBackPressed() }
-        } else {
-            // If the user isn't logged in, then this is a blocker page
-            btnClose.isVisible = false
+        viewLifecycleOwner.lifecycleScope.launch {
+            userViewModel.loginUser.collectLatest { loginUser ->
+                if (loginUser?.userId != null) {
+                    btnClose.isVisible = true
+                    btnClose.setOnClickListener { activity?.onBackPressedDispatcher?.onBackPressed() }
+                } else {
+                    // If the user isn't logged in, then this is a blocker page
+                    btnClose.isVisible = false
+                }
+            }
         }
 
         retryButton.setOnClickListener { viewModel.refresh() }
@@ -449,6 +454,7 @@ class AvatarStatusFragment : Fragment() {
                     safeCall {
                         findNavController().apply {
                             if (!navigateUp()) {
+                                // TODO: clean this up!
                                 if (ApplicationDependencies.getPersistentStore().isLogged) {
                                     gotoHome()
                                 } else {

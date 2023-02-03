@@ -11,6 +11,7 @@ object Constant {
     const val EXTRA_STREAM_ID   = "com.aiavatar.app.extras.STREAM_ID"
     const val EXTRA_SESSION_ID = "com.aiavatar.app.extras.SESSION_ID"
     const val EXTRA_FROM = "com.aiavatar.app.extras.FROM"
+    const val EXTRA_POP_ID = "com.aiavatar.app.extras.POP_ID"
 
     /* Args */
     const val ARG_PLAN_ID = "com.aiavatar.app.args.PLAN_ID"
