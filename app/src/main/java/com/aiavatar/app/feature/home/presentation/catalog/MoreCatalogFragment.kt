@@ -194,7 +194,7 @@ class MoreCatalogScrollAdapter(
             title.text = preset.imageName
             Glide.with(imageView)
                 .load(URLProvider.avatarUrl(preset.imageName))
-                .placeholder(R.color.transparent_black)
+                .placeholder(R.drawable.loading_animation)
                 .error(R.color.white)
                 .into(imageView)
 

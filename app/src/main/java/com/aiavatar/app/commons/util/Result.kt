@@ -1,5 +1,7 @@
 package com.aiavatar.app.commons.util
 
+import okhttp3.Cache
+
 /**
  * A generic class that holds data and it's state
  *
@@ -13,8 +15,8 @@ sealed class Result<out R> {
 
     override fun toString(): String {
         return when (this) {
-            is Success<*> -> "Success[data=$data]"
-            is Error -> "Error[exception=$exception]"
+            is Success<*>   -> "Success[data=$data]"
+            is Error        -> "Error[exception=$exception]"
             Loading         -> "Loading"
         }
     }

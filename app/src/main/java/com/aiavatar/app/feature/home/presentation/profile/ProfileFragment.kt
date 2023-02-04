@@ -463,7 +463,7 @@ class ModelListAdapter(
             description.text = "${data.modelListWithModel.model?.totalCount} creations"
             Glide.with(imageView)
                 .load(data.modelListWithModel.model?.latestImage)
-                .placeholder(R.color.transparent_black)
+                .placeholder(R.drawable.loading_animation)
                 .error(R.color.white)
                 .into(imageView)
 

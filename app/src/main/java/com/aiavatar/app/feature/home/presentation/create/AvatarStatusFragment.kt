@@ -556,7 +556,7 @@ class AvatarStatusFragment : Fragment() {
         uploadSessionWithFiles ?: return ""
         val uploadingFiles = uploadSessionWithFiles.uploadFilesEntity
         val finishedUploads = uploadingFiles.count { it.status == UploadFileStatus.COMPLETE.status }
-        return "$finishedUploads of $uploadingFiles"
+        return "$finishedUploads of ${uploadingFiles.size}"
     }
 
     private fun notifyUploadComplete(context: Context, photosCount: Int) {

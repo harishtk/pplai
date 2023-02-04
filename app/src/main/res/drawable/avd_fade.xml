@@ -1,0 +1,30 @@
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="vector"
+            android:width="100dp"
+            android:height="100dp"
+            android:viewportWidth="100"
+            android:viewportHeight="100">
+            <path
+                android:name="alphagroup"
+                android:pathData="M 0 0 L 100 0 C 105.302 0 110.393 2.109 114.142 5.858 C 117.891 9.607 120 14.698 120 20 L 120 120 C 120 125.302 117.891 130.393 114.142 134.142 C 110.393 137.891 105.302 140 100 140 L 0 140 C -5.302 140 -10.393 137.891 -14.142 134.142 C -17.891 130.393 -20 125.302 -20 120 L -20 20 C -20 14.698 -17.891 9.607 -14.142 5.858 C -10.393 2.109 -5.302 0 0 0 Z"
+                android:fillColor="#aaaaaa"/>
+        </vector>
+    </aapt:attr>
+    <target android:name="alphagroup">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:duration="1000"
+                android:valueFrom="0.6"
+                android:valueTo="0.95"
+                android:valueType="floatType"
+                android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+                android:repeatMode="reverse"
+                android:repeatCount="infinite" />
+        </aapt:attr>
+    </target>
+</animated-vector>

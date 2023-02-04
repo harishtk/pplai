@@ -16,6 +16,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
@@ -71,8 +72,9 @@ class ProfileViewModel @Inject constructor(
 
         modelsFetchJob?.cancel(CancellationException("New request")) // just in case
         modelsFetchJob = viewModelScope.launch {
-            setLoading(loadType, LoadState.Loading())
+            // setLoading(loadType, LoadState.Loading())
             homeRepository.getMyModels(forceRefresh).collectLatest { result ->
+                Timber.d("Result: $result")
                 when (result) {
                     is Result.Loading -> setLoading(loadType, LoadState.Loading())
                     is Result.Error -> {

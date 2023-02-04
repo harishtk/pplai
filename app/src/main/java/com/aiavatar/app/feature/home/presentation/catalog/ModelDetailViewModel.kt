@@ -6,10 +6,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.*
-import com.aiavatar.app.commons.util.ResolvableException
-import com.aiavatar.app.commons.util.Result
-import com.aiavatar.app.commons.util.StorageUtil
-import com.aiavatar.app.commons.util.UiText
+import com.aiavatar.app.commons.util.*
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
@@ -283,11 +280,13 @@ class ModelDetailViewModel @Inject constructor(
             )
         }
 
+        val mimeType = getMimeType(context, modelAvatar.remoteFile.toUri())
+            ?: Constant.MIME_TYPE_JPEG
         val savedUri = StorageUtil.saveFile(
             context = context,
             url = modelAvatar.remoteFile,
             relativePath = relativeDownloadPath,
-            mimeType = Constant.MIME_TYPE_JPEG,
+            mimeType = mimeType,
             displayName = Commons.getFileNameFromUrl(modelAvatar.remoteFile),
         ) { progress, bytesDownloaded ->
             Timber.d("Download: ${modelAvatar.remoteFile} progress = $progress downloaded = $bytesDownloaded")
@@ -362,7 +361,7 @@ class ModelDetailViewModel @Inject constructor(
             }
 
             if (downloadFiles.isNotEmpty()) {
-                // TODO: add download files and schedule worker
+                // TODO: -done- add download files and schedule worker
                 appDatabase.downloadFilesDao().insertAll(
                     downloadFiles.map(DownloadFile::toEntity)
                 )

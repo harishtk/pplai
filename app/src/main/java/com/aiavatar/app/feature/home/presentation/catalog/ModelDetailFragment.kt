@@ -22,6 +22,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.CompositePageTransformer
@@ -217,12 +218,11 @@ class ModelDetailFragment : Fragment() {
                 indicatorView.onPageSelected(position)
                 viewModel.toggleSelection(position)
 
-                avatarScrollerList.post {
-                    if (abs(previousPosition - position) <= SMOOTH_SCROLL_THRESHOLD) {
-                        avatarScrollerList.smoothScrollToPosition(position)
-                    } else {
-                        avatarScrollerList.scrollToPosition(position)
-                    }
+                val delta = abs(previousPosition - position)
+                if (delta <= SCROLL_ANIMATION_THRESHOLD) {
+                    avatarScrollerList.smoothScrollToPosition(position)
+                } else {
+                    avatarScrollerList.scrollToPosition(position)
                 }
 
                 if (position == jumpToPosition) {
@@ -573,7 +573,7 @@ class ModelDetailFragment : Fragment() {
     companion object {
         val TAG = ModelDetailFragment::class.java.simpleName
 
-        private const val SMOOTH_SCROLL_THRESHOLD = 20
+        private const val SCROLL_ANIMATION_THRESHOLD = 40
 
         const val ARG_MODEL_ID = "com.aiavatar.app.args.MODEL_ID"
         const val ARG_STATUS_ID = "com.aiavatar.app.args.STATUS_ID"
@@ -636,7 +636,7 @@ class AvatarScrollAdapter(
                 title.text = listAvatar.remoteFile
                 Glide.with(previewImage)
                     .load(listAvatar.remoteFile)
-                    .placeholder(R.color.transparent_black)
+                    .placeholder(R.drawable.loading_animation)
                     .error(R.color.white)
                     .into(previewImage)
 

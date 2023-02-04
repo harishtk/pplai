@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -11,8 +11,9 @@
         android:elevation="0dp"
         app:elevation="0dp">
 
-        <include layout="@layout/default_app_toolbar"
+        <include
             android:id="@+id/toolbar_included"
+            layout="@layout/default_app_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize" />
 
@@ -23,61 +24,170 @@
         android:layout_height="match_parent"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
-        <Space android:id="@+id/spacer1"
+        <Space
+            android:id="@+id/spacer1"
             android:layout_width="match_parent"
             android:layout_height="@dimen/spacer_size_very_small"
             android:visibility="gone"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView android:id="@+id/btn_close"
+        <ImageView
+            android:id="@+id/btn_close"
             android:layout_width="@dimen/large_icon_size"
             android:layout_height="@dimen/large_icon_size"
             android:layout_margin="@dimen/inset_large"
-            android:src="@drawable/cancel_transparent_rounded"
             android:background="@drawable/ripple_rounded"
             android:contentDescription="@string/content_description_close"
+            android:src="@drawable/cancel_transparent_rounded"
             android:visibility="gone"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0.0"
-            app:layout_constraintHorizontal_bias="1.0" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
 
-        <ImageView android:id="@+id/ic_edit"
+        <ImageView
+            android:id="@+id/ic_edit"
             style="@style/Widget.App.ImageButton"
             android:layout_width="@dimen/default_icon_size"
             android:layout_height="@dimen/default_icon_size"
             android:src="@drawable/ic_edit_filled_dark_bg"
             android:visibility="gone" />
 
-        <FrameLayout android:id="@+id/content"
+        <FrameLayout
+            android:id="@+id/content"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/bottom_barrier">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <androidx.recyclerview.widget.RecyclerView
+            <com.aiavatar.app.view.GridRecyclerView
                 android:id="@+id/avatar_preview_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3"
+                tools:itemCount="12"
+                tools:layoutAnimation="@null"
                 tools:listitem="@layout/item_square_image"
-                tools:itemCount="12" />
+                tools:visibility="visible" />
+
+            <com.facebook.shimmer.ShimmerFrameLayout
+                android:id="@+id/list_placeholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:shimmer_auto_start="true"
+                app:shimmer_direction="top_to_bottom"
+                tools:visibility="visible">
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:columnCount="3"
+                    android:rowCount="4">
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                    <include
+                        layout="@layout/item_square_image_placeholder"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_rowWeight="0"/>
+
+                </GridLayout>
+
+            </com.facebook.shimmer.ShimmerFrameLayout>
 
         </FrameLayout>
 
         <androidx.constraintlayout.widget.Barrier
             android:id="@+id/bottom_barrier"
-            app:barrierDirection="top"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:constraint_referenced_ids="btn_next"/>
+            app:barrierDirection="top"
+            app:constraint_referenced_ids="btn_next" />
 
         <com.dd.CircularProgressButton
             android:id="@+id/btn_next_old"
@@ -86,79 +196,82 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="10dp"
             android:textAllCaps="false"
-            android:textColor="@color/black"
             android:textAppearance="@style/Base.TextAppearance.Bold"
+            android:textColor="@color/black"
             android:textSize="16sp"
+            android:visibility="gone"
             app:cornerRadius="@dimen/button_corner_size"
             app:cpb_colorIndicator="@color/white"
-            app:cpb_colorProgress="?attr/colorSecondary"
             app:cpb_colorIndicatorBackground="?attr/colorSecondaryVariant"
+            app:cpb_colorProgress="?attr/colorSecondary"
             app:cpb_cornerRadius="@dimen/button_corner_size"
             app:cpb_selectorIdle="@drawable/progress_button_state"
             app:cpb_textIdle="Download"
             app:elevation="4dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/ic_download"
-            app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
-            app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constrainedWidth="true"
-            android:visibility="gone"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/ic_download"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/bottom_barrier" />
 
         <com.google.android.material.button.MaterialButton
-            style="@style/Widget.App.Button"
             android:id="@+id/btn_next"
+            style="@style/Widget.App.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:insetBottom="@dimen/inset_small"
             android:insetLeft="@dimen/inset_small"
             android:insetTop="@dimen/inset_small"
             android:insetRight="@dimen/inset_small"
+            android:insetBottom="@dimen/inset_small"
             android:text="@string/label_download"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/ic_download"
-            app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
-            app:layout_constraintHorizontal_chainStyle="spread"
+            android:visibility="visible"
             app:layout_constrainedWidth="true"
-            android:visibility="visible"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/ic_download"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle" />
 
-        <ImageView android:id="@+id/ic_download"
+        <ImageView
+            android:id="@+id/ic_download"
             style="@style/Widget.App.ImageButton"
             android:layout_width="@dimen/xxlarge_icon_size"
             android:layout_height="@dimen/xxlarge_icon_size"
             android:layout_margin="@dimen/default_touchable_inset"
-            android:src="@drawable/ic_download_outline"
             android:contentDescription="@string/content_description_download"
-            app:layout_constraintStart_toEndOf="@id/btn_next"
-            app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
-            app:layout_constraintEnd_toStartOf="@id/ic_share"
+            android:src="@drawable/ic_download_outline"
+            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constrainedWidth="true" />
+            app:layout_constraintEnd_toStartOf="@id/ic_share"
+            app:layout_constraintStart_toEndOf="@id/btn_next"
+            app:layout_constraintTop_toBottomOf="@id/bottom_barrier" />
 
-        <ProgressBar android:id="@+id/download_progress_bar"
+        <ProgressBar
+            android:id="@+id/download_progress_bar"
             android:layout_width="@dimen/icon_overlay_progress_size"
             android:layout_height="@dimen/icon_overlay_progress_size"
             android:visibility="gone"
-            app:layout_constraintStart_toStartOf="@id/ic_download"
-            app:layout_constraintEnd_toEndOf="@id/ic_download"
-            app:layout_constraintTop_toTopOf="@id/ic_download"
             app:layout_constraintBottom_toBottomOf="@id/ic_download"
+            app:layout_constraintEnd_toEndOf="@id/ic_download"
+            app:layout_constraintStart_toStartOf="@id/ic_download"
+            app:layout_constraintTop_toTopOf="@id/ic_download"
             tools:visibility="visible" />
 
-        <ImageView android:id="@+id/ic_share"
+        <ImageView
+            android:id="@+id/ic_share"
             style="@style/Widget.App.ImageButton"
             android:layout_width="@dimen/xxlarge_icon_size"
             android:layout_height="@dimen/xxlarge_icon_size"
             android:layout_margin="@dimen/default_touchable_inset"
-            android:src="@drawable/ic_share_outline"
             android:contentDescription="@string/content_description_download"
-            app:layout_constraintStart_toEndOf="@id/ic_download"
-            app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:src="@drawable/ic_share_outline"
+            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constrainedWidth="true" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ic_download"
+            app:layout_constraintTop_toBottomOf="@id/bottom_barrier" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/retry_button"
@@ -168,20 +281,22 @@
             android:layout_gravity="center"
             android:text="@string/retry"
             android:visibility="gone"
-            app:layout_constraintVertical_bias="0.7"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.7"
             tools:visibility="visible" />
 
-        <ProgressBar android:id="@+id/progress_bar"
+        <ProgressBar
+            android:id="@+id/progress_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

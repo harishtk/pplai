@@ -405,7 +405,7 @@ class AvatarScrollAdapter(
                 title.text = listAvatar.remoteFile
                 Glide.with(previewImage)
                     .load(listAvatar.remoteFile)
-                    .placeholder(R.color.transparent_black)
+                    .placeholder(R.drawable.loading_animation)
                     .error(R.color.white)
                     .into(previewImage)
 
@@ -533,7 +533,7 @@ class AvatarPreviewPagerAdapter(
             title.text = listAvatar.remoteFile
             Glide.with(previewImage)
                 .load(listAvatar.remoteFile)
-                .placeholder(R.color.transparent_black)
+                .placeholder(R.drawable.loading_animation)
                 .error(R.color.white)
                 .into(previewImage)
 

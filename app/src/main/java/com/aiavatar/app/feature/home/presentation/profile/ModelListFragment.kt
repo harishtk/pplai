@@ -13,6 +13,8 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.Navigator
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -177,8 +179,23 @@ class ModelListFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
                 Timber.d("Load state: $loadState")
-                progressBar.isVisible = loadState.refresh is LoadState.Loading &&
-                        adapter.itemCount <= 0
+                val emptyList = adapter.itemCount <= 0
+                if (loadState.refresh is LoadState.Loading) {
+                    listPlaceholder.isVisible = emptyList
+                }
+
+                if (loadState.refresh !is LoadState.Loading) {
+                    if (listPlaceholder.isVisible) {
+                        listPlaceholder.postDelayed({
+                            listPlaceholder.isVisible = false
+                        }, 100L)
+                    }
+                }
+
+                /*listPlaceholder.isVisible = loadState.refresh is LoadState.Loading &&
+                        adapter.itemCount <= 0*/
+                /*progressBar.isVisible = loadState.refresh is LoadState.Loading &&
+                        adapter.itemCount <= 0*/
                 retryButton.isVisible = loadState.refresh is LoadState.Error &&
                         adapter.itemCount <= 0
                 if (loadState.refresh is LoadState.Error) {
@@ -346,7 +363,10 @@ class ModelListFragment : Fragment() {
         }
     }
 
-    private fun gotoModelDetail(position: Int, data: ModelListUiModel2.AvatarItem) {
+    private fun gotoModelDetail(
+        position: Int,
+        data: ModelListUiModel2.AvatarItem
+    ) {
         Timber.d("gotoModelDetail: ${data.avatar._id}")
         val modelId = viewModel.getModelId()
 
@@ -389,6 +409,10 @@ class ModelListFragment : Fragment() {
         storagePermissionLauncher.launch(storagePermissions)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        Timber.d("onSaveInstanceState")
+    }
 }
 
 class ModelListAdapter2(
@@ -413,6 +437,7 @@ class ModelListAdapter2(
         fun bind(data: ModelListUiModel2.AvatarItem, callback: Callback) = with(binding) {
             Glide.with(view1)
                 .load(data.avatar.remoteFile)
+                // .load(R.drawable.image_placeholder_animation)
                 .placeholder(R.drawable.loading_animation)
                 .into(view1)
 

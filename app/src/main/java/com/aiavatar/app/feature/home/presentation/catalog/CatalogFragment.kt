@@ -225,7 +225,7 @@ class CatalogFragment : Fragment() {
 
     private fun FragmentCatalogBinding.bindToolbar() {
         toolbarNavigationIcon.isVisible = false
-        toolbarTitle.text = "Avatar"
+        toolbarTitle.text = "AI Avatar"
 
         viewLifecycleOwner.lifecycleScope.launch {
             userViewModel.loginUser.collectLatest { loginUser ->

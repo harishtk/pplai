@@ -161,7 +161,7 @@ class HomeRepositoryImpl @Inject constructor(
             is NetworkResult.Loading -> Result.Loading
             is NetworkResult.Success -> {
                 if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                    val modelItemListDto = networkResult.data?.data?.models
+                    val modelItemListDto = networkResult.data.data?.models
 
                     if (modelItemListDto != null) {
                         val modelItemList = modelItemListDto.map(ModelListDto::toModelListItem)
@@ -192,7 +192,7 @@ class HomeRepositoryImpl @Inject constructor(
             is NetworkResult.Loading -> Result.Loading
             is NetworkResult.Success -> {
                 if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                    val data = networkResult.data?.data?.models?.firstOrNull()?.let {
+                    val data = networkResult.data.data?.models?.firstOrNull()?.let {
                         it.modelDataDto?.toModelData(it.statusId)
                     }
                     if (data != null) {
@@ -212,9 +212,9 @@ class HomeRepositoryImpl @Inject constructor(
     override fun getMyModels2(forceRefresh: Boolean): Flow<Result<List<ModelData>>> {
         return observeAllModel()
             .onStart {
-                if (forceRefresh) {
+                /*if (forceRefresh) {
                     localDataSource.deleteAllModels()
-                }
+                }*/
             }
             .onEach { list ->
                 if (list.isEmpty()) {
@@ -242,7 +242,7 @@ class HomeRepositoryImpl @Inject constructor(
                 is NetworkResult.Loading -> Result.Loading
                 is NetworkResult.Success -> {
                     if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                        val data = networkResult.data?.data?.models?.firstOrNull()?.let {
+                        val data = networkResult.data.data?.models?.firstOrNull()?.let {
                             it.modelDataDto?.toModelData(it.statusId)
                         }
                         if (data != null) {
@@ -261,6 +261,11 @@ class HomeRepositoryImpl @Inject constructor(
 
     override fun getModel2(modelId: String): Flow<Result<ModelData>> = flow {
         val cache = observeModel(modelId).first()
+        if (cache != null) {
+            emit(Result.Success(cache))
+        } else {
+            emit(Result.Loading)
+        }
 
         if (cache == null) {
             emit(Result.Loading)
@@ -519,6 +524,11 @@ class HomeRepositoryImpl @Inject constructor(
 
     override fun getMyModels(forceRefresh: Boolean): Flow<Result<List<ModelListWithModel>>> = flow {
         val cache = observeAllModelListItem().first()
+        if (cache.isNotEmpty()) {
+            emit(Result.Success(cache))
+        } else {
+            emit(Result.Loading)
+        }
 
         if (forceRefresh) {
             if (cache.isEmpty()) {
@@ -545,6 +555,11 @@ class HomeRepositoryImpl @Inject constructor(
 
     override fun getAvatars2(getAvatarsRequest: GetAvatarsRequest, forceRefresh: Boolean): Flow<Result<List<ModelAvatar>>> = flow<Result<List<ModelAvatar>>> {
         val cache = observeModelAvatarsInternal(getAvatarsRequest.modelId).first()
+        if (cache.isNotEmpty()) {
+            emit(Result.Success(cache))
+        } else {
+            emit(Result.Loading)
+        }
 
         if (forceRefresh) {
             if (cache.isEmpty()) {
@@ -576,6 +591,10 @@ class HomeRepositoryImpl @Inject constructor(
                     /* Noop */
                 }
             }
+        }
+
+        if (BuildConfig.DEBUG) {
+            delay(5000)
         }
 
         emitAll(

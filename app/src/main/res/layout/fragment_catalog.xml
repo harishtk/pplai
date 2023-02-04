@@ -157,10 +157,12 @@
                 android:layout_height="0dp"
                 app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
                 app:spanCount="2"
+                android:layoutAnimation="@anim/layout_animation_from_bottom"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
+                tools:layoutAnimation="@null"
                 tools:listitem="@layout/item_big_avatar" />
 
             <ProgressBar android:id="@+id/progress_bar"

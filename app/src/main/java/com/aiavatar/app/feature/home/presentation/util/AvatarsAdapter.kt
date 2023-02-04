@@ -18,6 +18,7 @@ import com.aiavatar.app.databinding.ItemBigAvatarBinding
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.catalog.AvatarUiModel
 import com.aiavatar.app.ifNull
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import timber.log.Timber
 
 class AvatarsAdapter(
@@ -88,7 +89,7 @@ class AvatarsAdapter(
             val url = URLProvider.avatarUrl(category.imageName)
             Glide.with(image)
                 .load(url)
-                .placeholder(R.color.grey_divider)
+                .placeholder(R.drawable.loading_animation)
                 .into(image)
             textCategory.text = category.categoryName
 

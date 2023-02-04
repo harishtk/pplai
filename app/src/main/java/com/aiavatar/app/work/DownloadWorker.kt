@@ -12,6 +12,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.PendingIntentCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import com.aiavatar.app.BuildConfig
@@ -21,6 +22,7 @@ import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.commons.util.concurrent.ThreadSafeCounter
+import com.aiavatar.app.commons.util.getMimeType
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.DownloadFileStatus
 import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
@@ -106,12 +108,14 @@ class DownloadWorker @AssistedInject constructor(
             .filter { entity -> entity.downloaded == 0 }
             .map { downloadFilesEntity ->
                 workerScope.launch {
+                    val mimeType = getMimeType(context, downloadFilesEntity.fileUriString.toUri())
+                        ?: Constant.MIME_TYPE_JPEG
                     kotlin.runCatching {
                         val savedUri = StorageUtil.saveFile(
                             context = context,
                             url = downloadFilesEntity.fileUriString,
                             relativePath = relativeDownloadPath,
-                            mimeType = Constant.MIME_TYPE_JPEG,
+                            mimeType = mimeType,
                             displayName = Commons.getFileNameFromUrl(downloadFilesEntity.fileUriString),
                         ) { progress, bytesDownloaded ->
                             workerScope.launch {

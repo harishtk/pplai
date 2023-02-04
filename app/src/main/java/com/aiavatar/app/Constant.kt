@@ -21,6 +21,7 @@ object Constant {
 
     const val MIME_TYPE_IMAGE = "image/*"
     const val MIME_TYPE_JPEG = "image/jpeg"
+    const val MIME_TYPE_PNG = "image/png"
     const val MIME_TYPE_PLAIN_TEXT = "text/plain"
 
     /* Values */

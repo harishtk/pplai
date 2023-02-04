@@ -92,7 +92,7 @@
             android:layout_height="wrap_content"
             android:paddingHorizontal="@dimen/inset_large"
             android:text="Create stunning visual representations of your images - Bring your ideas to life with an endless array of options."
-            android:textAlignment="center"/>
+            android:textAlignment="center" />
 
     </LinearLayout>
 
