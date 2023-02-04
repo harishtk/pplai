@@ -216,10 +216,13 @@ class ModelDetailFragment : Fragment() {
                 // setUpCurrentIndicator(position)
                 indicatorView.onPageSelected(position)
                 viewModel.toggleSelection(position)
-                if (abs(previousPosition - position) <= SMOOTH_SCROLL_THRESHOLD) {
-                    avatarScrollerList.smoothScrollToPosition(position)
-                } else {
-                    avatarScrollerList.scrollToPosition(position)
+
+                avatarScrollerList.post {
+                    if (abs(previousPosition - position) <= SMOOTH_SCROLL_THRESHOLD) {
+                        avatarScrollerList.smoothScrollToPosition(position)
+                    } else {
+                        avatarScrollerList.scrollToPosition(position)
+                    }
                 }
 
                 if (position == jumpToPosition) {

@@ -112,9 +112,9 @@ class CatalogFragment : Fragment() {
                 Boolean::and
             ).collectLatest { hasError ->
                 if (hasError) {
-                    retryButton.isVisible = avatarsAdapter.itemCount <= 0
                     val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorText
                     if (e != null) {
+                        ifDebug { Timber.e(e) }
                         when (e) {
                             is BuenoCacheException -> {
                                 val hours = TimeUnit.MINUTES.toHours(e.minutesAgo).toInt()
@@ -163,10 +163,9 @@ class CatalogFragment : Fragment() {
                         swipeRefreshLayout.isRefreshing = false
                     }
                 }
-                retryButton.isVisible = loadState.refresh is LoadState.Error
-                        && avatarsAdapter.itemCount <= 0
                 if (loadState.refresh is LoadState.Error) {
                     if (loadState.refresh.error !is BuenoCacheException) {
+                        retryButton.isVisible = avatarsAdapter.itemCount <= 0
                         HapticUtil.createError(requireContext())
                         retryButton.shakeNow()
                     }

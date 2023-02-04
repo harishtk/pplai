@@ -54,7 +54,8 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
             .addBlocking("lifecycle-observer") {
                 ApplicationDependencies.getAppForegroundObserver().addListener(this)
             }
-            .addBlocking("after-create", this::setupApp)
+            // .addBlocking("after-create", this::setupApp)
+            .addPostRender(this::setupApp)
             .execute()
     }
 

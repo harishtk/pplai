@@ -125,6 +125,12 @@ inline fun <R> safeCall(block: () -> R): R? {
     }
 }
 
+inline fun ifDebug(block: () -> Unit) {
+    if (BuildConfig.DEBUG) {
+        block()
+    }
+}
+
 /**
  * Calls [block] if [this] is null.
  */

@@ -520,8 +520,10 @@ class HomeRepositoryImpl @Inject constructor(
     override fun getMyModels(forceRefresh: Boolean): Flow<Result<List<ModelListWithModel>>> = flow {
         val cache = observeAllModelListItem().first()
 
-        if (cache.isEmpty() && forceRefresh) {
-            emit(Result.Loading)
+        if (forceRefresh) {
+            if (cache.isEmpty()) {
+                emit(Result.Loading)
+            }
             when (val result = refreshAllModelInternal()) {
                 is Result.Error -> {
                     emit(result)
@@ -544,8 +546,10 @@ class HomeRepositoryImpl @Inject constructor(
     override fun getAvatars2(getAvatarsRequest: GetAvatarsRequest, forceRefresh: Boolean): Flow<Result<List<ModelAvatar>>> = flow<Result<List<ModelAvatar>>> {
         val cache = observeModelAvatarsInternal(getAvatarsRequest.modelId).first()
 
-        if (cache.isEmpty() && forceRefresh) {
-            emit(Result.Loading)
+        if (forceRefresh) {
+            if (cache.isEmpty()) {
+                emit(Result.Loading)
+            }
             val result = parseGetAvatarsResponse(
                 remoteDataSource.getAvatarsSync(getAvatarsRequest.asDto())
             )

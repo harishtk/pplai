@@ -3,7 +3,6 @@ package com.aiavatar.app.feature.home.presentation.create
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
@@ -23,7 +22,6 @@ import androidx.navigation.NavDeepLinkBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.work.ForegroundInfo
-import androidx.work.WorkManager
 import com.aiavatar.app.*
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.ServiceUtil
@@ -31,7 +29,9 @@ import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.commons.util.shakeNow
+import com.aiavatar.app.core.data.source.local.entity.UploadFileStatus
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
+import com.aiavatar.app.core.data.source.local.model.UploadSessionWithFilesEntity
 import com.aiavatar.app.core.domain.model.ModelStatus
 import com.aiavatar.app.databinding.FragmentAvatarStatusBinding
 import com.aiavatar.app.di.ApplicationDependencies
@@ -52,7 +52,6 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
-import kotlin.math.log
 
 @AndroidEntryPoint
 class AvatarStatusFragment : Fragment() {
@@ -261,7 +260,9 @@ class AvatarStatusFragment : Fragment() {
                 } else if (sessionStatus.status <= UploadSessionStatus.FAILED.status) {
                     when (UploadSessionStatus.fromRawValue(sessionStatus.status)) {
                         UploadSessionStatus.PARTIALLY_DONE -> {
-                            description.text = "Uploading photos.."
+                            val uploadingStatusString = getUploadingStatusString(uiState.value.uploadSessionWithFilesEntity)
+
+                            description.text = "Uploading photos.. $uploadingStatusString"
                             btnCreateAvatar.isVisible = false
                             progressIndicator.isVisible = true
                             progressIndicator.isIndeterminate = true
@@ -549,6 +550,13 @@ class AvatarStatusFragment : Fragment() {
         if (event.hint == "avatar_status") {
             viewModel.refresh()
         }
+    }
+
+    private fun getUploadingStatusString(uploadSessionWithFiles: UploadSessionWithFilesEntity?): String {
+        uploadSessionWithFiles ?: return ""
+        val uploadingFiles = uploadSessionWithFiles.uploadFilesEntity
+        val finishedUploads = uploadingFiles.count { it.status == UploadFileStatus.COMPLETE.status }
+        return "$finishedUploads of $uploadingFiles"
     }
 
     private fun notifyUploadComplete(context: Context, photosCount: Int) {

@@ -76,18 +76,7 @@ class SettingsFragment : Fragment() {
                         viewModel.logout()
                         ApplicationDependencies.getPersistentStore().logout()
                         context?.showToast("Logged out!")
-                        try {
-                            findNavController().apply {
-                                val navOpts = NavOptions.Builder()
-                                    .setLaunchSingleTop(true)
-                                    .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
-                                    .build()
-                                navigate(R.id.walkthrough_fragment, null, navOpts)
-                            }
-                        } catch (e: Exception) {
-                            Timber.e(e)
-                            (activity as? MainActivity)?.restart()
-                        }
+                        gotoWalkThrough()
                     }
                 }
             }
@@ -103,6 +92,23 @@ class SettingsFragment : Fragment() {
 
         settingsList.adapter = settingsAdapter
         settingsAdapter.submitList(settingsListData)
+    }
+
+    private fun gotoWalkThrough() {
+        try {
+            findNavController().apply {
+                val navOpts = NavOptions.Builder()
+                    .setExitAnim(R.anim.slide_bottom)
+                    .setEnterAnim(R.anim.slide_up)
+                    .setLaunchSingleTop(true)
+                    .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                    .build()
+                navigate(R.id.walkthrough_fragment, null, navOpts)
+            }
+        } catch (e: Exception) {
+            Timber.e(e)
+            (activity as? MainActivity)?.restart()
+        }
     }
 
 }

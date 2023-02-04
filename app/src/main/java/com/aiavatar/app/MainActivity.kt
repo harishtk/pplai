@@ -3,12 +3,15 @@ package com.aiavatar.app
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.ViewTreeObserver.OnPreDrawListener
 import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.activity.viewModels
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.Lifecycle
@@ -46,18 +49,24 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AppStartup.getInstance().onCriticalRenderEventStart()
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
-        lifecycleScope.launch {
-            AppCompatDelegate.setDefaultNightMode(ApplicationDependencies.getPersistentStore().userPreferredTheme)
+        ifDebug {
+            lifecycleScope.launch {
+                AppCompatDelegate.setDefaultNightMode(ApplicationDependencies.getPersistentStore().userPreferredTheme)
+            }
         }
 
-        installSplashScreen()
         checkSecureMode()
         setContentView(R.layout.activity_main)
 
-        val token = ApplicationDependencies.getPersistentStore().fcmToken
-        Timber.d("FCM Token: $token")
+        ifDebug {
+            lifecycleScope.launch {
+                val token = ApplicationDependencies.getPersistentStore().fcmToken
+                Timber.d("FCM Token: $token")
+            }
+        }
 
         val fragmentContainer = findViewById<FragmentContainerView>(R.id.fragment_container)
 
@@ -83,16 +92,12 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         AppStartup.getInstance().onCriticalRenderEventEnd()
         lifecycleScope.launch { StorageUtil.cleanUp(applicationContext) }
 
-        val restartHint = intent.extras?.getString("restart_hint", "")
-        // TODO: read login data from [UserViewModel]
-        if (ApplicationDependencies.getPersistentStore().isLogged) {
-            if (restartHint != "from_login") {
-                userViewModel.autoLogin()
+        ifDebug {
+            lifecycleScope.launch {
+                ApplicationDependencies.getPersistentStore().apply {
+                    Timber.d("User data: logged = $isLogged userId = $userId")
+                }
             }
-        }
-
-        ApplicationDependencies.getPersistentStore().apply {
-            Timber.d("User data: logged = $isLogged userId = $userId")
         }
 
         setupObservers()
@@ -200,6 +205,13 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 }
             }
         }*/
+
+        lifecycleScope.launch {
+            if (ApplicationDependencies.getPersistentStore().isLogged) {
+                userViewModel.autoLogin()
+            }
+        }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 sharedViewModel.jumpToDestination.collectLatest { destinationId ->
@@ -263,9 +275,27 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         }
     }
 
+
+    /**
+     * This will keep the splash for a pre-defined time.
+     *
+     * @param durationMillis - Time to keep
+     */
+    private fun keepSplash(durationMillis: Long = DEFAULT_SPLASH_DURATION) {
+        val content = findViewById<View>(android.R.id.content)
+        content.viewTreeObserver.addOnPreDrawListener(object : OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                Thread.sleep(durationMillis)
+                content.viewTreeObserver.removeOnPreDrawListener(this)
+                return true
+            }
+        })
+    }
+
     companion object {
 
         const val DEFAULT_UI_RENDER_WAIT_TIME = 50L
+        const val DEFAULT_SPLASH_DURATION: Long = 500
 
         const val THEME_MODE_AUTO   = 0
         const val THEME_MODE_LIGHT  = 1
