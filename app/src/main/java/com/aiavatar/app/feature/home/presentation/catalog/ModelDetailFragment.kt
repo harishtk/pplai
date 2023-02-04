@@ -352,7 +352,9 @@ class ModelDetailFragment : Fragment() {
         }
 
         btnNext.setOnClickListener {
-            context?.showToast("Coming soon!")
+            uiState.value.modelId?.let { modelId ->
+                gotoPlans(modelId)
+            }
         }
     }
 
@@ -528,6 +530,18 @@ class ModelDetailFragment : Fragment() {
 
     private fun askStoragePermission() {
         storagePermissionLauncher.launch(storagePermissions)
+    }
+
+    private fun gotoPlans(modelId: String) = safeCall {
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder()
+                .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
+                .build()
+            val args = Bundle().apply {
+                putString(Constant.ARG_MODEL_ID, modelId)
+            }
+            navigate(R.id.subscription_plans, args, navOpts)
+        }
     }
 
     private fun openGallery(uri: Uri) {

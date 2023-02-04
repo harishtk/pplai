@@ -75,7 +75,6 @@ fun AvatarFilesEntity.toModelAvatar(): ModelAvatar {
         downloaded = downloaded,
         progress = progress
     ).also {
-        it._id = _id
         it.downloadedAt = downloadedAt
         it.downloadedSize = downloadedSize
     }

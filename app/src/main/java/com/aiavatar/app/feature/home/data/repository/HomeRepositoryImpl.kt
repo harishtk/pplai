@@ -524,11 +524,12 @@ class HomeRepositoryImpl @Inject constructor(
 
     override fun getMyModels(forceRefresh: Boolean): Flow<Result<List<ModelListWithModel>>> = flow {
         val cache = observeAllModelListItem().first()
-        if (cache.isNotEmpty()) {
+        /*if (cache.isNotEmpty()) {
             emit(Result.Success(cache))
         } else {
             emit(Result.Loading)
-        }
+        }*/
+        emit(Result.Loading)
 
         if (forceRefresh) {
             if (cache.isEmpty()) {
@@ -555,11 +556,11 @@ class HomeRepositoryImpl @Inject constructor(
 
     override fun getAvatars2(getAvatarsRequest: GetAvatarsRequest, forceRefresh: Boolean): Flow<Result<List<ModelAvatar>>> = flow<Result<List<ModelAvatar>>> {
         val cache = observeModelAvatarsInternal(getAvatarsRequest.modelId).first()
-        if (cache.isNotEmpty()) {
+        /*if (cache.isNotEmpty()) {
             emit(Result.Success(cache))
         } else {
             emit(Result.Loading)
-        }
+        }*/
 
         if (forceRefresh) {
             if (cache.isEmpty()) {
@@ -591,10 +592,6 @@ class HomeRepositoryImpl @Inject constructor(
                     /* Noop */
                 }
             }
-        }
-
-        if (BuildConfig.DEBUG) {
-            delay(5000)
         }
 
         emitAll(
