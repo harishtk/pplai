@@ -179,24 +179,58 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                tools:listitem="@layout/item_model_list"/>
+                tools:listitem="@layout/item_model_list"
+                tools:visibility="gone"/>
+
+            <LinearLayout android:orientation="vertical"
+                android:id="@+id/empty_list_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <TextView android:id="@+id/empty_list_message"
+                    style="@style/TextStyle.VerySmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:padding="@dimen/inset_large"
+                    android:textAlignment="center"
+                    android:text="Create your first masterpiece!" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_create"
+                    style="@style/Widget.App.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_create"
+                    android:insetBottom="@dimen/inset_large"
+                    android:insetLeft="@dimen/inset_large"
+                    android:insetRight="@dimen/inset_large"
+                    android:insetTop="@dimen/inset_large"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle" />
+
+            </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <LinearLayout android:orientation="vertical"
-        android:id="@+id/empty_list_container"
+        android:id="@+id/error_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0.7">
 
-        <TextView android:id="@+id/empty_list"
+        <TextView android:id="@+id/error_message"
             style="@style/TextStyle.VerySmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

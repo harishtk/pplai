@@ -1,7 +1,6 @@
 package com.aiavatar.app.feature.onboard.presentation.login
 
 import android.util.Log
-import android.util.LogPrinter
 import androidx.core.util.PatternsCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -23,8 +22,8 @@ import com.aiavatar.app.feature.onboard.domain.model.request.LoginRequest
 import com.aiavatar.app.feature.onboard.domain.model.request.SocialLoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import com.aiavatar.app.nullAsEmpty
-import com.pepulnow.app.data.LoadState
-import com.pepulnow.app.data.LoadStates
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -32,7 +31,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.math.log
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -271,6 +269,14 @@ class LoginViewModel @Inject constructor(
                                     state.copy(
                                         exception = result.exception,
                                         uiErrorMessage = UiText.noInternet
+                                    )
+                                }
+                            }
+                            else -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorMessage = UiText.somethingWentWrong
                                     )
                                 }
                             }

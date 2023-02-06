@@ -11,7 +11,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.*
@@ -21,7 +20,7 @@ import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.viewmodels.UserViewModel
-import com.pepulnow.app.data.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow

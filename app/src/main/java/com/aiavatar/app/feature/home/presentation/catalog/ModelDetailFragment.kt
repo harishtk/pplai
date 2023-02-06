@@ -14,7 +14,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -22,7 +21,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.CompositePageTransformer
@@ -33,9 +31,7 @@ import com.aiavatar.app.*
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
-import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
-import com.aiavatar.app.databinding.FragmentModelListBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
@@ -43,7 +39,7 @@ import com.aiavatar.app.feature.home.presentation.util.AutoCenterLayoutManger
 import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
-import com.pepulnow.app.data.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
 import dagger.hilt.android.AndroidEntryPoint

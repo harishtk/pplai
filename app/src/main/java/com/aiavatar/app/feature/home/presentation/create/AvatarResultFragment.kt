@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -26,12 +25,11 @@ import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.databinding.FragmentAvatarResultBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
-import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
-import com.pepulnow.app.data.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

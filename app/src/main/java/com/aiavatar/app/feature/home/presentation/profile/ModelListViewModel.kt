@@ -16,7 +16,6 @@ import com.aiavatar.app.core.data.source.local.entity.DownloadFileStatus
 import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
 import com.aiavatar.app.core.data.source.local.entity.toEntity
 import com.aiavatar.app.core.data.source.local.model.toDownloadSessionWithFiles
-import com.aiavatar.app.core.data.source.local.model.toUploadSessionWithFiles
 import com.aiavatar.app.core.domain.model.DownloadFile
 import com.aiavatar.app.core.domain.model.DownloadSession
 import com.aiavatar.app.core.domain.model.DownloadSessionWithFiles
@@ -27,8 +26,8 @@ import com.aiavatar.app.feature.home.domain.model.ModelData
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.nullAsEmpty
-import com.pepulnow.app.data.LoadState
-import com.pepulnow.app.data.LoadStates
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*

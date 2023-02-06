@@ -3,7 +3,6 @@ package com.aiavatar.app.feature.home.presentation.catalog
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
@@ -12,8 +11,8 @@ import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.domain.util.BuenoCacheException
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.pepulnow.app.data.LoadState
-import com.pepulnow.app.data.LoadStates
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -26,7 +25,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel

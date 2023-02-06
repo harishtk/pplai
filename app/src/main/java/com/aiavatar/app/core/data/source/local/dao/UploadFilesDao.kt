@@ -25,7 +25,7 @@ interface UploadFilesDao {
     @Query("UPDATE ${UploadFilesTable.name} " +
             "SET ${UploadFilesTable.Columns.STATUS} = :status " +
             "WHERE ${UploadFilesTable.Columns.ID} = :id")
-    suspend fun updateFileStatus(id: Long, status: Int)
+    suspend fun updateFileStatus(id: Long, status: Int): Int
 
     @Query("UPDATE ${UploadFilesTable.name} " +
             "SET ${UploadFilesTable.Columns.PROGRESS} = :progress " +

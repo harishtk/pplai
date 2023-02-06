@@ -5,9 +5,9 @@ import androidx.core.net.toFile
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ListenableWorker
 import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.Constant
+import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
@@ -26,8 +26,8 @@ import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.domain.model.UploadImageData
-import com.pepulnow.app.data.LoadState
-import com.pepulnow.app.data.LoadStates
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -63,6 +63,7 @@ class AvatarStatusViewModel @Inject constructor(
     private var createModelJob: Job? = null
     private var avatarStatusJob: Job? = null
     private var uploadPhotosJob: Job? = null
+    private var uploadStatusJob: Job? = null
     private var scheduledAvatarStatusJob: Job? = null
 
     init {
@@ -426,10 +427,11 @@ class AvatarStatusViewModel @Inject constructor(
                                     result.data.imageName,
                                     System.currentTimeMillis()
                                 )
-                                appDatabase.uploadFilesDao().updateFileStatus(
+                                val affectedRows = appDatabase.uploadFilesDao().updateFileStatus(
                                     uploadFilesEntity._id!!,
                                     UploadFileStatus.COMPLETE.status
                                 )
+                                Timber.d("Upload file status: affected = $affectedRows")
                             }
 
                             is com.aiavatar.app.commons.util.Result.Error -> {
@@ -443,6 +445,8 @@ class AvatarStatusViewModel @Inject constructor(
                     }
                     task
                 }
+
+        observeUploadStatusInternal()
 
         uploadResultList.awaitAll()
         uploadResultList.map { it.getCompleted() }
@@ -495,6 +499,12 @@ class AvatarStatusViewModel @Inject constructor(
                 }
             } */
         }
+        uploadStatusJob?.cancel(CancellationException("Upload is complete!"))
+        _uiState.update { state ->
+            state.copy(
+                uploadStatusString = null
+            )
+        }
     }
 
     private fun uploadFailed(message: String) {
@@ -507,6 +517,31 @@ class AvatarStatusViewModel @Inject constructor(
         } else {
             UploadStep2Fragment.MIN_IMAGES
         }
+    }
+
+    private fun observeUploadStatusInternal() {
+        val uploadSessionWithFilesEntityFlow =
+            uiState.map { it.uploadSessionWithFilesEntity }
+                .distinctUntilChanged()
+        uploadStatusJob = viewModelScope.launch {
+            uploadSessionWithFilesEntityFlow.collectLatest {
+                getUploadingStatusString(it)?.let { statusString ->
+                    _uiState.update { state ->
+                        state.copy(
+                            uploadStatusString = UiText.StringResource(R.string.uploading_photos_, statusString)
+                        )
+                    }
+                }
+
+            }
+        }
+    }
+
+    private fun getUploadingStatusString(uploadSessionWithFiles: UploadSessionWithFilesEntity?): String? {
+        uploadSessionWithFiles ?: return null
+        val uploadingFiles = uploadSessionWithFiles.uploadFilesEntity
+        val finishedUploads = uploadingFiles.count { it.status == UploadFileStatus.COMPLETE.status }
+        return "$finishedUploads of ${uploadingFiles.size}"
     }
     /* END - Upload related */
 
@@ -583,6 +618,7 @@ data class AvatarStatusState(
     val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val toggleStateNotifyMe: Boolean = DEFAULT_TOGGLE_STATE,
     val progressHint: String? = null,
+    val uploadStatusString: UiText? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )

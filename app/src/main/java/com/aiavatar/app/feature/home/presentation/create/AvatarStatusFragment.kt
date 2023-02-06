@@ -39,7 +39,7 @@ import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.service.MyFirebaseMessagingService
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.aiavatar.app.work.UploadWorker
-import com.pepulnow.app.data.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -260,9 +260,10 @@ class AvatarStatusFragment : Fragment() {
                 } else if (sessionStatus.status <= UploadSessionStatus.FAILED.status) {
                     when (UploadSessionStatus.fromRawValue(sessionStatus.status)) {
                         UploadSessionStatus.PARTIALLY_DONE -> {
-                            val uploadingStatusString = getUploadingStatusString(uiState.value.uploadSessionWithFilesEntity)
+                            // val uploadingStatusString = getUploadingStatusString(uiState.value.uploadSessionWithFilesEntity)
 
-                            description.text = "Uploading photos.. $uploadingStatusString"
+                            // TODO: fix realtime updates
+                            description.text = getString(R.string.uploading_photos_, null)
                             btnCreateAvatar.isVisible = false
                             progressIndicator.isVisible = true
                             progressIndicator.isIndeterminate = true
@@ -368,6 +369,11 @@ class AvatarStatusFragment : Fragment() {
             }
         }
 
+        bindUploadStatus(
+            uiState = uiState,
+            uiAction = uiAction
+        )
+
         bindClick(
             uiState = uiState,
             uiAction = uiAction
@@ -414,6 +420,22 @@ class AvatarStatusFragment : Fragment() {
         }
 
         retryButton.setOnClickListener { viewModel.refresh() }
+    }
+
+    private fun FragmentAvatarStatusBinding.bindUploadStatus(
+        uiState: StateFlow<AvatarStatusState>,
+        uiAction: (AvatarStatusUiAction) -> Unit
+    ) {
+        val uploadStatusStringFlow = uiState.map { it.uploadStatusString }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            uploadStatusStringFlow.collectLatest { uploadStatusString ->
+                uploadStatusString?.let {
+                    description.text = it.asString(requireContext())
+                }
+            }
+        }
+
     }
 
     private fun setupObservers() {

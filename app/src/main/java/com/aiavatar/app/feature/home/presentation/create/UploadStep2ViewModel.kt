@@ -17,14 +17,12 @@ import com.aiavatar.app.core.data.source.local.entity.UploadSessionEntity
 import com.aiavatar.app.core.data.source.local.entity.UploadSessionStatus
 import com.aiavatar.app.feature.home.domain.model.SelectedMediaItem
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.aiavatar.app.mapButReplace
-import com.pepulnow.app.data.LoadState
-import com.pepulnow.app.data.LoadStates
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.select
 import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject

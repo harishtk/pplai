@@ -4,7 +4,6 @@ import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
@@ -20,11 +19,10 @@ import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.domain.model.ModelData
-import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.nullAsEmpty
-import com.pepulnow.app.data.LoadState
-import com.pepulnow.app.data.LoadStates
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job

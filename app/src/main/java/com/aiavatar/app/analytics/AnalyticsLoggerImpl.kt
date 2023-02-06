@@ -8,7 +8,6 @@ import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.core.Env
 import com.aiavatar.app.core.envForConfig
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.pepulnow.app.analytics.AnalyticsLogger
 import javax.inject.Inject
 
 class AnalyticsLoggerImpl @Inject constructor(
@@ -18,7 +17,7 @@ class AnalyticsLoggerImpl @Inject constructor(
 
     private val environment: Env = envForConfig(BuildConfig.ENV)
 
-    override fun logEvent(@NonNull @Size(min = 1L,max = 40L) name: String, @Nullable params: Bundle?) {
+    override fun logEvent(@Size(min = 1L,max = 40L) name: String, params: Bundle?) {
         if (environment == Env.PROD || environment == Env.SPECIAL) {
             firebaseAnalytics.logEvent(name, params)
             // facebookAnalytics.logEvent(name, params)
@@ -37,7 +36,7 @@ class AnalyticsLoggerImpl @Inject constructor(
         }
     }
 
-    override fun setUserId(@Nullable userId: String?) {
+    override fun setUserId(userId: String?) {
         firebaseAnalytics.setUserId(userId)
     }
 }

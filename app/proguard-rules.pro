@@ -21,9 +21,9 @@
 #-renamesourcefileattribute SourceFile
 
 # Keep Model classes
--keep class com.pepulnow.app**model.**{ *; }
+-keep class com.aiavatar.app**model.**{ *; }
 # Keep Dto classes
--keep class com.pepulnow.app**dto.**{ *; }
+-keep class com.aiavatar.app**dto.**{ *; }
 
 # Firebase
 # -keep class com.google.firebase.** { *; }
@@ -54,8 +54,8 @@
 }
 
 # Code obfuscation
--keepclassmembers class com.pepulnow.app.view.model_class.** { <fields>; }
--keep class com.pepulnow.app.view.model_class.** { *; }
+-keepclassmembers class com.aiavatar.app.view.model_class.** { <fields>; }
+-keep class com.aiavatar.app.view.model_class.** { *; }
 
 # For logs
 -assumenosideeffects class android.util.Log {

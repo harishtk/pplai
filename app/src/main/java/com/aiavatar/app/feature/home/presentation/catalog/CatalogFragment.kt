@@ -25,7 +25,7 @@ import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
-import com.pepulnow.app.data.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
-import kotlin.math.log
 
 @AndroidEntryPoint
 class CatalogFragment : Fragment() {
@@ -295,13 +294,6 @@ class CatalogFragment : Fragment() {
             Timber.d("Theme: $mode")
 
             return MainActivity.THEME_MAP[newTheme]
-        }
-    }
-
-    private fun gotoLogin() {
-        findNavController().apply {
-            val navOpts = defaultNavOptsBuilder().build()
-            navigate(R.id.login_fragment, null, navOpts)
         }
     }
 

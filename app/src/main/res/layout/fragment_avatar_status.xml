@@ -75,7 +75,7 @@
     <com.google.android.material.progressindicator.LinearProgressIndicator
         style="@style/Widget.App.LinearProgressIndicator"
         android:id="@+id/progress_indicator"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/inset_large_medium"
         android:indeterminate="true"
@@ -98,7 +98,8 @@
         app:layout_constraintTop_toBottomOf="@id/progress_indicator"
         app:layout_constraintBottom_toTopOf="@id/cb_notify_me"
         app:layout_constraintVertical_chainStyle="packed"
-        tools:text="7/100" />
+        tools:text="7/100"
+        tools:visibility="gone" />
 
     <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/cb_notify_me"
@@ -111,7 +112,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
-        tools:checked="true"/>
+        tools:checked="true"
+        tools:visibility="gone" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/retry_button"
@@ -126,7 +128,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.8"
-        tools:visibility="visible" />
+        tools:visibility="gone" />
 
     <com.dd.CircularProgressButton
         android:id="@+id/btn_create_avatar"
@@ -149,7 +151,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/bottom_barrier" />
+        app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
+        tools:visibility="gone" />
 
     <com.google.android.material.button.MaterialButton
         style="@style/Widget.App.Button"

@@ -11,9 +11,8 @@ import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.feature.home.domain.model.CatalogList
 import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.aiavatar.app.launch
-import com.pepulnow.app.data.LoadState
-import com.pepulnow.app.data.LoadStates
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*

@@ -1,4 +1,4 @@
-package com.pepulnow.app.data
+package com.aiavatar.app.commons.util.loadstate
 
 public sealed class LoadState(
     public val endOfPaginationReached: Boolean = false

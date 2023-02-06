@@ -25,18 +25,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
+import com.aiavatar.app.commons.util.*
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
-import com.aiavatar.app.commons.util.HapticUtil
-import com.aiavatar.app.commons.util.InvalidOtpException
-import com.aiavatar.app.commons.util.ResolvableException
-import com.aiavatar.app.commons.util.cancelSpinning
-import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentLoginBinding
-import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -44,7 +38,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
-import com.pepulnow.app.data.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,7 +49,6 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.math.sign
 
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
@@ -188,6 +181,7 @@ class LoginFragment : Fragment() {
                 if (hasError) {
                     val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorMessage
                     if (e != null) {
+                        ifDebug { Timber.e(e) }
                         if (uiErr != null) {
                             context?.showToast(uiErr.asString(requireContext()))
                         }
@@ -258,11 +252,13 @@ class LoginFragment : Fragment() {
         }
 
         bindInput(
-            uiState, uiAction
+            uiState = uiState,
+            uiAction = uiAction
         )
 
         bindClick(
-            uiState = uiState, uiAction = uiAction
+            uiState = uiState,
+            uiAction = uiAction
         )
 
     }
@@ -294,6 +290,28 @@ class LoginFragment : Fragment() {
         }
 
         edEmail.addTextChangedListener(afterTextChanged = { updateTypedEmailValue(uiAction) })
+
+        edOtp.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_GO) {
+                updateTypedOtpValue(uiAction)
+                uiAction(LoginUiAction.NextClick)
+                edOtp.hideKeyboard()
+                true
+            } else {
+                false
+            }
+        }
+
+        edOtp.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                updateTypedOtpValue(uiAction)
+                uiAction(LoginUiAction.NextClick)
+                edOtp.hideKeyboard()
+                true
+            } else {
+                false
+            }
+        }
 
         edOtp.addTextChangedListener(afterTextChanged = { updateTypedOtpValue(uiAction) })
     }
@@ -338,7 +356,11 @@ class LoginFragment : Fragment() {
         }
 
         btnSignInGoogle.setOnClickListener {
-            googleSignIn()
+            if (uiState.value.loadState.action is LoadState.Loading) {
+                context?.showToast("Please wait..")
+            } else {
+                googleSignIn()
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-package com.pepulnow.app.analytics
+package com.aiavatar.app.analytics
 
 import android.os.Bundle
 import androidx.annotation.NonNull
@@ -7,9 +7,9 @@ import androidx.annotation.Size
 
 interface AnalyticsLogger {
 
-    fun logEvent(@NonNull @Size(min = 1L,max = 40L) name: String, @Nullable params: Bundle?)
+    fun logEvent(@Size(min = 1L,max = 40L) name: String, params: Bundle?)
 
-    fun logDebugEvent(@NonNull @Size(min = 1L, max = 40L) name: String, @Nullable params: Bundle?)
+    fun logDebugEvent(@Size(min = 1L, max = 40L) name: String, params: Bundle?)
 
     fun setUserId(userId: String?)
 }

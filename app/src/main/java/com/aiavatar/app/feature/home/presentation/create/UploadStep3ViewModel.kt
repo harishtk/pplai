@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.commons.util.Result
-import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
@@ -17,9 +16,8 @@ import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.presentation.util.GenderModel
-import com.aiavatar.app.work.WorkUtil
-import com.pepulnow.app.data.LoadState
-import com.pepulnow.app.data.LoadStates
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job

@@ -82,6 +82,13 @@
         <item name="colorOnPrimary">@color/black</item>
     </style>
 
+    <style name="ThemeOverlay.App.Dialog" parent="">
+        <item name="colorSurface">@color/blue_grey_700</item>
+        <item name="colorSurfaceVariant">@color/white_grey</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorOnSurfaceInverse">@color/black</item>
+    </style>
+
     <!-- Progress Indicator -->
     <style name="ThemeOverlay.App.LinearProgressIndicator" parent="">
         <item name="android:colorPrimary">@color/yellow_200</item>

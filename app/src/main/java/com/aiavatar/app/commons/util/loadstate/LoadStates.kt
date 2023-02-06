@@ -1,6 +1,4 @@
-package com.pepulnow.app.data
-
-import com.aiavatar.app.commons.util.loadstate.LoadType
+package com.aiavatar.app.commons.util.loadstate
 
 public data class LoadStates(
     public val refresh: LoadState,

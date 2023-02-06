@@ -17,8 +17,8 @@ import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.pepulnow.app.data.LoadState
-import com.pepulnow.app.data.LoadStates
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job

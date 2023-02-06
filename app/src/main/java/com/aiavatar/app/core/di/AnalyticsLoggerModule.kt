@@ -1,7 +1,7 @@
 package com.aiavatar.app.core.di
 
 import com.aiavatar.app.analytics.AnalyticsLoggerImpl
-import com.pepulnow.app.analytics.AnalyticsLogger
+import com.aiavatar.app.analytics.AnalyticsLogger
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

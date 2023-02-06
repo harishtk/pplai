@@ -2,7 +2,6 @@ package com.aiavatar.app.feature.home.presentation.profile
 
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,11 +25,10 @@ import com.aiavatar.app.databinding.ItemModelListBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
-import com.aiavatar.app.feature.home.presentation.create.UploadStep2FragmentDirections
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
-import com.pepulnow.app.data.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -134,11 +132,14 @@ class ProfileFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
                 Timber.d("Load state: ${loadState.refresh}")
+                swipeRefreshLayout.isEnabled = loadState.refresh !is LoadState.Loading
                 if (loadState.refresh is LoadState.Loading) {
+                    errorContainer.isVisible = false
                     emptyListContainer.isVisible = false
                     progressBar.isVisible = adapter.itemCount <= 0
                 } else {
                     if (loadState.refresh is LoadState.Error) {
+                        errorContainer.isVisible = true
                         HapticUtil.createError(requireContext())
                         retryButton.shakeNow()
                     }
@@ -182,6 +183,7 @@ class ProfileFragment : Fragment() {
             modelListUiModelsFlow.collectLatest { modelList ->
                 adapter.submitList(modelList)
 
+                // TODO: Show empty list container
                 emptyListContainer.isVisible = modelList.isEmpty()
             }
         }
@@ -190,6 +192,10 @@ class ProfileFragment : Fragment() {
     private fun FragmentProfileBinding.bindClick(uiState: StateFlow<ProfileState>) {
         retryButton.setOnClickListener {
             viewModel.refresh(true)
+        }
+
+        btnCreate.setOnClickListener {
+            gotoUploadSteps()
         }
     }
 
@@ -340,6 +346,12 @@ class ProfileFragment : Fragment() {
                 navigate(R.id.model_detail, args, navOpts)
             }
         } catch (ignore: Exception) {
+        }
+    }
+
+    private fun gotoUploadSteps() = safeCall {
+        findNavController().apply {
+            navigate(ProfileFragmentDirections.actionProfileToUploadStep1())
         }
     }
 

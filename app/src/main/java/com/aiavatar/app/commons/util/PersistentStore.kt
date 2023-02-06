@@ -206,8 +206,6 @@ class PersistentStore private constructor(
             const val NOTIFY_UPON_COMPLETION = "notify_upon_completion"
             const val GUEST_USER_ID = "guest_user_id"
             const val PROCESSING_MODEL = "processing_model"
-            const val UPLOADING_PHOTOS = "uploading_photos"
-            const val CURRENT_AVATAR_STATUS_ID = "current_avatar_status_id"
             const val UPLOAD_STEP_SKIPPED: String = "upload_step_skipped"
             const val USER_PREFERRED_THEME = "user_preferred_theme"
         }

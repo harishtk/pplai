@@ -1,7 +1,5 @@
 package com.aiavatar.app.commons.util.loadstate
 
-import com.pepulnow.app.data.LoadState
-
 public class CombinedLoadStates(
     public val refresh: LoadState,
     public val prepend: LoadState,

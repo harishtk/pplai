@@ -14,8 +14,7 @@ import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentSubscriptionSuccessBinding
-import com.aiavatar.app.di.ApplicationDependencies
-import com.pepulnow.app.data.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*

@@ -51,7 +51,7 @@ class SettingsAdapter(
             } else {
                 settingsIcon.setImageResource(R.drawable.ic_settings_filled)
             }
-            rightBarrier.isVisible = data.hasMore
+            ivArrow.isVisible = data.hasMore
 
             binding.root.setOnClickListener { callback.onItemClick(adapterPosition) }
         }

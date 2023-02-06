@@ -20,10 +20,9 @@ import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.FragmentMoreCatalogBinding
 import com.aiavatar.app.databinding.ItemMoreCatalogBinding
 import com.aiavatar.app.feature.home.domain.model.CatalogList
-import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.safeCall
 import com.bumptech.glide.Glide
-import com.pepulnow.app.data.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
