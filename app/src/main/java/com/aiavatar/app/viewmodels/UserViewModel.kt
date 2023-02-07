@@ -12,6 +12,7 @@ import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.feature.onboard.domain.model.request.AutoLoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -61,4 +62,8 @@ class UserViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = false
         )
+
+    fun logout() = viewModelScope.launch(Dispatchers.IO) {
+        appDatabase.clearAllTables()
+    }
 }

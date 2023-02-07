@@ -60,7 +60,19 @@ open class BaseRemoteDataSource(
         var message : String = ""
         var errorMessage : String = ""
         try {
-            val jsonObject = JSONObject(response.errorBody()!!.string())
+            when (response.code()) {
+                HttpURLConnection.HTTP_INTERNAL_ERROR -> {
+                    errorMessage = "$code ${HttpURLConnection.HTTP_INTERNAL_ERROR}"
+                }
+                HttpURLConnection.HTTP_UNAUTHORIZED -> {
+                    errorMessage = "UnAuthorized"
+                    return NetworkResult.UnAuthorized(errorMessage)
+                }
+                else -> {
+                    errorMessage = "$code $message"
+                }
+            }
+            /*val jsonObject = JSONObject(response.errorBody()!!.string())
             jsonObject.apply {
                 if (has("statusCode")) {
                     code = getString("statusCode")
@@ -88,7 +100,7 @@ open class BaseRemoteDataSource(
                 }
             } else {
                 "${response.code()} ${response.message()}"
-            }
+            }*/
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, e.toString())
             errorMessage = "${response.code()} ${response.message()}"

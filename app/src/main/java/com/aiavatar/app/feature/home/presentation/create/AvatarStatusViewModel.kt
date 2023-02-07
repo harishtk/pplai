@@ -372,7 +372,7 @@ class AvatarStatusViewModel @Inject constructor(
                         val file = Uri.parse(uploadFilesEntity.fileUriString).toFile()
                         val progressRequestBody = ProgressRequestBody(
                             file,
-                            Constant.MIME_TYPE_JPEG,
+                            Constant.MIME_TYPE_IMAGE,
                             object : ProgressRequestBody.ProgressCallback {
                                 override fun onProgressUpdate(percentage: Int) {
                                     Timber.d("Uploading: ${file.name} PROGRESS $percentage")

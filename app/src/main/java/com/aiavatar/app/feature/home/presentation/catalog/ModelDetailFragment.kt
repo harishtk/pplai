@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
@@ -482,11 +483,15 @@ class ModelDetailFragment : Fragment() {
             Timber.d("Download scheduled: $downloadSessionId")
         }
 
-        if (checkStoragePermission()) {
-            cont()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (checkStoragePermission()) {
+                cont()
+            } else {
+                mStoragePermissionContinuation = cont
+                askStoragePermission()
+            }
         } else {
-            mStoragePermissionContinuation = cont
-            askStoragePermission()
+            cont()
         }
     }
 

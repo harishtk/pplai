@@ -1,11 +1,20 @@
 package com.aiavatar.app.feature.home.presentation.create
 
+import android.Manifest
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -19,6 +28,7 @@ import androidx.viewpager2.widget.CompositePageTransformer
 import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.FragmentAvatarPreviewBinding
@@ -41,6 +51,16 @@ class AvatarPreviewFragment : Fragment() {
 
     private val viewModel: AvatarPreviewViewModel by viewModels()
 
+    private val storagePermissions: Array<String> = arrayOf(
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE
+    )
+
+    private lateinit var storagePermissionLauncher: ActivityResultLauncher<Array<String>>
+    private var mStoragePermissionContinuation: Continuation? = null
+
+    private var isSettingsLaunched = false
+
     private var jumpToId: Long? = null
     private var jumpToPosition: Int? = null
 
@@ -48,6 +68,37 @@ class AvatarPreviewFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        storagePermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result: Map<String, Boolean> ->
+                val deniedList: List<String> = result.filter { !it.value }.map { it.key }
+                when {
+                    deniedList.isNotEmpty() -> {
+                        val map = deniedList.groupBy { permission ->
+                            if (shouldShowRequestPermissionRationale(permission)) {
+                                Constant.PERMISSION_DENIED
+                            } else {
+                                Constant.PERMISSION_PERMANENTLY_DENIED
+                            }
+                        }
+                        map[Constant.PERMISSION_DENIED]?.let {
+                            requireContext().showToast("Storage permission is required to upload photos")
+                            // TODO: show storage rationale
+                            showStoragePermissionRationale(false)
+                        }
+                        map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
+                            requireContext().showToast("Storage permission is required to upload photos")
+                            // TODO: show storage rationale permanent
+                            showStoragePermissionRationale(true)
+                        }
+                    }
+
+                    else -> {
+                        mStoragePermissionContinuation?.invoke()
+                        mStoragePermissionContinuation = null
+                    }
+                }
+            }
 
         arguments?.apply {
             val modelId = getString(AvatarPreviewFragment.ARG_MODEL_ID, null)
@@ -253,7 +304,16 @@ class AvatarPreviewFragment : Fragment() {
                 // TODO: get folder name
                 if (avatarStatus.modelRenamedByUser) {
                     // TODO: if model is renamed directly save the photos
-                    viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                    // TODO: [severity-10] check storage permissions if required
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                        if (!checkStoragePermission()) {
+                            askStoragePermission()
+                        } else {
+                            viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                        }
+                    } else {
+                        viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                    }
                 } else {
                     context?.debugToast("Getting folder name")
                     EditFolderNameDialog { typedName ->
@@ -313,6 +373,46 @@ class AvatarPreviewFragment : Fragment() {
         }
     }
 
+    private fun checkStoragePermission(): Boolean {
+        return storagePermissions.all {
+            ContextCompat.checkSelfPermission(requireContext(), it) ==
+                    PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun showStoragePermissionRationale(openSettings: Boolean) {
+        /* Simple permission rationale dialog */
+        SimpleDialog(
+            context = requireContext(),
+            popupIcon = R.drawable.ic_files_permission,
+            titleText = getString(R.string.permissions_required),
+            message = getString(R.string.files_permission_des),
+            positiveButtonText = "Settings",
+            positiveButtonAction = {
+                if (openSettings) {
+                    /* go to settings */ openSettings()
+                } else {
+                    askStoragePermission()
+                }
+            },
+            cancellable = true,
+            showCancelButton = true
+        ).show()
+    }
+
+    private fun openSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val uri: Uri = Uri.fromParts("package", requireActivity().packageName, null)
+        intent.data = uri
+        startActivity(intent)
+        isSettingsLaunched = true
+    }
+
+    private fun askStoragePermission() {
+        storagePermissionLauncher.launch(storagePermissions)
+    }
+
     private fun gotoPlans(modelId: String) = safeCall {
         findNavController().apply {
             val navOpts = defaultNavOptsBuilder()
@@ -340,6 +440,14 @@ class AvatarPreviewFragment : Fragment() {
                 }
             }
         )
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isSettingsLaunched) {
+            // Do something
+            isSettingsLaunched = false
+        }
     }
 
     companion object {

@@ -136,7 +136,7 @@ class PersistentStore private constructor(
         setSocialImage(null)
         setProcessingModel(false)
         setUploadStepSkipped(false)
-        setOnboardPresented(false)
+        // setOnboardPresented(false)
         setUserPreferredTheme(DEFAULT_USER_PREFERRED_THEME)
     }
 

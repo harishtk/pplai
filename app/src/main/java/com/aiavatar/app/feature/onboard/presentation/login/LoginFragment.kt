@@ -251,6 +251,8 @@ class LoginFragment : Fragment() {
             }
         }
 
+        // setupOtpView()
+
         bindInput(
             uiState = uiState,
             uiAction = uiAction
@@ -385,6 +387,7 @@ class LoginFragment : Fragment() {
             })
         }
         val fadeInAnim = AlphaAnimation(0F, 1F).apply {
+            interpolator = DecelerateInterpolator()
             duration = 200L
             setAnimationListener(object : AnimationListener {
                 override fun onAnimationStart(animation: Animation?) {
@@ -408,17 +411,17 @@ class LoginFragment : Fragment() {
 
     private fun FragmentLoginBinding.hideBackButton() {
         val rotationAnim = RotateAnimation(
-            0F, -90F, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f
+            0F, 180F, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f
         ).apply {
             interpolator = DecelerateInterpolator()
             duration = 200L
+            fillAfter = false
             setAnimationListener(object : AnimationListener {
                 override fun onAnimationStart(animation: Animation?) {
                     // Noop
                 }
 
                 override fun onAnimationEnd(animation: Animation?) {
-                    cardBackButton.isVisible = false
                     cardBackButton.animation = null
                 }
 
@@ -428,6 +431,7 @@ class LoginFragment : Fragment() {
             })
         }
         val fadeOutAnim = AlphaAnimation(1F, 0F).apply {
+            interpolator = DecelerateInterpolator()
             duration = 200L
             setAnimationListener(object : AnimationListener {
                 override fun onAnimationStart(animation: Animation?) {
@@ -435,7 +439,8 @@ class LoginFragment : Fragment() {
                 }
 
                 override fun onAnimationEnd(animation: Animation?) {
-                    cardBackButton.alpha = 1.0F
+                    // cardBackButton.alpha = 1.0F
+                    cardBackButton.isVisible = false
                 }
 
                 override fun onAnimationRepeat(animation: Animation?) {
@@ -447,6 +452,22 @@ class LoginFragment : Fragment() {
         animSet.addAnimation(rotationAnim)
         animSet.addAnimation(fadeOutAnim)
         cardBackButton.startAnimation(animSet)
+    }
+
+    private fun FragmentLoginBinding.setupOtpView() {
+        val insetPx = resources.getDimensionPixelSize(R.dimen.inset_small) * 2
+        val itemSpacingPx = resources.getDimensionPixelSize(R.dimen.otp_view_item_spacing)
+        val borderSizePx = resources.getDimensionPixelSize(R.dimen.otp_view_border_size)
+
+        val screenWidth = activity?.getDisplaySize()?.width ?: 0
+        val perItemWidth = ((screenWidth - insetPx) / edOtp.itemCount) - itemSpacingPx - borderSizePx
+
+        Timber.d("Otp view: screenWidth = $screenWidth itemWidth = $perItemWidth")
+
+        edOtp.apply {
+            itemWidth = perItemWidth
+            itemHeight = perItemWidth
+        }
     }
 
     private fun handleBackPressed() {

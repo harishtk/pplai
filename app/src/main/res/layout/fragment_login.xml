@@ -29,6 +29,7 @@
             android:layout_gravity="center">
 
             <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/card_inner_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:animateLayoutChanges="true">
@@ -146,8 +147,8 @@
                             android:inputType="number"
                             android:textColor="@color/white"
                             android:textAppearance="@style/TextStyle.Medium"
-                            android:layout_gravity="center"
                             app:hideLineWhenFilled="false"
+                            android:layout_gravity="center"
                             app:itemCount="6"
                             app:itemWidth="@dimen/_40sdp"
                             app:itemHeight="@dimen/_40sdp"
@@ -160,7 +161,8 @@
                             app:lineWidth="2dp"
                             app:itemRadius="@dimen/corner_size_small"
                             android:enabled="true"
-                            tools:text="123456"/>
+                            tools:text="123456"
+                            tools:visibility="visible"/>
 
                         <com.google.android.material.textfield.TextInputEditText style="@style/Widget.App.EditText.OutlinedBox.Alt"
                             android:id="@+id/ed_otp_old"

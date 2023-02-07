@@ -26,6 +26,7 @@ import com.aiavatar.app.feature.home.presentation.util.SettingsItem
 import com.aiavatar.app.feature.home.presentation.util.SettingsListType
 import com.aiavatar.app.safeCall
 import com.aiavatar.app.showToast
+import com.aiavatar.app.viewmodels.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -34,6 +35,7 @@ import timber.log.Timber
 class SettingsFragment : Fragment() {
 
     private val viewModel: SettingsViewModel by viewModels()
+    private val userViewModel: UserViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -78,10 +80,10 @@ class SettingsFragment : Fragment() {
             override fun onItemClick(position: Int) {
                 when (settingsListData[position].id) {
                     5 -> {
-                        viewModel.logout()
+                        userViewModel.logout()
                         ApplicationDependencies.getPersistentStore().logout()
                         context?.showToast("Logged out!")
-                        gotoWalkThrough()
+                        gotoUploadStep1()
                     }
                 }
             }
@@ -97,6 +99,23 @@ class SettingsFragment : Fragment() {
 
         settingsList.adapter = settingsAdapter
         settingsAdapter.submitList(settingsListData)
+    }
+
+    private fun gotoUploadStep1() {
+        try {
+            findNavController().apply {
+                val navOpts = NavOptions.Builder()
+                    .setExitAnim(R.anim.slide_bottom)
+                    .setEnterAnim(R.anim.slide_up)
+                    .setLaunchSingleTop(true)
+                    .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                    .build()
+                navigate(R.id.upload_step_1, null, navOpts)
+            }
+        } catch (e: Exception) {
+            Timber.e(e)
+            (activity as? MainActivity)?.restart()
+        }
     }
 
     private fun gotoWalkThrough() {

@@ -20,10 +20,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraph
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.eventbus.UnAuthorizedEvent
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -33,6 +36,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -289,6 +295,43 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 return true
             }
         })
+    }
+
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onUnAuthorizedEvent(e: UnAuthorizedEvent) {
+        Timber.d("onUnAuthorizedEvent: $e")
+        // TODO: gracefully logout the user.
+        userViewModel.logout()
+        ApplicationDependencies.getPersistentStore().logout()
+        showToast("Session expired! Please log in again.")
+        gotoUploadStep1()
+    }
+
+    private fun gotoUploadStep1() {
+        try {
+            mainNavController.apply {
+                val navOpts = NavOptions.Builder()
+                    .setExitAnim(R.anim.slide_bottom)
+                    .setEnterAnim(R.anim.slide_up)
+                    .setLaunchSingleTop(true)
+                    .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                    .build()
+                navigate(R.id.upload_step_1, null, navOpts)
+            }
+        } catch (e: Exception) {
+            Timber.e(e)
+            restart()
+        }
     }
 
     companion object {

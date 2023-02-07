@@ -428,17 +428,19 @@ class UploadStep2Fragment : Fragment() {
         if (BuildConfig.DEBUG) {
             context?.showToast("Pick up to $maxPick selfies")
         }
+
         if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable()) {
-            photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.SingleMimeType(
+                MIME_TYPE_JPEG)))
         } else {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 if (!checkStoragePermission()) {
                     askStoragePermission()
                 } else {
-                    photoPickerGenericLauncher.launch(MIME_TYPE_IMAGE)
+                    photoPickerGenericLauncher.launch(MIME_TYPE_JPEG)
                 }
             } else {
-                photoPickerGenericLauncher.launch(MIME_TYPE_IMAGE)
+                photoPickerGenericLauncher.launch(MIME_TYPE_JPEG)
             }
         }
     }

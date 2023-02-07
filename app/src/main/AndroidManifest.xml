@@ -10,13 +10,6 @@
         </intent>
     </queries>
 
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
-    <uses-feature
-        android:name="android.hardware.camera.autofocus"
-        android:required="false" />
-
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -24,7 +17,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
@@ -41,7 +35,8 @@
         android:theme="@style/Theme.App.Splash"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
-        tools:targetApi="31"
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="tiramisu"
         tools:replace="android:allowBackup">
         <activity
             android:name="com.aiavatar.app.MainActivity"

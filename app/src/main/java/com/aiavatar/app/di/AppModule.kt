@@ -5,11 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.NetWorkHelper
-import com.aiavatar.app.commons.util.net.AndroidHeaderInterceptor
-import com.aiavatar.app.commons.util.net.GuestUserInterceptor
-import com.aiavatar.app.commons.util.net.JwtInterceptor
-import com.aiavatar.app.commons.util.net.PlatformInterceptor
-import com.aiavatar.app.commons.util.net.UserAgentInterceptor
+import com.aiavatar.app.commons.util.net.*
 import com.aiavatar.app.core.Env
 import com.aiavatar.app.core.envForConfig
 import dagger.Module
@@ -48,6 +44,7 @@ object AppModule {
         okHttpClientBuilder.addInterceptor(JwtInterceptor())
         okHttpClientBuilder.addInterceptor(PlatformInterceptor())
         okHttpClientBuilder.addInterceptor(GuestUserInterceptor())
+        okHttpClientBuilder.addInterceptor(ForbiddenInterceptor())
 
         if (envForConfig(BuildConfig.ENV) == Env.DEV || BuildConfig.DEBUG) {
             val httpLoggingInterceptor = HttpLoggingInterceptor()

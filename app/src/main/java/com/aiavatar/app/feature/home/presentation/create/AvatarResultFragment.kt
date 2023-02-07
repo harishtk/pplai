@@ -1,8 +1,12 @@
 package com.aiavatar.app.feature.home.presentation.create
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +23,7 @@ import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.setSpinning
@@ -52,6 +57,8 @@ class AvatarResultFragment : Fragment() {
     private lateinit var storagePermissionLauncher: ActivityResultLauncher<Array<String>>
     private var mStoragePermissionContinuation: Continuation? = null
 
+    private var isSettingsLaunched = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -75,12 +82,14 @@ class AvatarResultFragment : Fragment() {
                             }
                         }
                         map[Constant.PERMISSION_DENIED]?.let {
-                            requireContext().showToast("Storage permission is required to upload photos")
+                            requireContext().showToast("Storage permission is required to download photos")
                             // TODO: show storage rationale
+                            showStoragePermissionRationale(false)
                         }
                         map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
-                            requireContext().showToast("Storage permission is required to upload photos")
+                            requireContext().showToast("Storage permission is required to download photos")
                             // TODO: show storage rationale permanent
+                            showStoragePermissionRationale(openSettings = true)
                         }
                     }
 
@@ -210,7 +219,16 @@ class AvatarResultFragment : Fragment() {
                 // TODO: get folder name
                 if (avatarStatus.modelRenamedByUser) {
                     // TODO: if model is renamed directly save the photos
-                    viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                    // TODO: [severity-10] check storage permissions if required
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                        if (!checkStoragePermission()) {
+                            askStoragePermission()
+                        } else {
+                            viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                        }
+                    } else {
+                        viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                    }
                 } else {
                     context?.debugToast("Getting folder name")
                     EditFolderNameDialog { typedName ->
@@ -251,11 +269,15 @@ class AvatarResultFragment : Fragment() {
             }*/
         }
 
-        if (checkStoragePermission()) {
-            cont()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (checkStoragePermission()) {
+                cont()
+            } else {
+                mStoragePermissionContinuation = cont
+                askStoragePermission()
+            }
         } else {
-            mStoragePermissionContinuation = cont
-            askStoragePermission()
+            cont()
         }
     }
 
@@ -300,6 +322,35 @@ class AvatarResultFragment : Fragment() {
         }
     }
 
+    private fun showStoragePermissionRationale(openSettings: Boolean) {
+        /* Simple permission rationale dialog */
+        SimpleDialog(
+            context = requireContext(),
+            popupIcon = R.drawable.ic_files_permission,
+            titleText = getString(R.string.permissions_required),
+            message = getString(R.string.files_permission_des),
+            positiveButtonText = "Settings",
+            positiveButtonAction = {
+                if (openSettings) {
+                    /* go to settings */ openSettings()
+                } else {
+                    askStoragePermission()
+                }
+            },
+            cancellable = true,
+            showCancelButton = true
+        ).show()
+    }
+
+    private fun openSettings() {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val uri: Uri = Uri.fromParts("package", requireActivity().packageName, null)
+        intent.data = uri
+        startActivity(intent)
+        isSettingsLaunched = true
+    }
+
     private fun checkStoragePermission(): Boolean {
         return storagePermissions.all {
             ContextCompat.checkSelfPermission(requireContext(), it) ==
@@ -309,6 +360,14 @@ class AvatarResultFragment : Fragment() {
 
     private fun askStoragePermission() {
         storagePermissionLauncher.launch(storagePermissions)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isSettingsLaunched) {
+            // gotoCamera()
+            isSettingsLaunched = false
+        }
     }
 
 }

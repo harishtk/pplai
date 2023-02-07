@@ -68,4 +68,6 @@
 
     <dimen name="default_stroke_width">1dp</dimen>
     <dimen name="icon_overlay_progress_size">54dp</dimen>
+    <dimen name="otp_view_item_spacing">10dp</dimen>
+    <dimen name="otp_view_border_size">2dp</dimen>
 </resources>
