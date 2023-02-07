@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="spacer_size_very_small">10dp</dimen>
+
+    <dimen name="spacer_height_small">20dp</dimen>
+    <dimen name="spacer_size_small">20dp</dimen>
+    <dimen name="default_spacer_height">40dp</dimen>
+    <dimen name="spacer_height_large">60dp</dimen>
+    <dimen name="default_spacer_size">40dp</dimen>
+</resources>

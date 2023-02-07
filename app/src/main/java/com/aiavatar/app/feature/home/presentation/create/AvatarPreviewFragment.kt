@@ -50,8 +50,9 @@ class AvatarPreviewFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         arguments?.apply {
-            val modelId = getString(ModelDetailFragment.ARG_MODEL_ID, null)
-            val statusId = getString(ModelDetailFragment.ARG_STATUS_ID, null)
+            val modelId = getString(AvatarPreviewFragment.ARG_MODEL_ID, null)
+            val statusId = getString(AvatarPreviewFragment.ARG_STATUS_ID, null)
+            jumpToId = getLong(AvatarPreviewFragment.ARG_JUMP_TO_ID, -1L)
             // jumpToImageName = getString(ModelDetailFragment.ARG_JUMP_TO_IMAGE_NAME, null)
 
             Timber.d("Args: model id = $modelId status id = $statusId jumpTo = $jumpToId")
@@ -140,7 +141,7 @@ class AvatarPreviewFragment : Fragment() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 // setUpCurrentIndicator(position)
-                indicatorView.onPageSelected(position)
+                // indicatorView.onPageSelected(position)
                 viewModel.toggleSelection(position)
                 if (abs(previousPosition - position) <= SMOOTH_SCROLL_THRESHOLD) {
                     avatarScrollerList.smoothScrollToPosition(position)
@@ -162,12 +163,12 @@ class AvatarPreviewFragment : Fragment() {
                 positionOffsetPixels: Int,
             ) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
-                indicatorView.onPageScrolled(position, positionOffset, positionOffsetPixels)
+                // indicatorView.onPageScrolled(position, positionOffset, positionOffsetPixels)
             }
 
             override fun onPageScrollStateChanged(state: Int) {
                 super.onPageScrollStateChanged(state)
-                indicatorView.onPageScrollStateChanged(state)
+                // indicatorView.onPageScrollStateChanged(state)
             }
         })
 
@@ -193,7 +194,10 @@ class AvatarPreviewFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             avatarListFlow.collectLatest { avatarList ->
                 scrollerAdapter.submitList(avatarList)
-                catalogPresetAdapter.submitList(avatarList) {
+                catalogPresetAdapter.submitList(avatarList)
+
+                catalogPreviewPager.post {
+                    // TODO: refactor
                     Timber.d("Jump to Id: $jumpToId")
                     if (jumpToId != null) {
                         avatarList.mapIndexed { index, avatarUiModel ->

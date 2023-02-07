@@ -159,16 +159,8 @@ class AvatarResultViewModel @Inject constructor(
                     val avatarResultList = avatarStatusWithFilesEntity.avatarFilesEntity.map {
                         AvatarResultUiModel.AvatarItem(it.toModelAvatar())
                     }
-                    val modelData = with(avatarStatusWithFilesEntity.avatarStatusEntity) {
-                        ModelData(
-                            id = modelId,
-                            name = modelName.nullAsEmpty(),
-                            latestImage = "",
-                            totalCount = this.totalAiCount,
-                            paid = this.paid,
-                            renamed = this.modelRenamed
-                        )
-                    }
+                    val ids = avatarStatusWithFilesEntity.avatarFilesEntity.map { it._id }
+                    Timber.d("Avatar status: $ids")
                     _uiState.update { state ->
                         state.copy(
                             avatarStatus = avatarStatusWithFilesEntity.avatarStatusEntity.toAvatarStatus(),

@@ -112,7 +112,25 @@ object Analytics {
         const val MORE_CATALOG_BACK_ACTION_CLICK = "Morecatalog_backAction_click"
         /* END - More catalog */
 
+        /* Model list */
+        const val MODEL_LIST_PRESENTED = "Modellist_page_presented"
+        const val MODEL_LIST_BACK_ACTION_CLICK = "Modellist_backAction_click"
+        const val MODEL_LIST_RECREATE_CLICK = "Modllist_recreateBtn_click"
+        const val MODEL_LIST_DOWNLOAD_CLICK = "Modellist_downloadBtn_click"
+        const val MODEL_LIST_SHARE_CLICK = "Modellist_shareBtn_click"
+        const val MODEL_LIST_ITEM_CLICK = "Modellist_item_click"
+        const val MODEL_LIST_FOLDER_NAME_CHANGE = "Modellist_folderName_change_event"
+        /* END - Model list */
 
+        /* Model detail */
+        const val MODEL_DETAIL_PRESENTED = "Modeldetail_page_presented"
+        const val MODEL_DETAIL_SCROLL_ACTION = "Modeldetail_scroll_action"
+        const val MODEL_DETAIL_SCROLLER_ITEM_CLICK = "Modeldetail_scrollerItem_click"
+        const val MODEL_DETAIL_BACK_BTN_CLICK = "Modeldetail_backBtn_click"
+        const val MODEL_DETAIL_SHARE_BTN_CLICK = "Modeldetail_shareBtn_click"
+        const val MODEL_DETAIL_DOWNLOAD_BTN_CLICK = "Modeldetail_downloadBtn_click"
+        const val MODEL_DETAIL_FOLDER_NAME_CHANGE = "Modeldetail_folderName_change_event"
+        /* END - Model detail */
 
         /* After first profile upload success */
         const val ONBOARD_SUCCESS_EVENT = "Onboarding_success"

@@ -60,7 +60,9 @@ fun AvatarStatusDto.toAvatarFiles(): List<AvatarFile> {
             modelId = modelId,
             remoteFile = listAvatar.imageName,
             localUri = "",
-        )
+        ).also {
+            it.id = listAvatar.id
+        }
     }
 }
 

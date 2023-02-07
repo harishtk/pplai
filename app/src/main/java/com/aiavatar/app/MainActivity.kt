@@ -275,7 +275,6 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         }
     }
 
-
     /**
      * This will keep the splash for a pre-defined time.
      *

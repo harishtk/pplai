@@ -211,7 +211,7 @@ class ModelDetailFragment : Fragment() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 // setUpCurrentIndicator(position)
-                indicatorView.onPageSelected(position)
+                // indicatorView.onPageSelected(position)
                 viewModel.toggleSelection(position)
 
                 val delta = abs(previousPosition - position)
@@ -235,12 +235,12 @@ class ModelDetailFragment : Fragment() {
                 positionOffsetPixels: Int,
             ) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
-                indicatorView.onPageScrolled(position, positionOffset, positionOffsetPixels)
+                // indicatorView.onPageScrolled(position, positionOffset, positionOffsetPixels)
             }
 
             override fun onPageScrollStateChanged(state: Int) {
                 super.onPageScrollStateChanged(state)
-                indicatorView.onPageScrollStateChanged(state)
+                // indicatorView.onPageScrollStateChanged(state)
             }
         })
 
@@ -266,7 +266,9 @@ class ModelDetailFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             avatarListFlow.collectLatest { avatarList ->
                 scrollerAdapter.submitList(avatarList)
-                catalogPresetAdapter.submitList(avatarList) {
+                catalogPresetAdapter.submitList(avatarList)
+
+                catalogPreviewPager.post {
                     // TODO: refactor
                     Timber.d("Jump to Id: $jumpToId")
                     if (jumpToId != null) {
@@ -294,7 +296,7 @@ class ModelDetailFragment : Fragment() {
                             }
                     }
                 }
-                setUpIndicator(avatarList.size)
+                // setUpIndicator(avatarList.size)
             }
         }
 

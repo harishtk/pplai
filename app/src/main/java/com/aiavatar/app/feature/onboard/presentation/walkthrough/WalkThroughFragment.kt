@@ -4,11 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.aiavatar.app.R
+import com.aiavatar.app.autoCleared
 import com.aiavatar.app.databinding.FragmentWalkThroughBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.utils.FragmentPagerAdapter
@@ -17,6 +19,10 @@ import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
 
 class WalkThroughFragment : Fragment() {
+
+    private var _binding: FragmentWalkThroughBinding by autoCleared()
+    val binding: FragmentWalkThroughBinding
+        get() = _binding!!
 
     private val SMALL_DESCRIPTIONS = listOf<Int>(
         R.string.walkthrough_des_1,
@@ -34,9 +40,10 @@ class WalkThroughFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val binding = FragmentWalkThroughBinding.bind(view)
+        _binding = FragmentWalkThroughBinding.bind(view)
 
         binding.bindState()
+        handleBackPressed()
     }
 
     private fun FragmentWalkThroughBinding.bindState() {
@@ -118,6 +125,26 @@ class WalkThroughFragment : Fragment() {
                 } catch (ignore: Exception) {}
             }
         }
+    }
+
+    private fun handleBackPressed() {
+        activity?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    safeCall {
+                        if (binding.walkthroughPager.currentItem > 0) {
+                            // consume
+                            val curPos = binding.walkthroughPager.currentItem
+                            binding.walkthroughPager.currentItem = curPos - 1
+                        } else {
+                            if (!findNavController().popBackStack()) {
+                                activity?.finishAffinity()
+                            }
+                        }
+                    }
+                }
+            }
+        )
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
