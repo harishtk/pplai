@@ -41,7 +41,6 @@
     <color name="tag_fourth_color">#ECAE25</color>
     <color name="tag_fifth_color">#BA83F2</color>
     <color name="grey_divider">#26979797</color>
-    <color name="transparent_black">#80000000</color>
     <color name="comment_input_background">#80000000</color>
 
     <color name="tab_indicator_unselected">#C8C8C8</color>
@@ -54,4 +53,5 @@
     <color name="backdrop_primary">#33FAAD14</color>
 
     <color name="image_placeholder_fill">#FFFFFFFF</color>
+    <color name="icon_tint">@color/transparent_black_40</color>
 </resources>

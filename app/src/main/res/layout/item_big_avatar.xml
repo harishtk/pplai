@@ -32,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/inset_small"
-            android:background="@color/transparent_black"
+            android:background="@color/transparent_black_80"
             tools:text="Category Name"
             android:textColor="@color/white"
             android:textAlignment="center"

@@ -60,7 +60,9 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
         ifDebug {
             lifecycleScope.launch {
-                AppCompatDelegate.setDefaultNightMode(ApplicationDependencies.getPersistentStore().userPreferredTheme)
+                ApplicationDependencies.getPersistentStore().userPreferredTheme.let { theme ->
+                    THEME_MAP[theme]?.let { AppCompatDelegate.setDefaultNightMode(it) }
+                }
             }
         }
 

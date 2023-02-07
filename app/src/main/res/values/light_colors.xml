@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="signal_accent_primary">@color/core_ultramarine</color>
+
+    <color name="signal_divider_minor">@color/core_grey_15</color>
+    <color name="signal_divider_major">@color/core_grey_25</color>
+
+    <color name="signal_inverse_primary">@color/core_black</color>
+
+    <color name="signal_inverse_transparent">@color/transparent_black</color>
+    <color name="signal_inverse_transparent_05">@color/transparent_black_05</color>
+    <color name="signal_inverse_transparent_08">@color/transparent_black_08</color>
+    <color name="signal_inverse_transparent_10">@color/transparent_black_10</color>
+    <color name="signal_inverse_transparent_15">@color/transparent_black_15</color>
+    <color name="signal_inverse_transparent_20">@color/transparent_black_20</color>
+    <color name="signal_inverse_transparent_25">@color/transparent_black_25</color>
+    <color name="signal_inverse_transparent_40">@color/transparent_black_40</color>
+    <color name="signal_inverse_transparent_60">@color/transparent_black_60</color>
+    <color name="signal_inverse_transparent_80">@color/transparent_black_80</color>
+</resources>

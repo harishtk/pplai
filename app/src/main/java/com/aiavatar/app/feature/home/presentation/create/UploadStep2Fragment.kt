@@ -330,6 +330,14 @@ class UploadStep2Fragment : Fragment() {
                 }
             }
         }
+
+        bindClick()
+    }
+
+    private fun FragmentUploadStep2Binding.bindClick() {
+        navigationIcon.setOnClickListener {
+            safeCall { findNavController().popBackStack() }
+        }
     }
 
     private fun FragmentUploadStep2Binding.bindExamplesAdapter() {
