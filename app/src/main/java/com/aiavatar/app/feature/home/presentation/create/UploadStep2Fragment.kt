@@ -30,7 +30,9 @@ import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.*
+import com.aiavatar.app.Constant.MIME_TYPE_IMAGE
 import com.aiavatar.app.Constant.MIME_TYPE_JPEG
+import com.aiavatar.app.Constant.MIME_TYPE_PNG
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.HapticUtil
@@ -49,6 +51,9 @@ import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.google.android.gms.common.moduleinstall.ModuleInstall
+import com.google.android.gms.common.moduleinstall.ModuleInstallClient
+import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -148,6 +153,32 @@ class UploadStep2Fragment : Fragment() {
                     }
                 }
             }
+
+        val faceDetector = FaceDetection.getClient()
+        val moduleInstallClient = ModuleInstall.getClient(requireActivity())
+        moduleInstallClient
+            .areModulesAvailable(faceDetector)
+            .addOnSuccessListener {
+                if (it.areModulesAvailable()) {
+                    Timber.d("FaceDetector: available")
+                } else {
+                    Timber.d("FaceDetector: not available")
+                }
+            }
+            .addOnFailureListener { t ->
+                ifDebug { Timber.e(t) }
+            }
+
+        val moduleInstallRequest = ModuleInstallRequest.newBuilder()
+            .addApi(faceDetector)
+            .setListener {
+                Timber.d("ModuleInstall: status = $it")
+            }
+            .build()
+
+        moduleInstallClient.installModules(
+            moduleInstallRequest
+        )
     }
 
     override fun onCreateView(
@@ -357,6 +388,21 @@ class UploadStep2Fragment : Fragment() {
                     .addOnFailureListener { countDownLatch.countDown() }
                 ft
             }
+
+            val moduleInstallClient = ModuleInstall.getClient(requireActivity())
+            moduleInstallClient
+                .areModulesAvailable(faceDetector)
+                .addOnSuccessListener {
+                    if (it.areModulesAvailable()) {
+                        Timber.d("FaceDetector: available")
+                    } else {
+                        Timber.d("FaceDetector: not available")
+                    }
+                }
+                .addOnFailureListener { t ->
+                    ifDebug { Timber.e(t) }
+                }
+
             runBlocking(Dispatchers.IO) {
                 countDownLatch.await(1, TimeUnit.MINUTES)
                 val previewModelList = taskList.mapIndexed { index, task ->
@@ -389,10 +435,10 @@ class UploadStep2Fragment : Fragment() {
                 if (!checkStoragePermission()) {
                     askStoragePermission()
                 } else {
-                    photoPickerGenericLauncher.launch(MIME_TYPE_JPEG)
+                    photoPickerGenericLauncher.launch(MIME_TYPE_IMAGE)
                 }
             } else {
-                photoPickerGenericLauncher.launch(MIME_TYPE_JPEG)
+                photoPickerGenericLauncher.launch(MIME_TYPE_IMAGE)
             }
         }
     }

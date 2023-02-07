@@ -349,7 +349,8 @@ class HomeRepositoryImpl @Inject constructor(
             }
     }
 
-    // TODO: [forceRefresh] will not work as expected
+    // TODO: fix [forceRefresh] will not work as expected
+    // TODO: fix [BuenoCacheException] is thrown for empty data!
     override fun getCatalogList2(
         request: CatalogDetailRequest,
         forceRefresh: Boolean

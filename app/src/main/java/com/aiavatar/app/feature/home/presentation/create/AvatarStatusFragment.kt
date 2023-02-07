@@ -53,6 +53,9 @@ import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
+/**
+ * TODO: handle offline status, retry upload.
+ */
 @AndroidEntryPoint
 class AvatarStatusFragment : Fragment() {
 

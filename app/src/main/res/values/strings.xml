@@ -84,6 +84,8 @@
     <string name="cannot_refresh_message">Can\'t refresh. Last updated %1$s</string>
     <string name="uploading_photos_">Uploading Photos.. %1$s</string>
 
+    <string name="version_info" translatable="false"><![CDATA[%1$s \u2022 %2$s]]></string>
+
     <string name="hours_single">An hour ago</string>
     <string name="hours_more">%1$d hours ago</string>
 

@@ -298,6 +298,8 @@ class AvatarStatusViewModel @Inject constructor(
                             }
                         }
                         setLoading(LoadType.ACTION, LoadState.Error(result.exception))
+
+                        scheduleAvatarStatusJob(forceNew = true)
                     }
                     is Result.Success -> {
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)

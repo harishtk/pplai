@@ -15,6 +15,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.setSpinning
@@ -59,6 +60,10 @@ class SettingsFragment : Fragment() {
 
             toolbarTitle.text = getString(R.string.label_settings)
         }
+
+        val appName = getString(R.string.app_name)
+        val version = "v${BuildConfig.VERSION_NAME}"
+        tvVersionInfo.text = getString(R.string.version_info, appName, version)
 
         val settingsListData = listOf<SettingsItem>(
             SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 0, title = "FAQs", R.drawable.ic_faq_outline, "Frequently asked questions", true),

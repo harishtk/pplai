@@ -42,15 +42,33 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:overScrollMode="never"
+            android:paddingBottom="@dimen/spacer_size_very_small"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_title"
+            app:layout_constraintBottom_toTopOf="@id/bottom_spacer"
             app:layout_constraintVertical_chainStyle="packed"
-            tools:listitem="@layout/item_simple_settings" />
+            tools:listitem="@layout/item_simple_settings"
+            tools:itemCount="3"/>
+
+        <Space android:id="@+id/bottom_spacer"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/default_spacer_height"
+            app:layout_constraintVertical_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/settings_list"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView android:id="@+id/tv_version_info"
+        style="@style/TextStyle.Tiny"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        tools:text="AI Avatar \u2022 v0.0.1"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

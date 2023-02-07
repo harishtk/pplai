@@ -18,6 +18,7 @@ import com.aiavatar.app.Constant
 import com.aiavatar.app.R
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.UiText
+import com.aiavatar.app.commons.util.net.isConnected
 import com.aiavatar.app.databinding.FragmentUploadStep3Binding
 import com.aiavatar.app.databinding.ItemGenderSelectableBinding
 import com.aiavatar.app.feature.home.presentation.util.GenderModel
@@ -101,11 +102,16 @@ class UploadStep3Fragment : Fragment() {
         }
 
         btnNext.setOnClickListener {
-            if (sessionIdCache != null) {
-                btnNext.setOnClickListener(null)
-                viewModel.updateTrainingType(sessionIdCache!!)
+            // TODO: check if network is available
+            if (context?.isConnected() != true) {
+                context?.showToast(UiText.noInternet.asString(requireContext()))
             } else {
-                context?.showToast(UiText.somethingWentWrong.asString(requireContext()))
+                if (sessionIdCache != null) {
+                    btnNext.setOnClickListener(null)
+                    viewModel.updateTrainingType(sessionIdCache!!)
+                } else {
+                    context?.showToast(UiText.somethingWentWrong.asString(requireContext()))
+                }
             }
         }
     }
