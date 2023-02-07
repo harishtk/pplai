@@ -94,6 +94,8 @@
     <string name="content_description_delete_photo">Delete Photo</string>
     <string name="content_description_go_back">Go back</string>
     <string name="label_create">Create</string>
+    <string name="walkthrough2_title_1">Create stunning, mesmerizing avatars from your photos.</string>
+    <string name="good_examples">Good Examples</string>
 
     <plurals name="hours_ago">
         <item quantity="one">@string/hours_single</item>

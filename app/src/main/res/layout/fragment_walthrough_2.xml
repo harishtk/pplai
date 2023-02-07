@@ -35,7 +35,8 @@
         <LinearLayout android:orientation="horizontal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:visibility="gone">
+            android:visibility="gone"
+            tools:visibility="gone">
 
             <TextView android:id="@+id/big_description_1"
                 style="@style/Base.TextAppearance.Bold"
@@ -57,10 +58,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingHorizontal="@dimen/inset_large"
-            android:text="Create stunning, mesmerizing avatars from your photos."
+            android:text="@string/walkthrough2_title_1"
             android:textSize="@dimen/text_size_huge"
             android:lineSpacingMultiplier="0.9"
-            android:textAlignment="center"/>
+            android:textAlignment="center"
+            android:visibility="gone"
+            tools:visibility="visible"/>
 
     </LinearLayout>
 
@@ -84,7 +87,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            tools:itemCount="40"
+            tools:itemCount="20"
             tools:listitem="@layout/item_square_image" />
 
         <androidx.constraintlayout.widget.ConstraintLayout

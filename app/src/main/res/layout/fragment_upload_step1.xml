@@ -64,7 +64,9 @@
                 android:text="What to Expect"
                 android:textSize="@dimen/text_size_huge"
                 android:lineSpacingMultiplier="0.9"
-                android:textAlignment="center"/>
+                android:textAlignment="center"
+                android:visibility="gone"
+                tools:visibility="visible"/>
 
             <TextView android:id="@+id/small_description1"
                 style="@style/TextStyle.VerySmall"
@@ -77,16 +79,19 @@
                 app:layout_constraintTop_toBottomOf="@id/content"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:visibility="visible"/>
+                android:visibility="gone"
+                tools:visibility="visible"/>
 
             <TextView android:id="@+id/big_description_2"
                 style="@style/Base.TextAppearance.Bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Good Examples"
+                android:text="@string/good_examples"
                 android:textSize="@dimen/text_size_huge"
                 android:lineSpacingMultiplier="0.9"
-                android:textAlignment="center"/>
+                android:textAlignment="center"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
         </LinearLayout>
 
