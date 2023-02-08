@@ -11,7 +11,7 @@ class CacheLocalDataSource @Inject constructor(
     private val appDatabase: AppDatabase
 ) {
 
-    suspend fun getOrCreate(tableName: String): CacheKeysEntity {
+    suspend fun getOrCreateCacheKeys(tableName: String): CacheKeysEntity {
         val cacheKey = cacheKeyForTable(tableName)
         return appDatabase.cacheKeysDao().getCacheKeysSync(cacheKey).ifNull {
             CacheKeysEntity(
@@ -24,6 +24,11 @@ class CacheLocalDataSource @Inject constructor(
         }
     }
 
+    suspend fun getCacheKeys(tableName: String): CacheKeysEntity? {
+        val cacheKey = cacheKeyForTable(tableName)
+        return appDatabase.cacheKeysDao().getCacheKeysSync(cacheKey)
+    }
+
     suspend fun insertCacheKey(entity: CacheKeysEntity) {
         appDatabase.cacheKeysDao().insert(entity)
     }
@@ -33,9 +38,9 @@ class CacheLocalDataSource @Inject constructor(
         return appDatabase.cacheKeysDao().updateCacheKeys(entity)
     }
 
-    suspend fun getCacheKeys(key: String): CacheKeysEntity? {
+    /*suspend fun getCacheKeys(key: String): CacheKeysEntity? {
         return appDatabase.cacheKeysDao().getCacheKeysSync(key)
-    }
+    }*/
 
     suspend fun clearCacheKeys() {
         appDatabase.cacheKeysDao().deleteAll()

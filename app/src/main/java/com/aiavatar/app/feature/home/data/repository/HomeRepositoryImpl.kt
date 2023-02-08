@@ -1,6 +1,5 @@
 package com.aiavatar.app.feature.home.data.repository
 
-import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.commons.util.NetworkResultParser
 import com.aiavatar.app.commons.util.Result
@@ -29,7 +28,6 @@ import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -97,7 +95,7 @@ class HomeRepositoryImpl @Inject constructor(
                         localDataSource.deleteAllCategories()
                         localDataSource.insertAllCategories(categories)
 
-                        val cacheKeys = cacheLocalDataSource.getOrCreate(AvatarCategoriesTable.name)
+                        val cacheKeys = cacheLocalDataSource.getOrCreateCacheKeys(AvatarCategoriesTable.name)
 
                         val affected = cacheLocalDataSource.updateCacheKey(
                             cacheKeys.modify(
@@ -131,7 +129,7 @@ class HomeRepositoryImpl @Inject constructor(
                         localDataSource.deleteAllCatalogList(catalogDetailRequest.category)
                         localDataSource.insertAllCatalogList(catalogList.map(CatalogList::asEntity))
 
-                        val cacheKeys = cacheLocalDataSource.getOrCreate(CatalogListTable.name)
+                        val cacheKeys = cacheLocalDataSource.getOrCreateCacheKeys(CatalogListTable.name)
 
                         val affected = cacheLocalDataSource.updateCacheKey(
                             cacheKeys.modify(
@@ -315,7 +313,8 @@ class HomeRepositoryImpl @Inject constructor(
         return observeAllCategoryInternal()
             .onStart {
                 if (forceRefresh) {
-                    val cacheKeys = cacheLocalDataSource.getOrCreate(AvatarCategoriesTable.name)
+                    val cacheKeys = cacheLocalDataSource.getCacheKeys(AvatarCategoriesTable.name)
+                        ?: return@onStart
                     if (cacheKeys.expired()) {
                         Timber.d("Cache keys: ${cacheKeys.key} expired")
                         localDataSource.deleteAllCategories()
@@ -358,7 +357,8 @@ class HomeRepositoryImpl @Inject constructor(
         return observeAllCatalogListInternal(request.category)
             .onStart {
                 if (forceRefresh) {
-                    val cacheKeys = cacheLocalDataSource.getOrCreate(CatalogListTable.name)
+                    val cacheKeys = cacheLocalDataSource.getCacheKeys(CatalogListTable.name)
+                        ?: return@onStart
                     if (cacheKeys.expired()) {
                         Timber.d("Cache keys: ${cacheKeys.key} expired")
                         localDataSource.deleteAllCatalogList(request.category)

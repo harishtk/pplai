@@ -382,52 +382,60 @@ class UploadStep2Fragment : Fragment() {
     private fun detectFacesInternal(pickedUris: List<Uri>) =
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             // TODO: Clean this sheet
-            isFaceDetectionRunning = true
-            viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
-            val result = HashMap<String, Boolean>()
-            val faceDetectorOpts = FaceDetectorOptions.Builder()
-                .setMinFaceSize(0.5F)
-                .build()
-            val faceDetector = FaceDetection.getClient(faceDetectorOpts)
-            val countDownLatch = CountDownLatch(pickedUris.size)
-            val taskList: List<Task<List<Face>>> = pickedUris.mapIndexed { index, uri ->
-                val ft = faceDetector.process(InputImage.fromFilePath(requireContext(), uri))
-                    .addOnCompleteListener { countDownLatch.countDown() }
-                    .addOnFailureListener { countDownLatch.countDown() }
-                ft
-            }
+            kotlin.runCatching {
+                isFaceDetectionRunning = true
+                viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
+                val result = HashMap<String, Boolean>()
+                val faceDetectorOpts = FaceDetectorOptions.Builder()
+                    .setMinFaceSize(0.5F)
+                    .build()
+                val faceDetector = FaceDetection.getClient(faceDetectorOpts)
+                val countDownLatch = CountDownLatch(pickedUris.size)
+                val taskList: List<Task<List<Face>>> = pickedUris.mapIndexed { index, uri ->
+                    val ft = faceDetector.process(InputImage.fromFilePath(requireContext(), uri))
+                        .addOnCompleteListener { countDownLatch.countDown() }
+                        .addOnFailureListener { countDownLatch.countDown() }
+                    ft
+                }
 
-            val moduleInstallClient = ModuleInstall.getClient(requireActivity())
-            moduleInstallClient
-                .areModulesAvailable(faceDetector)
-                .addOnSuccessListener {
-                    if (it.areModulesAvailable()) {
-                        Timber.d("FaceDetector: available")
-                    } else {
-                        Timber.d("FaceDetector: not available")
+                val moduleInstallClient = ModuleInstall.getClient(requireActivity())
+                moduleInstallClient
+                    .areModulesAvailable(faceDetector)
+                    .addOnSuccessListener {
+                        if (it.areModulesAvailable()) {
+                            Timber.d("FaceDetector: available")
+                        } else {
+                            Timber.d("FaceDetector: not available")
+                        }
                     }
-                }
-                .addOnFailureListener { t ->
-                    ifDebug { Timber.e(t) }
-                }
+                    .addOnFailureListener { t ->
+                        ifDebug { Timber.e(t) }
+                    }
 
-            runBlocking(Dispatchers.IO) {
-                countDownLatch.await(1, TimeUnit.MINUTES)
-                val previewModelList = taskList.mapIndexed { index, task ->
-                    val trackedIds = task.result.mapNotNull { it.trackingId }.distinct()
-                    result[pickedUris[index].toString()] = task.result.isNotEmpty()/* &&
+                runBlocking(Dispatchers.IO) {
+                    countDownLatch.await(1, TimeUnit.MINUTES)
+                    val previewModelList = taskList.mapIndexed { index, task ->
+                        val trackedIds = task.result.mapNotNull { it.trackingId }.distinct()
+                        result[pickedUris[index].toString()] = task.result.isNotEmpty()/* &&
                         trackedIds.size == 1*/
-                    Timber.d("Detecting: id = $index faces $trackedIds")
-                    UploadPreviewUiModel.Item(
-                        SelectedMediaItem(pickedUris[index]),
-                        selected = task.result.isNotEmpty()
-                    )
+                        Timber.d("Detecting: id = $index faces $trackedIds")
+                        UploadPreviewUiModel.Item(
+                            SelectedMediaItem(pickedUris[index]),
+                            selected = task.result.isNotEmpty()
+                        )
+                    }
+                    viewModel.setPickedUris(previewModelList)
+                    Timber.d("Detected Faces: $result")
                 }
-                viewModel.setPickedUris(previewModelList)
-                Timber.d("Detected Faces: $result")
+                isFaceDetectionRunning = false
+                viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
+            }.onFailure { t ->
+                ifDebug {
+                    val cause = RuntimeException("FATAL: Cannot process face detection.", t)
+                    Timber.wtf(cause)
+                }
+                this@UploadStep2Fragment.context?.showToast("Cannot process image")
             }
-            isFaceDetectionRunning = false
-            viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
         }
 
     private fun launchPhotoPicker() {

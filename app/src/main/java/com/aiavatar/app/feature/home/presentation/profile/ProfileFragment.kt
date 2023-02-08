@@ -139,6 +139,8 @@ class ProfileFragment : Fragment() {
                     progressBar.isVisible = adapter.itemCount <= 0
                 } else {
                     swipeRefreshLayout.isRefreshing = false
+                    // TODO: Show empty list container
+                    emptyListContainer.isVisible = adapter.itemCount <= 0
                     if (loadState.refresh is LoadState.Error) {
                         errorContainer.isVisible = true
                         HapticUtil.createError(requireContext())
@@ -183,9 +185,6 @@ class ProfileFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             modelListUiModelsFlow.collectLatest { modelList ->
                 adapter.submitList(modelList)
-
-                // TODO: Show empty list container
-                emptyListContainer.isVisible = modelList.isEmpty()
             }
         }
     }
