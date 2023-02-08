@@ -1,11 +1,9 @@
 package com.aiavatar.app.feature.onboard.data.source.remote
 
-import com.aiavatar.app.feature.onboard.data.source.remote.dto.AutoLoginRequestDto
-import com.aiavatar.app.feature.onboard.data.source.remote.dto.LoginRequestDto
-import com.aiavatar.app.feature.onboard.data.source.remote.dto.LogoutRequestDto
-import com.aiavatar.app.feature.onboard.data.source.remote.dto.SocialLoginRequestDto
+import com.aiavatar.app.feature.onboard.data.source.remote.dto.*
 import com.aiavatar.app.feature.onboard.data.source.remote.model.AutoLoginResponse
 import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
+import com.aiavatar.app.feature.onboard.data.source.remote.model.GetShareLinkResponse
 import com.aiavatar.app.feature.onboard.data.source.remote.model.LoginResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -24,5 +22,8 @@ interface AccountsApi {
 
     @POST("user/logout")
     suspend fun logout(@Body logoutRequestDto: LogoutRequestDto): Response<BaseResponse>
+
+    @POST("user/share")
+    suspend fun getShareLink(@Body getShareLinkRequestDto: GetShareLinkRequestDto): Response<GetShareLinkResponse>
 
 }

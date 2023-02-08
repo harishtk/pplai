@@ -12,17 +12,17 @@ import com.aiavatar.app.feature.onboard.data.source.remote.AccountsRemoteDataSou
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.asDto
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.toAutoLoginData
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.toLoginData
+import com.aiavatar.app.feature.onboard.data.source.remote.dto.toShareLinkData
 import com.aiavatar.app.feature.onboard.data.source.remote.model.LoginResponse
 import com.aiavatar.app.feature.onboard.domain.model.AutoLoginData
 import com.aiavatar.app.feature.onboard.domain.model.LoginData
-import com.aiavatar.app.feature.onboard.domain.model.request.AutoLoginRequest
-import com.aiavatar.app.feature.onboard.domain.model.request.LoginRequest
-import com.aiavatar.app.feature.onboard.domain.model.request.LogoutRequest
-import com.aiavatar.app.feature.onboard.domain.model.request.SocialLoginRequest
+import com.aiavatar.app.feature.onboard.domain.model.ShareLinkData
+import com.aiavatar.app.feature.onboard.domain.model.request.*
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import com.aiavatar.app.feature.onboard.presentation.utils.InvalidMobileNumberException
 import com.aiavatar.app.feature.onboard.presentation.utils.RecaptchaException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.net.ssl.HttpsURLConnection
@@ -77,6 +77,31 @@ class AccountsRepositoryImpl constructor(
                 else -> parseErrorNetworkResult(networkResult)
             }
         }
+    }
+
+    override fun getShareLink(getShareLinkRequest: GetShareLinkRequest): Flow<Result<ShareLinkData>> {
+        return remoteDataSource.getShareLink(getShareLinkRequest.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val shareLinkDataDto = networkResult.data?.data
+                        if (shareLinkDataDto != null) {
+                            Result.Success(shareLinkDataDto.toShareLinkData())
+                        } else {
+                            emptyResponse(networkResult)
+                        }
+                    } else {
+                        badResponse(networkResult)
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
+            .catch { t ->
+                val cause = ApiException(t)
+                emit(Result.Error(cause))
+            }
     }
 
     private fun parseLoginResult(networkResult: NetworkResult<LoginResponse>): Result<LoginData> {

@@ -8,6 +8,8 @@ import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.UiText
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadStates
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
@@ -25,9 +27,11 @@ import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.domain.model.ModelData
 import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import com.aiavatar.app.feature.onboard.domain.model.ShareLinkData
+import com.aiavatar.app.feature.onboard.domain.model.request.GetShareLinkRequest
+import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
+import com.aiavatar.app.ifDebug
 import com.aiavatar.app.nullAsEmpty
-import com.aiavatar.app.commons.util.loadstate.LoadState
-import com.aiavatar.app.commons.util.loadstate.LoadStates
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -39,6 +43,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ModelListViewModel @Inject constructor(
     private val appRepository: AppRepository,
+    private val accountsRepository: AccountsRepository,
     private val homeRepository: HomeRepository,
     @Deprecated("migrate to repo")
     private val appDatabase: AppDatabase,
@@ -57,6 +62,7 @@ class ModelListViewModel @Inject constructor(
     private var modelDetailFetchJob: Job? = null
     private var createDownloadSessionJob: Job? = null
     private var downloadProgressJob: Job? = null
+    private var getShareLinkJob: Job? = null
 
     init {
         accept = { uiAction -> onUiAction(uiAction) }
@@ -71,6 +77,9 @@ class ModelListViewModel @Inject constructor(
                         uiErrorText = null
                     )
                 }
+            }
+            is ModelListUiAction.GetShareLink -> {
+                uiState.value.modelId?.let { getShareLinkInternal(it) }
             }
         }
     }
@@ -342,6 +351,66 @@ class ModelListViewModel @Inject constructor(
 
     /* END - Download session related */
 
+    /* Share link */
+    private fun getShareLinkInternal(modelId: String) {
+        val request = GetShareLinkRequest(modelId)
+
+        getShareLink(request)
+    }
+
+    private fun getShareLink(request: GetShareLinkRequest) {
+        if (getShareLinkJob?.isActive == true) {
+            val t = IllegalStateException("A share link fetch job is already active. Ignoring..")
+            ifDebug { Timber.w(t) }
+            return
+        }
+
+        getShareLinkJob?.cancel(CancellationException("New request")) // just in case
+        getShareLinkJob = viewModelScope.launch {
+            accountsRepository.getShareLink(request).collectLatest { result ->
+                when (result) {
+                    is Result.Loading -> {
+                        val newLoadState = uiState.value.shareLoadState.modifyState(LoadType.REFRESH, LoadState.Loading())
+                        _uiState.update { state -> state.copy(shareLoadState = newLoadState) }
+                    }
+                    is Result.Error -> {
+                        when (result.exception) {
+                            is NoInternetException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.noInternet
+                                    )
+                                }
+                            }
+                            else -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
+                                    )
+                                }
+                            }
+                        }
+                        val newLoadState = uiState.value.shareLoadState.modifyState(LoadType.REFRESH, LoadState.Error(result.exception))
+                        _uiState.update { state -> state.copy(shareLoadState = newLoadState) }
+                    }
+                    is Result.Success -> {
+                        val newLoadState = uiState.value.shareLoadState.modifyState(LoadType.REFRESH, LoadState.NotLoading.Complete)
+                        _uiState.update { state ->
+                            state.copy(
+                                shareLoadState = newLoadState,
+                                shareLinkData = result.data
+                            )
+                        }
+                        sendEvent(ModelListUiEvent.ShareLink(result.data.shortLink))
+                    }
+                }
+            }
+        }
+    }
+    /* END - Share link */
+
     private fun setLoading(
         loadType: LoadType,
         loadState: LoadState
@@ -374,17 +443,21 @@ data class ModelListState(
     val modelData: ModelData? = null,
     val modelResultList: List<ModelListUiModel2> = emptyList(),
     val downloadStatus: DownloadSessionStatus? = null,
+    val shareLoadState: LoadStates = LoadStates.IDLE,
+    val shareLinkData: ShareLinkData? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
 
 interface ModelListUiAction {
     data class ErrorShown(val e: Exception) : ModelListUiAction
+    object GetShareLink : ModelListUiAction
 }
 
 interface ModelListUiEvent {
     data class ShowToast(val message: UiText) : ModelListUiEvent
     data class StartDownload(val downloadSessionId: Long) : ModelListUiEvent
+    data class ShareLink(val link: String) : ModelListUiEvent
 }
 
 interface ModelListUiModel2 {

@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -133,6 +134,9 @@ class ModelListFragment : Fragment() {
                     is ModelListUiEvent.StartDownload -> {
                         checkPermissionAndScheduleWorker(event.downloadSessionId)
                     }
+                    is ModelListUiEvent.ShareLink -> {
+                        handleShareLink(event.link)
+                    }
                 }
             }
         }
@@ -153,7 +157,7 @@ class ModelListFragment : Fragment() {
                 if (hasError) {
                     val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorText
                     if (e != null) {
-                        Timber.e(e)
+                        ifDebug { Timber.e(e) }
                         uiErr?.let { uiText -> context?.showToast(uiText.asString(requireContext())) }
                         uiAction(ModelListUiAction.ErrorShown(e))
                     }
@@ -230,6 +234,11 @@ class ModelListFragment : Fragment() {
             uiAction = uiAction
         )
 
+        bindShareProgress(
+            uiState = uiState,
+            uiAction = uiAction
+        )
+
         bindClick(
             uiState = uiState,
             uiAction = uiAction
@@ -285,7 +294,13 @@ class ModelListFragment : Fragment() {
         }
 
         icShare.isVisible = true
-        icShare.setOnClickListener { }
+        icShare.setOnClickListener {
+            if (uiState.value.shareLinkData != null) {
+                handleShareLink(uiState.value.shareLinkData!!.shortLink)
+            } else {
+                uiAction(ModelListUiAction.GetShareLink)
+            }
+        }
 
         btnClose.setOnClickListener { findNavController().navigateUp() }
 
@@ -323,6 +338,27 @@ class ModelListFragment : Fragment() {
         }
     }
 
+    private fun FragmentModelListBinding.bindShareProgress(
+        uiState: StateFlow<ModelListState>,
+        uiAction: (ModelListUiAction) -> Unit
+    ) {
+        val loadStateFlow = uiState.map { it.shareLoadState }
+            .distinctUntilChangedBy { it.refresh }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                if (loadState.refresh is LoadState.Loading) {
+                    icShare.setImageResource(R.drawable.ic_share)
+                    icShare.isEnabled = false
+                    shareProgressBar.isVisible = true
+                } else {
+                    icShare.setImageResource(R.drawable.ic_share_outline)
+                    icShare.isEnabled = true
+                    shareProgressBar.isVisible = false
+                }
+            }
+        }
+    }
+
     private fun FragmentModelListBinding.bindToolbar(uiState: StateFlow<ModelListState>) {
         val modelDataFlow = uiState.map { it.modelData }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -349,6 +385,16 @@ class ModelListFragment : Fragment() {
 
     private fun checkFolderName(name: String) {
 
+    }
+
+    private fun handleShareLink(link: String) {
+        val shareIntent = ShareCompat.IntentBuilder(requireContext())
+            .setText(link)
+            .setType("text/plain")
+            .setChooserTitle("Share with")
+            .intent
+
+        startActivity(Intent.createChooser(shareIntent, "Share with"))
     }
 
     private fun checkPermissionAndScheduleWorker(downloadSessionId: Long) {
