@@ -7,4 +7,10 @@
     <dimen name="default_spacer_height">40dp</dimen>
     <dimen name="spacer_height_large">60dp</dimen>
     <dimen name="default_spacer_size">40dp</dimen>
+
+    <dimen name="inset_small">8dp</dimen>
+    <dimen name="inset_very_small">4dp</dimen>
+    <dimen name="inset_medium">10dp</dimen>
+    <dimen name="inset_large">14dp</dimen>
+    <dimen name="inset_large_medium">12dp</dimen>
 </resources>

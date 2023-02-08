@@ -16,7 +16,9 @@ data class ModelDataDto(
     @SerializedName("paid")
     val paid: Boolean,
     @SerializedName("renamed")
-    val renamed: Boolean
+    val renamed: Boolean,
+    @SerializedName("updatedAt")
+    val updatedAt: String
 )
 
 fun ModelDataDto.toModelData(statusId: String): ModelData {
@@ -26,7 +28,8 @@ fun ModelDataDto.toModelData(statusId: String): ModelData {
         latestImage = latestImage,
         totalCount = totalCount,
         paid = paid,
-        renamed = renamed
+        renamed = renamed,
+        updatedAt = updatedAt
     ).also {
         it.statusId = statusId
     }

@@ -6,7 +6,8 @@ data class ModelData(
     val latestImage: String,
     val totalCount: Int,
     val paid: Boolean,
-    val renamed: Boolean
+    val renamed: Boolean,
+    val updatedAt: String
 ) {
     var statusId: String? = null
 }

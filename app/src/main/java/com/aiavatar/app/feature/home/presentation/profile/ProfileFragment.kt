@@ -132,12 +132,13 @@ class ProfileFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
                 Timber.d("Load state: ${loadState.refresh}")
-                swipeRefreshLayout.isEnabled = loadState.refresh !is LoadState.Loading
+                // swipeRefreshLayout.isEnabled = loadState.refresh !is LoadState.Loading
                 if (loadState.refresh is LoadState.Loading) {
                     errorContainer.isVisible = false
                     emptyListContainer.isVisible = false
                     progressBar.isVisible = adapter.itemCount <= 0
                 } else {
+                    swipeRefreshLayout.isRefreshing = false
                     if (loadState.refresh is LoadState.Error) {
                         errorContainer.isVisible = true
                         HapticUtil.createError(requireContext())
@@ -146,11 +147,11 @@ class ProfileFragment : Fragment() {
                     progressBar.isVisible = false
                 }
 
-                if (swipeRefreshLayout.isRefreshing) {
+                /*if (swipeRefreshLayout.isRefreshing) {
                     if (loadState.refresh !is LoadState.Loading) {
                         swipeRefreshLayout.isRefreshing = false
                     }
-                }
+                }*/
 
                 retryButton.isVisible = loadState.refresh is LoadState.Error &&
                         adapter.itemCount <= 0

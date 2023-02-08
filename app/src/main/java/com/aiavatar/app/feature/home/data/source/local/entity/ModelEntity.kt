@@ -22,7 +22,9 @@ data class ModelEntity(
     @ColumnInfo("paid")
     val paid: Boolean,
     @ColumnInfo("renamed")
-    val renamed: Boolean
+    val renamed: Boolean,
+    @ColumnInfo("updated_at")
+    val updatedAt: String,
 ) {
     @ColumnInfo("status_id")
     var statusId: String? = null
@@ -35,7 +37,8 @@ fun ModelData.toEntity(): ModelEntity {
         latestImage = latestImage,
         totalCount = totalCount,
         paid = paid,
-        renamed = renamed
+        renamed = renamed,
+        updatedAt = updatedAt
     ).also {
         it.statusId = statusId
     }
@@ -48,7 +51,8 @@ fun ModelEntity.toModelData(): ModelData {
         latestImage = latestImage,
         totalCount = totalCount,
         paid = paid,
-        renamed = renamed
+        renamed = renamed,
+        updatedAt = updatedAt
     ).also {
         it.statusId = statusId
     }
@@ -65,5 +69,6 @@ object ModelEntityTable {
         const val PAID          = "paid"
         const val RENAMED       = "renamed"
         const val STATUS_ID     = "status_id"
+        const val UPDATED_AT    = "updated_at"
     }
 }

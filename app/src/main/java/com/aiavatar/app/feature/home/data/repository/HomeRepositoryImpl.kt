@@ -524,6 +524,7 @@ class HomeRepositoryImpl @Inject constructor(
     }
 
     override fun getMyModels(forceRefresh: Boolean): Flow<Result<List<ModelListWithModel>>> = flow {
+        emit(Result.Loading)
         val cache = observeAllModelListItem().first()
         if (cache.isNotEmpty()) {
             emit(Result.Success(cache))
