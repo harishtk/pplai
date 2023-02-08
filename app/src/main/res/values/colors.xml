@@ -50,7 +50,8 @@
     <color name="white_grey">#EFEFEF</color>
 
     <color name="progress_indicator_background">#D9D9D9</color>
-    <color name="backdrop_primary">#33FAAD14</color>
+    <color name="backdrop_primary_old">#33FAAD14</color>
+    <color name="backdrop_primary">#FBEFD3</color>
 
     <color name="image_placeholder_fill">#FFFFFFFF</color>
     <color name="icon_tint">@color/transparent_black_40</color>

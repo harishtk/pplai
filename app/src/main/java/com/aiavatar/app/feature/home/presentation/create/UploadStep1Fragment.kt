@@ -1,9 +1,15 @@
 package com.aiavatar.app.feature.home.presentation.create
 
+import android.Manifest
+import android.annotation.TargetApi
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavOptions
@@ -20,6 +26,16 @@ import timber.log.Timber
 
 class UploadStep1Fragment : Fragment() {
 
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+
+        } else {
+            // TODO: handle rationale if necessary
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -34,6 +50,8 @@ class UploadStep1Fragment : Fragment() {
 
         binding.bindState()
         setupObservers()
+
+        askNotificationPermission()
     }
 
     private fun FragmentUploadStep1Binding.bindState() {
@@ -123,6 +141,22 @@ class UploadStep1Fragment : Fragment() {
 
     private fun setupObservers() {
 
+    }
+
+    @TargetApi(Build.VERSION_CODES.TIRAMISU)
+    private fun checkNotificationPermission(): Boolean {
+        return (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
+            == PackageManager.PERMISSION_GRANTED)
+    }
+
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                // TODO: (not-important) Check if request rationale should be shown
+            } else {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
     }
 }
 
