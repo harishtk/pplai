@@ -4,9 +4,9 @@ import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.commons.util.NetworkResultParser
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.net.ApiException
-import com.aiavatar.app.commons.util.net.BadResponseException
 import com.aiavatar.app.commons.util.net.EmptyResponseException
 import com.aiavatar.app.core.data.source.local.CacheLocalDataSource
+import com.aiavatar.app.core.data.source.local.entity.CacheKeyProvider
 import com.aiavatar.app.core.data.source.local.entity.modify
 import com.aiavatar.app.core.domain.util.BuenoCacheException
 import com.aiavatar.app.feature.home.data.model.ModelListWithModelEntity
@@ -35,6 +35,7 @@ import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
 val DEFAULT_CACHE_TIME_TO_LIVE: Long = TimeUnit.DAYS.toMillis(1)
+val SHORT_CACHE_TIME_TO_LIVE: Long = TimeUnit.HOURS.toMillis(1)
 
 class HomeRepositoryImpl @Inject constructor(
     private val remoteDataSource: HomeRemoteDataSource,
@@ -95,17 +96,25 @@ class HomeRepositoryImpl @Inject constructor(
                         localDataSource.deleteAllCategories()
                         localDataSource.insertAllCategories(categories)
 
-                        val cacheKeys = cacheLocalDataSource.getOrCreateCacheKeys(AvatarCategoriesTable.name)
+                        if (categories.isNotEmpty()) {
+                            val cacheKeys = cacheLocalDataSource.getOrCreateCacheKeys(
+                                CacheKeyProvider.getAvatarCategoriesCacheKey()
+                            )
 
-                        val affected = cacheLocalDataSource.updateCacheKey(
-                            cacheKeys.modify(
-                                createdAt = System.currentTimeMillis(),
-                                expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_TIME_TO_LIVE)
-                            ).also {
-                                it._id = cacheKeys._id
+                            val affected = cacheLocalDataSource.updateCacheKey(
+                                cacheKeys.modify(
+                                    createdAt = System.currentTimeMillis(),
+                                    expiresAt = (System.currentTimeMillis() + SHORT_CACHE_TIME_TO_LIVE)
+                                ).also {
+                                    it._id = cacheKeys._id
+                                }
+                            )
+                            Timber.d("Cache keys: categories updated $affected cacheKeys = $cacheKeys")
+                        } else {
+                            cacheLocalDataSource.clearCacheKeys(AvatarCategoriesTable.name).let { affected ->
+                                Timber.d("Cache keys: categories removed for ${AvatarCategoriesTable.name} $affected")
                             }
-                        )
-                        Timber.d("Cache keys: categories updated $affected cacheKeys = $cacheKeys")
+                        }
                         Result.Success(categories.map(CategoryEntity::toCategory))
                     } else {
                         emptyResponse(networkCatalogResult)
@@ -129,17 +138,25 @@ class HomeRepositoryImpl @Inject constructor(
                         localDataSource.deleteAllCatalogList(catalogDetailRequest.category)
                         localDataSource.insertAllCatalogList(catalogList.map(CatalogList::asEntity))
 
-                        val cacheKeys = cacheLocalDataSource.getOrCreateCacheKeys(CatalogListTable.name)
-
-                        val affected = cacheLocalDataSource.updateCacheKey(
-                            cacheKeys.modify(
-                                createdAt = System.currentTimeMillis(),
-                                expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_TIME_TO_LIVE)
-                            ).also {
-                                it._id = cacheKeys._id
-                            }
+                        val cacheKeys = cacheLocalDataSource.getOrCreateCacheKeys(
+                            CacheKeyProvider.getCatalogListCacheKey(catalogDetailRequest.category)
                         )
-                        Timber.d("Cache keys: categories updated $affected cacheKeys = $cacheKeys")
+
+                        if (catalogList.isNotEmpty()) {
+                            val affected = cacheLocalDataSource.updateCacheKey(
+                                cacheKeys.modify(
+                                    createdAt = System.currentTimeMillis(),
+                                    expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_TIME_TO_LIVE)
+                                ).also {
+                                    it._id = cacheKeys._id
+                                }
+                            )
+                            Timber.d("Cache keys: categories updated $affected cacheKeys = $cacheKeys")
+                        } else {
+                            cacheLocalDataSource.clearCacheKeys(AvatarCategoriesTable.name).let { affected ->
+                                Timber.d("Cache keys: categories removed for ${AvatarCategoriesTable.name} $affected")
+                            }
+                        }
 
                         Result.Success(catalogList)
                     } else {
@@ -207,31 +224,26 @@ class HomeRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getMyModels2(forceRefresh: Boolean): Flow<Result<List<ModelData>>> {
-        return observeAllModel()
-            .onStart {
-                /*if (forceRefresh) {
-                    localDataSource.deleteAllModels()
-                }*/
-            }
-            .onEach { list ->
-                if (list.isEmpty()) {
-                    val remoteResult = refreshAllModelInternal()
-                    if (remoteResult is Result.Error) {
-                        throw remoteResult.exception
-                    }
+    override fun getMyModels2(forceRefresh: Boolean): Flow<Result<List<ModelData>>> = flow {
+        emit(Result.Loading)
+        val cache = observeAllModel().first()
+
+        if (forceRefresh || cache.isEmpty()) {
+            when (val remoteResult = refreshAllModelInternal()) {
+                is Result.Error -> {
+                    throw remoteResult.exception
+                }
+                else -> {
+                    // Noop
                 }
             }
-            .map { list ->
-                if (list.isEmpty()) {
-                    Result.Loading
-                } else {
-                    Result.Success(list)
-                }
-            }
-            .catch { t ->
-                emit(Result.Error(t as Exception))
-            }
+        }
+
+        emitAll(
+            observeAllModel().map { Result.Success(it) }
+        )
+    }.catch { t ->
+        emit(Result.Error(t as Exception))
     }
 
     override fun getModel(modelId: String): Flow<Result<ModelData>> {
@@ -286,115 +298,94 @@ class HomeRepositoryImpl @Inject constructor(
             observeModel(modelId)
                 .map { Result.Success(it!!) }
         )
-        /*observeModel(modelId)
-            .onEach { modelData ->
-                if (modelData == null) {
-                    // Model data not available in cache, get from remote
-                    val remoteResult = refreshModelInternal(modelId)
-                    if (remoteResult is Result.Error) {
-                        throw remoteResult.exception
-                    }
-                }
-            }
-            .map { modelData ->
-                if (modelData == null) {
-                    Result.Loading
-                } else {
-                    Result.Success(modelData)
-                }
-            }
-            .catch { t ->
-                emit(Result.Error(t as Exception))
-            }*/
     }
 
-    // TODO: [forceRefresh] will not work as expected
-    override fun getCatalog2(forceRefresh: Boolean): Flow<Result<List<Category>>> {
-        return observeAllCategoryInternal()
-            .onStart {
-                if (forceRefresh) {
-                    val cacheKeys = cacheLocalDataSource.getCacheKeys(AvatarCategoriesTable.name)
-                        ?: return@onStart
-                    if (cacheKeys.expired()) {
-                        Timber.d("Cache keys: ${cacheKeys.key} expired")
-                        localDataSource.deleteAllCategories()
-                    } else {
-                        val delta = (System.currentTimeMillis() - cacheKeys.createdAt).coerceAtLeast(0)
-                        val lastUpdate = TimeUnit.MILLISECONDS.toMinutes(delta)
-                        val message = "Can't refresh. Last updated $lastUpdate minutes ago"
-                        val t = BuenoCacheException(lastUpdate, message)
-                        // Timber.d(t, "Cache keys: $message")
-                        throw t
-                    }
-                }
-            }
-            .onEach { list ->
-                if (list.isEmpty()) {
-                    val remoteResult = refreshCategoriesInternal()
-                    if (remoteResult is Result.Error) {
-                        throw remoteResult.exception
-                    }
-                }
-            }
-            .map { list ->
-                if (list.isEmpty()) {
-                    Result.Loading
+    override fun getCatalog2(forceRefresh: Boolean): Flow<Result<List<Category>>> = flow {
+        emit(Result.Loading)
+        val cache = observeAllCategoryInternal().first()
+
+        if (forceRefresh || cache.isEmpty()) {
+            val cacheKeys = cacheLocalDataSource.getCacheKeys(
+                CacheKeyProvider.getAvatarCategoriesCacheKey()
+            )
+            if (cacheKeys != null) {
+                if (cacheKeys.expired()) {
+                    localDataSource.deleteAllCategories()
                 } else {
-                    Result.Success(list)
+                    Timber.d("Cache keys: ${cacheKeys.key} expired")
+                    val delta = (System.currentTimeMillis() - cacheKeys.createdAt).coerceAtLeast(0)
+                    val lastUpdate = TimeUnit.MILLISECONDS.toMinutes(delta)
+                    val message = "Can't refresh. Last updated $lastUpdate minutes ago"
+                    val t = BuenoCacheException(lastUpdate, message)
+                    // Timber.d(t, "Cache keys: $message")
+                    throw t
+                }
+            } else { /* Get data from remote */
+                when (val result = refreshCategoriesInternal()) {
+                    is Result.Error -> {
+                        throw result.exception
+                    }
+                    else -> {
+                        /* Noop */
+                    }
                 }
             }
-            .catch { t ->
-                emit(Result.Error(t as Exception))
-            }
+        }
+
+        emitAll(
+            observeAllCategoryInternal().map { Result.Success(it) }
+        )
+    }.catch { t ->
+        emit(Result.Error(t as Exception))
     }
 
-    // TODO: fix [forceRefresh] will not work as expected
-    // TODO: fix [BuenoCacheException] is thrown for empty data!
     override fun getCatalogList2(
         request: CatalogDetailRequest,
         forceRefresh: Boolean
-    ): Flow<Result<CatalogDetailData>> {
-        return observeAllCatalogListInternal(request.category)
-            .onStart {
-                if (forceRefresh) {
-                    val cacheKeys = cacheLocalDataSource.getCacheKeys(CatalogListTable.name)
-                        ?: return@onStart
-                    if (cacheKeys.expired()) {
-                        Timber.d("Cache keys: ${cacheKeys.key} expired")
-                        localDataSource.deleteAllCatalogList(request.category)
-                    } else {
-                        val delta = (System.currentTimeMillis() - cacheKeys.createdAt).coerceAtLeast(0)
-                        val lastUpdate = TimeUnit.MILLISECONDS.toMinutes(delta)
-                        val message = "Can't refresh. Last updated $lastUpdate minutes ago"
-                        val t = BuenoCacheException(lastUpdate, message)
-                        throw t
+    ): Flow<Result<CatalogDetailData>> = flow {
+        emit(Result.Loading)
+        val cache = observeAllCatalogListInternal(request.category).first()
+
+        if (forceRefresh || cache.isEmpty()) {
+            val cacheKeys = cacheLocalDataSource.getCacheKeys(
+                CacheKeyProvider.getCatalogListCacheKey(request.category)
+            )
+            if (cacheKeys != null) {
+                if (cacheKeys.expired()) {
+                    Timber.d("Cache keys: ${cacheKeys.key} expired")
+                    localDataSource.deleteAllCatalogList(request.category)
+                } else {
+                    val delta = (System.currentTimeMillis() - cacheKeys.createdAt).coerceAtLeast(0)
+                    val lastUpdate = TimeUnit.MILLISECONDS.toMinutes(delta)
+                    val message = "Can't refresh. Last updated $lastUpdate minutes ago"
+                    val t = BuenoCacheException(lastUpdate, message)
+                    // Timber.d(t, "Cache keys: $message")
+                    throw t
+                }
+            } else { /* Get data from remote */
+                when (val result = refreshCatalogListInternal(request)) {
+                    is Result.Error -> {
+                        throw result.exception
+                    }
+                    else -> {
+                        /* Noop */
                     }
                 }
             }
-            .onEach { list ->
-                if (list.isEmpty()) {
-                    val remoteResult = refreshCatalogListInternal(request)
-                    if (remoteResult is Result.Error) {
-                        throw remoteResult.exception
-                    }
-                } else {
-                    Result.Success(list)
-                }
-            }
-            .map { list ->
-                if (list.isEmpty()) {
-                    Result.Loading
-                } else {
+        }
+
+        emitAll(
+            observeAllCatalogListInternal(request.category)
+                .map { list ->
                     val catalogDetailData = CatalogDetailData(
                         category = request.category,
                         avatars = list
                     )
                     Result.Success(catalogDetailData)
                 }
-            }
-            .catch { t ->
-                emit(Result.Error(t as Exception))
-            }
+        )
+    }.catch { t ->
+        emit(Result.Error(t as Exception))
     }
 
     override fun getCatalog(): Flow<Result<List<Category>>> {
@@ -410,13 +401,10 @@ class HomeRepositoryImpl @Inject constructor(
                                     ?: listOf<Category>()
                             Result.Success(categories)
                         } else {
-                            val cause = EmptyResponseException("No data")
-                            Result.Error(ApiException(cause))
+                            emptyResponse(networkResult)
                         }
                     } else {
-                        val cause =
-                            BadResponseException("Unexpected response code: ${networkResult.code}")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -434,12 +422,10 @@ class HomeRepositoryImpl @Inject constructor(
                         if (data != null) {
                             Result.Success(data.toCatalogDetailData())
                         } else {
-                            val cause = EmptyResponseException("No data")
-                            Result.Error(ApiException(cause))
+                            emptyResponse(networkResult)
                         }
                     } else {
-                        val cause = BadResponseException("Unexpected response code")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -460,13 +446,10 @@ class HomeRepositoryImpl @Inject constructor(
                                     ?: emptyList<SubscriptionPlan>()
                             Result.Success(plans)
                         } else {
-                            val cause = EmptyResponseException("No data")
-                            Result.Error(ApiException(cause))
+                            emptyResponse(networkResult)
                         }
                     } else {
-                        val cause =
-                            BadResponseException("Unexpected response code: ${networkResult.code}")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -489,9 +472,7 @@ class HomeRepositoryImpl @Inject constructor(
                                 Result.Error(ApiException(cause))
                             }
                         } else {
-                            val cause =
-                                BadResponseException("Unexpected response code: ${networkResult.code}")
-                            Result.Error(ApiException(cause))
+                            badResponse(networkResult)
                         }
                     }
                     else -> parseErrorNetworkResult(networkResult)
@@ -509,13 +490,10 @@ class HomeRepositoryImpl @Inject constructor(
                         if (avatarStatusId != null) {
                             Result.Success(avatarStatusId)
                         } else {
-                            val cause = EmptyResponseException("No data")
-                            Result.Error(ApiException(cause))
+                            emptyResponse(networkResult)
                         }
                     } else {
-                        val cause =
-                            BadResponseException("Unexpected response code: ${networkResult.code}")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -565,9 +543,6 @@ class HomeRepositoryImpl @Inject constructor(
         }
 
         if (forceRefresh) {
-            if (cache.isEmpty()) {
-                emit(Result.Loading)
-            }
             val result = parseGetAvatarsResponse(
                 remoteDataSource.getAvatarsSync(getAvatarsRequest.asDto())
             )
@@ -617,13 +592,10 @@ class HomeRepositoryImpl @Inject constructor(
                     if (avatarList != null) {
                         Result.Success(avatarList)
                     } else {
-                        val cause = EmptyResponseException("No data")
-                        Result.Error(ApiException(cause))
+                        emptyResponse(networkResult)
                     }
                 } else {
-                    val cause =
-                        BadResponseException("Unexpected response code ${networkResult.code}")
-                    Result.Error(ApiException(cause))
+                    badResponse(networkResult)
                 }
             }
             else -> parseErrorNetworkResult(networkResult)

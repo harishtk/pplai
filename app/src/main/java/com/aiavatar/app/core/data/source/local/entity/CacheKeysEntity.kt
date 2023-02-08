@@ -63,11 +63,23 @@ fun CacheKeys.asEntity(): CacheKeysEntity {
     }
 }
 
-fun cacheKeyForTable(tableName: String): String {
+@Deprecated("Not a good way to maintain the keys")
+fun cacheKeyForTable(tableName: String, suffix: String?): String {
     return when (tableName) {
         AppDatabase.TABLE_AVATAR_CATEGORIES -> "categories"
-        AppDatabase.TABLE_CATEGORY_LIST     -> "category_list"
+        AppDatabase.TABLE_CATEGORY_LIST     -> if (suffix != null) {
+            "category_list_$suffix"
+        } else {
+            "category_list"
+        }
         else -> throw IllegalStateException("Unable to decide a cache key for table $tableName")
+    }
+}
+
+object CacheKeyProvider {
+    fun getAvatarCategoriesCacheKey(): String = "categories"
+    fun getCatalogListCacheKey(suffix: String): String {
+        return "catalog_list_$suffix"
     }
 }
 
