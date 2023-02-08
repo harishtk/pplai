@@ -7,6 +7,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.aiavatar.app.nullAsEmpty
 import com.google.firebase.crashlytics.internal.model.CrashlyticsReport.Session.User
 import java.util.*
 
@@ -158,6 +159,18 @@ class PersistentStore private constructor(
         return this
     }
 
+    /* Save/Retrieve Deep link keys */
+    fun setDeepLinkKey(keyType: String, key: String) =
+        appPreferences.edit {
+            putString(UserPreferenceKeys.DEEPLINK_KEY_TYPE, keyType)
+            putString(UserPreferenceKeys.DEEPLINK_KEY_VALUE, key)
+        }
+
+    fun getDeepLinkKey(): Pair<String, String> =
+        appPreferences.getString(UserPreferenceKeys.DEEPLINK_KEY_TYPE, "").nullAsEmpty() to
+                appPreferences.getString(UserPreferenceKeys.DEEPLINK_KEY_VALUE, "").nullAsEmpty()
+
+
     private fun getAppPreferences(): SharedPreferences {
         return appPreferences
     }
@@ -208,6 +221,8 @@ class PersistentStore private constructor(
             const val PROCESSING_MODEL = "processing_model"
             const val UPLOAD_STEP_SKIPPED: String = "upload_step_skipped"
             const val USER_PREFERRED_THEME = "user_preferred_theme"
+            const val DEEPLINK_KEY_TYPE = "deep_link_key_type"
+            const val DEEPLINK_KEY_VALUE = "deep_link_key_value"
         }
 
         object AppEssentialKeys {

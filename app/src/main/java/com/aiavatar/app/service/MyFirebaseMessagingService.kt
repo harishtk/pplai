@@ -31,6 +31,8 @@ import org.json.JSONObject
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.math.abs
+import kotlin.random.Random
 
 @AndroidEntryPoint
 class MyFirebaseMessagingService : FirebaseMessagingService() {
@@ -68,6 +70,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                         CATEGORY_AVATAR -> {
                             handleAvatarNotification(fcmData)
                         }
+                        CATEGORY_GENERAL -> {
+                            handleGeneralNotification(fcmData)
+                        }
                     }
                 }
                 /*val dataArr: JSONArray = jsonObject.getJSONArray("data")
@@ -88,6 +93,24 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    private fun handleGeneralNotification(fcmData: FcmPushMessageDto.Data) {
+        val channelId = getString(R.string.general_notifications_channel_id)
+        val pendingIntent = NavDeepLinkBuilder(this)
+            .setGraph(R.navigation.home_nav_graph)
+            .setDestination(R.id.catalog_list)
+            .setComponentName(MainActivity::class.java)
+            .createPendingIntent()
+
+        val notification = defaultNotificationBuilder(channelId)
+            .setContentTitle("AI Avatar")
+            .setContentText(fcmData.content)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        ServiceUtil.getNotificationManager(this)
+            .notify(generateNewNotificationId(), notification)
+    }
+
     private fun handleAvatarNotification(fcmData: FcmPushMessageDto.Data) {
         val channelId = getString(R.string.general_notifications_channel_id)
 
@@ -102,13 +125,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setComponentName(MainActivity::class.java)
             .createPendingIntent()
 
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
-        val notification = notificationBuilder
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationManager.IMPORTANCE_HIGH)
-            .setCategory(Notification.CATEGORY_STATUS)
-            .setOngoing(false)
-            .setAutoCancel(true)
+        val notification = defaultNotificationBuilder(channelId)
             .setContentTitle("AI Avatar")
             .setContentText(fcmData.content)
             .setContentIntent(pendingIntent)
@@ -133,20 +150,23 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setComponentName(MainActivity::class.java)
             .createPendingIntent()
 
-        val notificationBuilder = NotificationCompat.Builder(this, channelId)
-        val notification = notificationBuilder
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationManager.IMPORTANCE_HIGH)
+        val notification = defaultNotificationBuilder(channelId)
             .setCategory(Notification.CATEGORY_STATUS)
-            .setOngoing(false)
-            .setAutoCancel(true)
-            .setContentTitle("AI Avatar")
             .setContentText(messageModel.content)
             .setContentIntent(pendingIntent)
             .build()
 
         ServiceUtil.getNotificationManager(this)
             .notify(AVATAR_STATUS_NOTIFICATION_ID, notification)
+    }
+
+    private fun defaultNotificationBuilder(channelId: String): NotificationCompat.Builder {
+        return NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationManager.IMPORTANCE_HIGH)
+            .setCategory(Notification.CATEGORY_STATUS)
+            .setOngoing(false)
+            .setAutoCancel(true)
     }
 
     override fun onNewToken(token: String) {
@@ -207,7 +227,12 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         const val AVATAR_STATUS_NOTIFICATION_ID = 500
 
+        const val CATEGORY_GENERAL = "general"
         const val CATEGORY_AVATAR = "avatar"
+
+        fun generateNewNotificationId(): Int {
+            return abs(Random.nextInt())
+        }
     }
 }
 

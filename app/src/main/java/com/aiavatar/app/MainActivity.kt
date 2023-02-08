@@ -1,6 +1,7 @@
 package com.aiavatar.app
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -23,6 +24,8 @@ import androidx.navigation.NavGraph
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
 import com.aiavatar.app.di.ApplicationDependencies
@@ -31,7 +34,9 @@ import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -40,9 +45,13 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedListener {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val sharedViewModel: SharedViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels()
@@ -84,7 +93,12 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 val navHeight = windowInsets.getInsets(WindowInsets.Type.navigationBars()).bottom
                 val statusBarHeight = windowInsets.getInsets(WindowInsets.Type.statusBars()).top
                 Timber.d("Insets: imeHeight=$imeHeight navHeight=$navHeight statusBarHeight=$statusBarHeight")
-                fragmentContainer.setPadding(0, statusBarHeight, 0, imeHeight.coerceAtLeast(navHeight))
+                fragmentContainer.setPadding(
+                    0,
+                    statusBarHeight,
+                    0,
+                    imeHeight.coerceAtLeast(navHeight)
+                )
             }
             windowInsets
         }
@@ -109,6 +123,7 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         }
 
         setupObservers()
+        handleDeepLinks(intent)
     }
 
     private fun setNavGraph(@IdRes jumpToDestination: Int? = null) {
@@ -134,12 +149,12 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
             val persistentStore = ApplicationDependencies.getPersistentStore()
             when {
                 persistentStore.isProcessingModel &&
-                    !persistentStore.isLogged -> {
+                        !persistentStore.isLogged -> {
                     graph = inflater.inflate(R.navigation.home_nav_graph)
                     graph.setStartDestination(R.id.avatar_status)
                 }
                 persistentStore.isLogged ||
-                persistentStore.isUploadStepSkipped -> {
+                        persistentStore.isUploadStepSkipped -> {
                     graph = inflater.inflate(R.navigation.home_nav_graph)
                     graph.setStartDestination(R.id.catalog_list)
                 }
@@ -165,7 +180,9 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         super.onNewIntent(intent)
 
         setNavGraph()
-        mainNavController.handleDeepLink(intent)
+        if (!mainNavController.handleDeepLink(intent)) {
+            handleDeepLinks(intent)
+        }
     }
 
     override fun onDestinationChanged(
@@ -252,6 +269,84 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
             }.addOnFailureListener {
                 // Nothing to do. Ignore the forceUpdate flag.
             }
+    }
+
+    private fun handleDeepLinks(intent: Intent?) {
+        intent ?: return
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            FirebaseDynamicLinks.getInstance().getDynamicLink(intent)
+                .addOnSuccessListener { pendingDynamicLink ->
+                    if (pendingDynamicLink != null) {
+                        var deepLink: Uri? = null
+                        deepLink = pendingDynamicLink.link
+                        val keyType = deepLink?.getQueryParameter("keytype").nullAsEmpty()
+                        val key = deepLink?.getQueryParameter("key").nullAsEmpty()
+                        Timber.tag("Deeplink.Msg")
+                            .d("Deep Link: %s key=$key keytype=$keyType", deepLink?.toString())
+                        if (keyType == "invite" && key?.isNotEmpty() == true) {
+                            ApplicationDependencies.getPersistentStore()
+                                .setDeepLinkKey(keyType, key)
+                            val bundle = Bundle().apply {
+                                putInt("parseId", 0)
+                                putString("keytype", keyType)
+                                putString("key", key)
+                            }
+                            analyticsLogger.logEvent(
+                                Analytics.OtherEvents.DEEP_LINK_INVITATION,
+                                bundle
+                            )
+                        } else if (keyType == "profile" && key?.isNotEmpty() == true) {
+                            ApplicationDependencies.getPersistentStore()
+                                .setDeepLinkKey(keyType, key)
+                            // TODO: goto profile
+                        } else {
+                            ApplicationDependencies.getPersistentStore()
+                                .setDeepLinkKey(keyType, key)
+                        }
+                    } else {
+                        ifDebug {
+                            val t = IllegalStateException("Failed to get deep link data!")
+                            Timber.e(t)
+                        }
+                    }
+                }.addOnFailureListener {
+                    FirebaseDynamicLinks.getInstance().getDynamicLink(intent.data!!)
+                        .addOnSuccessListener { pendingDynamicLink ->
+                            if (pendingDynamicLink != null) {
+                                var deepLink: Uri? = null
+                                deepLink = pendingDynamicLink.link
+                                val keyType = deepLink?.getQueryParameter("keytype").toString()
+                                val key = deepLink?.getQueryParameter("key").toString()
+                                if (keyType == "invite" && key?.isNotEmpty() == true) {
+                                    ApplicationDependencies.getPersistentStore()
+                                        .setDeepLinkKey(keyType, key)
+                                    val bundle = Bundle().apply {
+                                        putInt("parseId", 1)
+                                        putString("keytype", keyType)
+                                        putString("key", key)
+                                    }
+                                    analyticsLogger.logEvent(
+                                        Analytics.OtherEvents.DEEP_LINK_INVITATION,
+                                        bundle
+                                    )
+                                } else if (keyType == "profile" && key?.isNotEmpty() == true) {
+                                    // TODO: goto profile
+                                }
+                            } else {
+                                ifDebug {
+                                    val t = IllegalStateException("Failed to get deep link data!")
+                                    Timber.e(t)
+                                }
+                            }
+                        }.addOnFailureListener {
+                            ifDebug {
+                                val t = IllegalStateException("Failed to get deep link data", it)
+                                Timber.e(t)
+                            }
+                        }
+                }
+        }
     }
 
     private fun gotoForceUpdate() = safeCall {
@@ -341,9 +436,9 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         const val DEFAULT_UI_RENDER_WAIT_TIME = 50L
         const val DEFAULT_SPLASH_DURATION: Long = 500
 
-        const val THEME_MODE_AUTO   = 0
-        const val THEME_MODE_LIGHT  = 1
-        const val THEME_MODE_DARK   = 2
+        const val THEME_MODE_AUTO = 0
+        const val THEME_MODE_LIGHT = 1
+        const val THEME_MODE_DARK = 2
 
         val THEME_MAP = mapOf<Int, Int>(
             THEME_MODE_AUTO to R.drawable.baseline_auto_mode_24,

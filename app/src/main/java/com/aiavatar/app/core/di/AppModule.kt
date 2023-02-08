@@ -11,6 +11,7 @@ import com.aiavatar.app.core.data.source.remote.AppRemoteDataSource
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.core.domain.util.JsonParser
 import com.aiavatar.app.di.WebService
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
@@ -51,6 +52,14 @@ object AppModule {
     @Provides
     fun dataStore(@ApplicationContext context: Context): DataStore<Preferences> =
         preferencesDataStore(name = "data-store").getValue(context, String::javaClass)
+
+    /* Analytics */
+    @Singleton
+    @Provides
+    fun provideFirebaseAnalytics(@ApplicationContext app: Context): FirebaseAnalytics =
+        FirebaseAnalytics.getInstance(app)
+
+    /* END - Analytics */
 
 }
 
