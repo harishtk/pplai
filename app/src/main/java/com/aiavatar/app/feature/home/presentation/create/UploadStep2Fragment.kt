@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
@@ -55,11 +57,8 @@ import com.google.android.gms.common.moduleinstall.ModuleInstall
 import com.google.android.gms.common.moduleinstall.ModuleInstallClient
 import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -434,7 +433,9 @@ class UploadStep2Fragment : Fragment() {
                     val cause = RuntimeException("FATAL: Cannot process face detection.", t)
                     Timber.wtf(cause)
                 }
-                this@UploadStep2Fragment.context?.showToast("Cannot process image")
+                Handler(Looper.getMainLooper()).post {
+                    this@UploadStep2Fragment.context?.showToast("Cannot process image")
+                }
             }
         }
 

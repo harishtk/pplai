@@ -266,6 +266,7 @@ class AvatarResultFragment : Fragment() {
         icShare.isVisible = true
         icShare.setOnClickListener {
             // TODO: -done- check if login is necessary
+            Timber.d("Login: authentication state = ${userViewModel.authenticationState.value}")
             if (userViewModel.authenticationState.value.isAuthenticated()) {
                 if (uiState.value.shareLinkData != null) {
                     handleShareLink(uiState.value.shareLinkData!!.shortLink)
@@ -343,8 +344,7 @@ class AvatarResultFragment : Fragment() {
             val navOpts = defaultNavOptsBuilder().build()
             val args = Bundle().apply {
                 /* 'popup' means previous page, the one who fired it expects the result */
-                putString(Constant.EXTRA_FROM, "popup")
-                putInt(Constant.EXTRA_POP_ID, R.id.profile)
+                putString(Constant.EXTRA_FROM, "result")
             }
             navigate(R.id.login_fragment, args, navOpts)
         }

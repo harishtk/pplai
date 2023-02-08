@@ -140,7 +140,7 @@ class ProfileFragment : Fragment() {
                 } else {
                     swipeRefreshLayout.isRefreshing = false
                     // TODO: Show empty list container
-                    emptyListContainer.isVisible = adapter.itemCount <= 0
+                    // emptyListContainer.isVisible = adapter.itemCount <= 0
                     if (loadState.refresh is LoadState.Error) {
                         errorContainer.isVisible = true
                         HapticUtil.createError(requireContext())
@@ -185,6 +185,8 @@ class ProfileFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             modelListUiModelsFlow.collectLatest { modelList ->
                 adapter.submitList(modelList)
+
+                // emptyListContainer.isVisible = modelList.isEmpty()
             }
         }
     }
@@ -197,12 +199,18 @@ class ProfileFragment : Fragment() {
         btnCreate.setOnClickListener {
             gotoUploadSteps()
         }
+
+        fabCreate.setOnClickListener {
+            gotoUploadSteps()
+        }
     }
 
     private fun FragmentProfileBinding.bindAppbar(uiState: StateFlow<ProfileState>) {
         appbarLayout.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
             val delta = (kotlin.math.abs(verticalOffset)) / appBarLayout.totalScrollRange.toFloat()
             // Timber.d("Offset: $verticalOffset total: ${appBarLayout.totalScrollRange} delta = $delta")
+
+            toolbarSettings.rotation = (180F * delta)
 
             (1.0F - delta).let { scale ->
                 profileImageExpanded.scaleX = scale

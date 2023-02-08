@@ -360,7 +360,18 @@ class AvatarPreviewFragment : Fragment() {
         }
 
         icShare.isVisible = true
-        icShare.setOnClickListener { }
+        icShare.setOnClickListener {
+            // TODO: -done- check if login is necessary
+            if (userViewModel.authenticationState.value.isAuthenticated()) {
+                if (uiState.value.shareLinkData != null) {
+                    handleShareLink(uiState.value.shareLinkData!!.shortLink)
+                } else {
+                    uiAction(AvatarPreviewUiAction.GetShareLink)
+                }
+            } else {
+                gotoLogin()
+            }
+        }
     }
 
     private fun FragmentAvatarPreviewBinding.bindToolbar(uiState: StateFlow<AvatarPreviewState>) {
@@ -474,8 +485,7 @@ class AvatarPreviewFragment : Fragment() {
             val navOpts = defaultNavOptsBuilder().build()
             val args = Bundle().apply {
                 /* 'popup' means previous page, the one who fired it expects the result */
-                putString(Constant.EXTRA_FROM, "popup")
-                putInt(Constant.EXTRA_POP_ID, R.id.profile)
+                putString(Constant.EXTRA_FROM, "result")
             }
             navigate(R.id.login_fragment, args, navOpts)
         }

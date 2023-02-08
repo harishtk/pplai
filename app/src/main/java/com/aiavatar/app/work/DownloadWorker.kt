@@ -251,7 +251,7 @@ class DownloadWorker @AssistedInject constructor(
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {
         Timber.d("createForegroundInfo: $progress")
-        createUploadNotificationChannel(context)
+        createDownloadNotificationChannel(context)
 
         // Build a notification using bytesRead and contentLength
         val context = applicationContext
@@ -269,7 +269,7 @@ class DownloadWorker @AssistedInject constructor(
         return ForegroundInfo(ONGOING_NOTIFICATION_ID, notification)
     }
 
-    private fun createUploadNotificationChannel(context: Context) {
+    private fun createDownloadNotificationChannel(context: Context) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as
                 NotificationManager
         val channelId = context.getString(R.string.download_notification_channel_id)

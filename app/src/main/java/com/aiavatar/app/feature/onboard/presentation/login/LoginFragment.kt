@@ -148,7 +148,7 @@ class LoginFragment : Fragment() {
                                     navigate(R.id.upload_step_1, args, navOpts)
                                 }
                             }
-                            "popup" -> { /* 'popup' means previous page, the one who fired it expects the result */
+                            "popup", "result" -> { /* 'popup' means previous page, the one who fired it expects the result */
                                 savedStateHandle?.set(LOGIN_RESULT, true)
                                 findNavController().popBackStack()
                             }

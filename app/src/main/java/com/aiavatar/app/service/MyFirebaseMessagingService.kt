@@ -21,12 +21,14 @@ import com.aiavatar.app.core.domain.model.request.SendFcmTokenRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.core.domain.util.JsonParser
 import com.aiavatar.app.di.ApplicationDependencies
+import com.aiavatar.app.eventbus.NewNotificationEvent
 import com.aiavatar.app.feature.home.presentation.create.AvatarResultFragment
 import com.aiavatar.app.service.model.SimplePushMessage
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.annotations.SerializedName
 import dagger.hilt.android.AndroidEntryPoint
+import org.greenrobot.eventbus.EventBus
 import org.json.JSONObject
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -69,6 +71,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                     when (fcmData.category) {
                         CATEGORY_AVATAR -> {
                             handleAvatarNotification(fcmData)
+                            EventBus.getDefault().post(NewNotificationEvent("avatar_status", System.currentTimeMillis()))
                         }
                         CATEGORY_GENERAL -> {
                             handleGeneralNotification(fcmData)
