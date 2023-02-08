@@ -44,6 +44,7 @@ import com.aiavatar.app.viewmodels.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import kotlin.math.abs
 
@@ -308,14 +309,17 @@ class AvatarPreviewFragment : Fragment() {
         icShare.isVisible = true
         icShare.setOnClickListener {
             // TODO: check if login is necessary
-            if (userViewModel.authenticationState.value.isAuthenticated()) {
-                if (uiState.value.shareLinkData != null) {
-                    handleShareLink(uiState.value.shareLinkData!!.shortLink)
+            runBlocking {
+                val loginUser = userViewModel.loginUser.first()
+                if (loginUser?.userId != null) {
+                    if (uiState.value.shareLinkData != null) {
+                        handleShareLink(uiState.value.shareLinkData!!.shortLink)
+                    } else {
+                        uiAction(AvatarPreviewUiAction.GetShareLink)
+                    }
                 } else {
-                    uiAction(AvatarPreviewUiAction.GetShareLink)
+                    gotoLogin()
                 }
-            } else {
-                gotoLogin()
             }
         }
 
@@ -356,20 +360,6 @@ class AvatarPreviewFragment : Fragment() {
             } else {
                 // TODO: goto payment
                 gotoPlans(avatarStatus.modelId)
-            }
-        }
-
-        icShare.isVisible = true
-        icShare.setOnClickListener {
-            // TODO: -done- check if login is necessary
-            if (userViewModel.authenticationState.value.isAuthenticated()) {
-                if (uiState.value.shareLinkData != null) {
-                    handleShareLink(uiState.value.shareLinkData!!.shortLink)
-                } else {
-                    uiAction(AvatarPreviewUiAction.GetShareLink)
-                }
-            } else {
-                gotoLogin()
             }
         }
     }

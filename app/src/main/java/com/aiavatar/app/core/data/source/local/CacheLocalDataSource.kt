@@ -3,6 +3,7 @@ package com.aiavatar.app.core.data.source.local
 import com.aiavatar.app.core.data.source.local.entity.CacheKeysEntity
 import com.aiavatar.app.core.data.source.local.entity.cacheKeyForTable
 import com.aiavatar.app.feature.home.data.repository.DEFAULT_CACHE_TIME_TO_LIVE
+import com.aiavatar.app.feature.home.data.repository.SHORT_CACHE_TIME_TO_LIVE
 import com.aiavatar.app.ifNull
 import timber.log.Timber
 import javax.inject.Inject
@@ -16,7 +17,7 @@ class CacheLocalDataSource @Inject constructor(
             CacheKeysEntity(
                 key = cacheKey,
                 createdAt = System.currentTimeMillis(),
-                expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_TIME_TO_LIVE)
+                expiresAt = (System.currentTimeMillis() + SHORT_CACHE_TIME_TO_LIVE)
             ).also { entity ->
                 appDatabase.cacheKeysDao().insert(entity).also { id -> entity._id = id }
             }

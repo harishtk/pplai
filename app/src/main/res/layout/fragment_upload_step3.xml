@@ -8,6 +8,7 @@
     <Space android:id="@+id/spacer1"
         android:layout_width="match_parent"
         android:layout_height="@dimen/spacer_size_very_small"
+        android:visibility="visible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -22,22 +23,30 @@
         style="@style/Widget.App.ImageButton"
         android:contentDescription="@string/content_description_go_back"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/spacer1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintVertical_bias="0.0" />
 
     <TextView android:id="@+id/title"
-        style="@style/TextStyle.Large.Bold"
+        style="@style/TextStyle.Small.Bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Step 3 of 4"
-        android:padding="@dimen/inset_large"
+        android:padding="@dimen/inset_small"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/spacer1"
-        app:layout_constraintBottom_toTopOf="@id/top_description_container" />
+        app:layout_constraintBottom_toTopOf="@id/spacer2" />
+
+    <Space android:id="@+id/spacer2"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/spacer_size_small"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintBottom_toTopOf="@id/top_description_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout android:orientation="vertical"
         android:id="@+id/top_description_container"
@@ -45,14 +54,14 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/spacer2"
         android:gravity="center">
 
         <TextView android:id="@+id/big_description_1"
             style="@style/Base.TextAppearance.Bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Upload Photos"
+            android:text="Select your gender"
             android:textSize="@dimen/text_size_huge"
             android:lineSpacingMultiplier="0.9"
             android:textAlignment="center"/>
@@ -61,7 +70,7 @@
             style="@style/TextStyle.VerySmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="@dimen/inset_large"
+            android:paddingHorizontal="@dimen/inset_large"
             android:text="@string/upload_step_3_des1"
             android:textColor="@color/text_secondary"
             android:textAlignment="center"
@@ -96,7 +105,7 @@
             android:id="@+id/gender_selection_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="@dimen/inset_large"
+            android:paddingHorizontal="@dimen/inset_large"
             android:overScrollMode="never"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:listitem="@layout/item_gender_selectable"

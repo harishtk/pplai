@@ -5,11 +5,20 @@ import com.google.gson.annotations.SerializedName
 
 data class GetShareLinkRequestDto(
     @SerializedName("modelId")
-    val modelId: String
+    val modelId: String,
+    @SerializedName("avatarId")
+    val avatarId: String,
+    @SerializedName("folderName")
+    val folderName: String,
+    @SerializedName("fileName")
+    val fileName: String
 )
 
 fun GetShareLinkRequest.asDto(): GetShareLinkRequestDto {
     return GetShareLinkRequestDto(
-        modelId = modelId
+        modelId = modelId,
+        avatarId = avatarId,
+        folderName = folderName,
+        fileName = fileName
     )
 }

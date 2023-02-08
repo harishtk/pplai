@@ -356,7 +356,12 @@ class AvatarPreviewViewModel @Inject constructor(
 
     /* Share link */
     private fun getShareLinkInternal(modelId: String) {
-        val request = GetShareLinkRequest(modelId)
+        val request = GetShareLinkRequest(
+            modelId = modelId,
+            avatarId = "",
+            folderName = "",
+            fileName = ""
+        )
 
         getShareLink(request)
     }

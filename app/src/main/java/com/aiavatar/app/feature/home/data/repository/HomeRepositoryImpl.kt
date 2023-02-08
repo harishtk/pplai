@@ -146,7 +146,7 @@ class HomeRepositoryImpl @Inject constructor(
                             val affected = cacheLocalDataSource.updateCacheKey(
                                 cacheKeys.modify(
                                     createdAt = System.currentTimeMillis(),
-                                    expiresAt = (System.currentTimeMillis() + DEFAULT_CACHE_TIME_TO_LIVE)
+                                    expiresAt = (System.currentTimeMillis() + SHORT_CACHE_TIME_TO_LIVE)
                                 ).also {
                                     it._id = cacheKeys._id
                                 }
@@ -300,6 +300,7 @@ class HomeRepositoryImpl @Inject constructor(
         )
     }
 
+    // TODO: check cache invalidation
     override fun getCatalog2(forceRefresh: Boolean): Flow<Result<List<Category>>> = flow {
         emit(Result.Loading)
         val cache = observeAllCategoryInternal().first()
@@ -309,7 +310,7 @@ class HomeRepositoryImpl @Inject constructor(
                 CacheKeyProvider.getAvatarCategoriesCacheKey()
             )
             if (cacheKeys != null) {
-                if (cacheKeys.expired()) {
+                if (cacheKeys.expired() || forceRefresh) {
                     localDataSource.deleteAllCategories()
                 } else {
                     Timber.d("Cache keys: ${cacheKeys.key} expired")
@@ -320,14 +321,15 @@ class HomeRepositoryImpl @Inject constructor(
                     // Timber.d(t, "Cache keys: $message")
                     throw t
                 }
-            } else { /* Get data from remote */
-                when (val result = refreshCategoriesInternal()) {
-                    is Result.Error -> {
-                        throw result.exception
-                    }
-                    else -> {
-                        /* Noop */
-                    }
+            }
+
+            /* Get data from remote */
+            when (val result = refreshCategoriesInternal()) {
+                is Result.Error -> {
+                    throw result.exception
+                }
+                else -> {
+                    /* Noop */
                 }
             }
         }
@@ -339,6 +341,7 @@ class HomeRepositoryImpl @Inject constructor(
         emit(Result.Error(t as Exception))
     }
 
+    // TODO: check cache invalidation
     override fun getCatalogList2(
         request: CatalogDetailRequest,
         forceRefresh: Boolean
@@ -351,7 +354,7 @@ class HomeRepositoryImpl @Inject constructor(
                 CacheKeyProvider.getCatalogListCacheKey(request.category)
             )
             if (cacheKeys != null) {
-                if (cacheKeys.expired()) {
+                if (cacheKeys.expired() || forceRefresh) {
                     Timber.d("Cache keys: ${cacheKeys.key} expired")
                     localDataSource.deleteAllCatalogList(request.category)
                 } else {
@@ -362,14 +365,15 @@ class HomeRepositoryImpl @Inject constructor(
                     // Timber.d(t, "Cache keys: $message")
                     throw t
                 }
-            } else { /* Get data from remote */
-                when (val result = refreshCatalogListInternal(request)) {
-                    is Result.Error -> {
-                        throw result.exception
-                    }
-                    else -> {
-                        /* Noop */
-                    }
+            }
+
+            /* Get data from remote */
+            when (val result = refreshCatalogListInternal(request)) {
+                is Result.Error -> {
+                    throw result.exception
+                }
+                else -> {
+                    /* Noop */
                 }
             }
         }

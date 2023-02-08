@@ -43,7 +43,9 @@ import com.aiavatar.app.viewmodels.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
+import kotlin.math.log
 
 /**
  * TODO: 1. If storage permission is not granted, show a blocking notification to get the same.
@@ -266,15 +268,17 @@ class AvatarResultFragment : Fragment() {
         icShare.isVisible = true
         icShare.setOnClickListener {
             // TODO: -done- check if login is necessary
-            Timber.d("Login: authentication state = ${userViewModel.authenticationState.value}")
-            if (userViewModel.authenticationState.value.isAuthenticated()) {
-                if (uiState.value.shareLinkData != null) {
-                    handleShareLink(uiState.value.shareLinkData!!.shortLink)
+            runBlocking {
+                val loginUser = userViewModel.loginUser.first()
+                if (loginUser?.userId != null) {
+                    if (uiState.value.shareLinkData != null) {
+                        handleShareLink(uiState.value.shareLinkData!!.shortLink)
+                    } else {
+                        uiAction(AvatarResultUiAction.GetShareLink)
+                    }
                 } else {
-                    uiAction(AvatarResultUiAction.GetShareLink)
+                    gotoLogin()
                 }
-            } else {
-                gotoLogin()
             }
         }
 

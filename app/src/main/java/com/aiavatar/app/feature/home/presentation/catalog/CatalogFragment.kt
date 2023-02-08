@@ -158,7 +158,8 @@ class CatalogFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             loadStateFlow.collectLatest { loadState ->
                 Timber.d("Load state: $loadState")
-                progressBar.isVisible = loadState.refresh is LoadState.Loading
+                progressBar.isVisible = loadState.refresh is LoadState.Loading &&
+                        avatarsAdapter.itemCount <= 0
                 if (swipeRefreshLayout.isRefreshing) {
                     if (loadState.refresh !is LoadState.Loading) {
                         swipeRefreshLayout.isRefreshing = false
@@ -175,7 +176,7 @@ class CatalogFragment : Fragment() {
         }
 
         swipeRefreshLayout.setOnRefreshListener {
-            viewModel.refresh()
+            viewModel.refresh(true)
         }
 
         bindList(
@@ -221,7 +222,7 @@ class CatalogFragment : Fragment() {
             }
         }
 
-        retryButton.setOnClickListener { viewModel.refresh() }
+        retryButton.setOnClickListener { viewModel.refresh(true) }
     }
 
     private fun FragmentCatalogBinding.bindToolbar() {

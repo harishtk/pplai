@@ -63,8 +63,8 @@ class CatalogViewModel @Inject constructor(
         }
     }
 
-    fun refresh() {
-        refreshInternal(forceRefresh = true)
+    fun refresh(forceRefresh: Boolean = false) {
+        refreshInternal(forceRefresh = forceRefresh)
     }
 
     private fun refreshInternal(forceRefresh: Boolean) {

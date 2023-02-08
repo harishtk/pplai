@@ -15,7 +15,7 @@
         style="@style/Widget.App.ImageButton"
         android:contentDescription="@string/content_description_go_back"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/spacer1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -24,16 +24,17 @@
     <Space android:id="@+id/spacer1"
         android:layout_width="match_parent"
         android:layout_height="@dimen/spacer_size_very_small"
+        android:visibility="visible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView android:id="@+id/title"
-        style="@style/TextStyle.Large.Bold"
+        style="@style/TextStyle.Small.Bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Step 2 of 4"
-        android:padding="@dimen/inset_large"
+        android:padding="@dimen/inset_small"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/spacer1"
@@ -41,12 +42,20 @@
         app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintVertical_bias="0.0"/>
 
+    <Space android:id="@+id/spacer2"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/spacer_size_small"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintBottom_toTopOf="@id/scroll_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.core.widget.NestedScrollView android:id="@+id/scroll_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/spacer2"
         app:layout_constraintBottom_toTopOf="@id/privacy_disclosure_container"
         app:layout_constraintVertical_chainStyle="spread">
 

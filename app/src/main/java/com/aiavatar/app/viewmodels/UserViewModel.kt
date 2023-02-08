@@ -10,6 +10,7 @@ import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.feature.onboard.domain.model.request.AutoLoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
+import com.aiavatar.app.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,6 +33,7 @@ class UserViewModel @Inject constructor(
     val loginUser = appDatabase.loginUserDao().getLoginUser()
         .map { it?.toLoginUser() }
 
+    @Deprecated("not working as expected")
     val authenticationState = appDatabase.loginUserDao()
         .getLoginUser()
         .map {

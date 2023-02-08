@@ -595,7 +595,7 @@ class AvatarStatusFragment : Fragment() {
             .createPendingIntent()
 
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
-        val notification = notificationBuilder.setOngoing(true)
+        val notification = notificationBuilder
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationManager.IMPORTANCE_HIGH)
             .setCategory(Notification.CATEGORY_STATUS)
@@ -621,7 +621,7 @@ class AvatarStatusFragment : Fragment() {
             .createPendingIntent()
 
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
-        val notification = notificationBuilder.setOngoing(true)
+        val notification = notificationBuilder
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationManager.IMPORTANCE_DEFAULT)
             .setCategory(Notification.CATEGORY_PROGRESS)
