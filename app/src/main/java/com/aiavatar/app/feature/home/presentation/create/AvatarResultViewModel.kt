@@ -23,6 +23,12 @@ import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.nullAsEmpty
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailUiAction
+import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailUiEvent
+import com.aiavatar.app.feature.onboard.domain.model.ShareLinkData
+import com.aiavatar.app.feature.onboard.domain.model.request.GetShareLinkRequest
+import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
+import com.aiavatar.app.ifDebug
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -37,6 +43,7 @@ import javax.inject.Inject
 class AvatarResultViewModel @Inject constructor(
     private val appRepository: AppRepository,
     private val homeRepository: HomeRepository,
+    private val accountsRepository: AccountsRepository,
     @Deprecated("move to repo")
     private val appDatabase: AppDatabase,
     private val savedStateHandle: SavedStateHandle
@@ -54,6 +61,7 @@ class AvatarResultViewModel @Inject constructor(
     private var avatarStatusJob: Job? = null
     private var modelDetailFetchJob: Job? = null
     private var createDownloadSessionJob: Job? = null
+    private var getShareLinkJob: Job? = null
 
     init {
         accept = { uiAction -> onUiAction(uiAction) }
@@ -68,6 +76,9 @@ class AvatarResultViewModel @Inject constructor(
                         uiErrorText = null
                     )
                 }
+            }
+            is AvatarResultUiAction.GetShareLink -> {
+                uiState.value.avatarStatus?.modelId?.let { getShareLinkInternal(it) }
             }
         }
     }
@@ -237,6 +248,66 @@ class AvatarResultViewModel @Inject constructor(
     }
     /* END - Download session related */
 
+    /* Share link */
+    private fun getShareLinkInternal(modelId: String) {
+        val request = GetShareLinkRequest(modelId)
+
+        getShareLink(request)
+    }
+
+    private fun getShareLink(request: GetShareLinkRequest) {
+        if (getShareLinkJob?.isActive == true) {
+            val t = IllegalStateException("A share link fetch job is already active. Ignoring..")
+            ifDebug { Timber.w(t) }
+            return
+        }
+
+        getShareLinkJob?.cancel(CancellationException("New request")) // just in case
+        getShareLinkJob = viewModelScope.launch {
+            accountsRepository.getShareLink(request).collectLatest { result ->
+                when (result) {
+                    is Result.Loading -> {
+                        val newLoadState = uiState.value.shareLoadState.modifyState(LoadType.REFRESH, LoadState.Loading())
+                        _uiState.update { state -> state.copy(shareLoadState = newLoadState) }
+                    }
+                    is Result.Error -> {
+                        when (result.exception) {
+                            is NoInternetException -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.noInternet
+                                    )
+                                }
+                            }
+                            else -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
+                                    )
+                                }
+                            }
+                        }
+                        val newLoadState = uiState.value.shareLoadState.modifyState(LoadType.REFRESH, LoadState.Error(result.exception))
+                        _uiState.update { state -> state.copy(shareLoadState = newLoadState) }
+                    }
+                    is Result.Success -> {
+                        val newLoadState = uiState.value.shareLoadState.modifyState(LoadType.REFRESH, LoadState.NotLoading.Complete)
+                        _uiState.update { state ->
+                            state.copy(
+                                shareLoadState = newLoadState,
+                                shareLinkData = result.data
+                            )
+                        }
+                        sendEvent(AvatarResultUiEvent.ShareLink(result.data.shortLink))
+                    }
+                }
+            }
+        }
+    }
+    /* END - Share link */
+
     private fun setLoading(
         loadType: LoadType,
         loadState: LoadState
@@ -259,6 +330,7 @@ class AvatarResultViewModel @Inject constructor(
         avatarsFetchJob?.cancel(t)
         modelDetailFetchJob?.cancel(t)
         createDownloadSessionJob?.cancel(t)
+        getShareLinkJob?.cancel(t)
         super.onCleared()
     }
 }
@@ -268,17 +340,21 @@ data class AvatarResultState(
     val avatarStatusId: String? = null,
     val avatarStatus: AvatarStatus? = null,
     val avatarResultList: List<AvatarResultUiModel> = emptyList(),
+    val shareLoadState: LoadStates = LoadStates.IDLE,
+    val shareLinkData: ShareLinkData? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
 
 interface AvatarResultUiAction {
     data class ErrorShown(val e: Exception) : AvatarResultUiAction
+    object GetShareLink : AvatarResultUiAction
 }
 
 interface AvatarResultUiEvent {
     data class ShowToast(val message: UiText) : AvatarResultUiEvent
     data class StartDownload(val downloadSessionId: Long) : AvatarResultUiEvent
+    data class ShareLink(val link: String) : AvatarResultUiEvent
 }
 
 interface AvatarResultUiModel {

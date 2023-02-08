@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -35,6 +36,10 @@ import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.feature.home.presentation.profile.ModelListUiAction
+import com.aiavatar.app.feature.home.presentation.profile.ModelListUiEvent
+import com.aiavatar.app.viewmodels.AuthenticationState
+import com.aiavatar.app.viewmodels.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -47,6 +52,7 @@ import timber.log.Timber
 class AvatarResultFragment : Fragment() {
 
     private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val userViewModel: UserViewModel by viewModels()
     private val viewModel: AvatarResultViewModel by viewModels()
 
     private val storagePermissions: Array<String> = arrayOf(
@@ -134,6 +140,9 @@ class AvatarResultFragment : Fragment() {
                     is AvatarResultUiEvent.StartDownload -> {
                         checkPermissionAndScheduleWorker(event.downloadSessionId)
                     }
+                    is AvatarResultUiEvent.ShareLink -> {
+                        handleShareLink(event.link)
+                    }
                 }
             }
         }
@@ -200,6 +209,11 @@ class AvatarResultFragment : Fragment() {
             }
         }
 
+        bindShareProgress(
+            uiState = uiState,
+            uiAction = uiAction
+        )
+
         bindClick(
             uiState = uiState,
             uiAction = uiAction
@@ -250,9 +264,41 @@ class AvatarResultFragment : Fragment() {
         }
 
         icShare.isVisible = true
-        icShare.setOnClickListener { }
+        icShare.setOnClickListener {
+            // TODO: -done- check if login is necessary
+            if (userViewModel.authenticationState.value.isAuthenticated()) {
+                if (uiState.value.shareLinkData != null) {
+                    handleShareLink(uiState.value.shareLinkData!!.shortLink)
+                } else {
+                    uiAction(AvatarResultUiAction.GetShareLink)
+                }
+            } else {
+                gotoLogin()
+            }
+        }
 
         btnClose.setOnClickListener { findNavController().navigateUp() }
+    }
+
+    private fun FragmentAvatarResultBinding.bindShareProgress(
+        uiState: StateFlow<AvatarResultState>,
+        uiAction: (AvatarResultUiAction) -> Unit
+    ) {
+        val loadStateFlow = uiState.map { it.shareLoadState }
+            .distinctUntilChangedBy { it.refresh }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                if (loadState.refresh is LoadState.Loading) {
+                    icShare.setImageResource(R.drawable.ic_share)
+                    icShare.isEnabled = false
+                    shareProgressBar.isVisible = true
+                } else {
+                    icShare.setImageResource(R.drawable.ic_share_outline)
+                    icShare.isEnabled = true
+                    shareProgressBar.isVisible = false
+                }
+            }
+        }
     }
 
     private fun checkFolderName(name: String) {
@@ -278,6 +324,29 @@ class AvatarResultFragment : Fragment() {
             }
         } else {
             cont()
+        }
+    }
+
+    private fun handleShareLink(link: String) {
+        val shareIntent = ShareCompat.IntentBuilder(requireContext())
+            .setText(link)
+            .setType("text/plain")
+            .setChooserTitle("Share with")
+            .intent
+
+        startActivity(Intent.createChooser(shareIntent, "Share with"))
+    }
+
+    private fun gotoLogin() {
+        Timber.d("User login: opening login..")
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder().build()
+            val args = Bundle().apply {
+                /* 'popup' means previous page, the one who fired it expects the result */
+                putString(Constant.EXTRA_FROM, "popup")
+                putInt(Constant.EXTRA_POP_ID, R.id.profile)
+            }
+            navigate(R.id.login_fragment, args, navOpts)
         }
     }
 

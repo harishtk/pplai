@@ -134,6 +134,17 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constrainedWidth="true" />
 
+    <ProgressBar
+        android:id="@+id/share_progress_bar"
+        android:layout_width="@dimen/icon_overlay_progress_size"
+        android:layout_height="@dimen/icon_overlay_progress_size"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/ic_share"
+        app:layout_constraintEnd_toEndOf="@id/ic_share"
+        app:layout_constraintStart_toStartOf="@id/ic_share"
+        app:layout_constraintTop_toTopOf="@id/ic_share"
+        tools:visibility="visible" />
+
     <ProgressBar android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

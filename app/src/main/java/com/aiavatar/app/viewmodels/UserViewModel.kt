@@ -7,7 +7,6 @@ import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.toLoginUser
 import com.aiavatar.app.core.domain.repository.AppRepository
-import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.feature.onboard.domain.model.request.AutoLoginRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
@@ -32,6 +31,21 @@ class UserViewModel @Inject constructor(
 
     val loginUser = appDatabase.loginUserDao().getLoginUser()
         .map { it?.toLoginUser() }
+
+    val authenticationState = appDatabase.loginUserDao()
+        .getLoginUser()
+        .map {
+            if (it?.userId?.isNotBlank() == true) {
+                AuthenticationState.AUTHENTICATED
+            } else {
+                AuthenticationState.NOT_AUTHENTICATED
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = AuthenticationState.UNKNOWN
+        )
 
     private var autoLoginJob: Job? = null
 
@@ -65,5 +79,13 @@ class UserViewModel @Inject constructor(
 
     fun logout() = viewModelScope.launch(Dispatchers.IO) {
         appDatabase.clearAllTables()
+    }
+}
+
+enum class AuthenticationState {
+    UNKNOWN, AUTHENTICATED, NOT_AUTHENTICATED;
+
+    fun isAuthenticated(): Boolean {
+        return this == AUTHENTICATED
     }
 }

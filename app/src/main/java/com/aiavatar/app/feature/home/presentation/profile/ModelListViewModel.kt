@@ -433,6 +433,7 @@ class ModelListViewModel @Inject constructor(
         modelDetailFetchJob?.cancel(t)
         createDownloadSessionJob?.cancel(t)
         downloadProgressJob?.cancel(t)
+        getShareLinkJob?.cancel(t)
         super.onCleared()
     }
 }

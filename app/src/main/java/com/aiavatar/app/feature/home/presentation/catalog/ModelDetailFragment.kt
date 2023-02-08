@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
@@ -41,6 +42,7 @@ import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.feature.home.presentation.profile.ModelListUiAction
 import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
 import dagger.hilt.android.AndroidEntryPoint
@@ -158,6 +160,9 @@ class ModelDetailFragment : Fragment() {
                     }
                     is ModelDetailUiEvent.DownloadComplete -> {
                         handleDownloadComplete(event.savedUri)
+                    }
+                    is ModelDetailUiEvent.ShareLink -> {
+                        handleShareLink(event.link)
                     }
                 }
             }
@@ -301,6 +306,30 @@ class ModelDetailFragment : Fragment() {
             }
         }
 
+        val notLoadingFlow = uiState.map { it.loadState }
+            .distinctUntilChanged { old, new ->
+                old.refresh == new.refresh && old.action == new.action
+            }
+            .map { it.refresh !is LoadState.Loading && it.action !is LoadState.Loading }
+        val hasErrorsFlow = uiState.map { it.exception != null }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            combine(
+                notLoadingFlow,
+                hasErrorsFlow,
+                Boolean::and
+            ).collectLatest { hasError ->
+                if (hasError) {
+                    val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorText
+                    if (e != null) {
+                        ifDebug { Timber.e(e) }
+                        uiErr?.let { uiText -> context?.showToast(uiText.asString(requireContext())) }
+                        uiAction(ModelDetailUiAction.ErrorShown(e))
+                    }
+                }
+            }
+        }
+
         btnNext.text = getString(R.string.label_recreate)
         icDownload.isVisible = true
         icShare.isVisible = true
@@ -310,8 +339,14 @@ class ModelDetailFragment : Fragment() {
             uiAction = uiAction
         )
 
+        bindShareProgress(
+            uiState = uiState,
+            uiAction = uiAction
+        )
+
         bindClick(
-            uiState = uiState
+            uiState = uiState,
+            uiAction = uiAction
         )
 
         bindToolbar(
@@ -319,7 +354,10 @@ class ModelDetailFragment : Fragment() {
         )
     }
 
-    private fun FragmentModelDetailBinding.bindClick(uiState: StateFlow<ModelDetailState>) {
+    private fun FragmentModelDetailBinding.bindClick(
+        uiState: StateFlow<ModelDetailState>,
+        uiAction: (ModelDetailUiAction) -> Unit
+    ) {
         icShare.setOnClickListener {
             context?.showToast("Coming soon!")
         }
@@ -347,6 +385,14 @@ class ModelDetailFragment : Fragment() {
                     null
                 }.show(childFragmentManager, "folder-name-dialog")
                 // checkPermissionAndScheduleWorker(uiState.value.modelId!!)
+            }
+        }
+
+        icShare.setOnClickListener {
+            if (uiState.value.shareLinkData != null) {
+                handleShareLink(uiState.value.shareLinkData!!.shortLink)
+            } else {
+                uiAction(ModelDetailUiAction.GetShareLink)
             }
         }
 
@@ -411,6 +457,27 @@ class ModelDetailFragment : Fragment() {
         }
     }
 
+    private fun FragmentModelDetailBinding.bindShareProgress(
+        uiState: StateFlow<ModelDetailState>,
+        uiAction: (ModelDetailUiAction) -> Unit
+    ) {
+        val loadStateFlow = uiState.map { it.shareLoadState }
+            .distinctUntilChangedBy { it.refresh }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                if (loadState.refresh is LoadState.Loading) {
+                    icShare.setImageResource(R.drawable.ic_share)
+                    icShare.isEnabled = false
+                    shareProgressBar.isVisible = true
+                } else {
+                    icShare.setImageResource(R.drawable.ic_share_outline)
+                    icShare.isEnabled = true
+                    shareProgressBar.isVisible = false
+                }
+            }
+        }
+    }
+
     private fun FragmentModelDetailBinding.handleDownloadComplete(
         savedUri: Uri
     ) {
@@ -431,6 +498,16 @@ class ModelDetailFragment : Fragment() {
                 openGallery(savedUri)
             }
         )
+    }
+
+    private fun handleShareLink(link: String) {
+        val shareIntent = ShareCompat.IntentBuilder(requireContext())
+            .setText(link)
+            .setType("text/plain")
+            .setChooserTitle("Share with")
+            .intent
+
+        startActivity(Intent.createChooser(shareIntent, "Share with"))
     }
 
     private fun setUpIndicator(count: Int) {

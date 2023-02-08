@@ -41,8 +41,8 @@ import java.util.concurrent.TimeUnit
 @AndroidEntryPoint
 class CatalogFragment : Fragment() {
 
-    private val viewModel: CatalogViewModel by viewModels()
     private val userViewModel: UserViewModel by activityViewModels()
+    private val viewModel: CatalogViewModel by viewModels()
 
     private var _binding: FragmentCatalogBinding? = null
     private val binding: FragmentCatalogBinding
@@ -65,6 +65,8 @@ class CatalogFragment : Fragment() {
             uiAction = viewModel.accept,
             uiEvent = viewModel.uiEvent
         )
+
+        setupObservers()
     }
 
     private fun FragmentCatalogBinding.bindState(
@@ -268,6 +270,14 @@ class CatalogFragment : Fragment() {
 
         profileContainer.setOnClickListener {
             gotoProfile()
+        }
+    }
+
+    private fun setupObservers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            userViewModel.authenticationState.collectLatest { state ->
+                Timber.d("Login: authentication state = $state")
+            }
         }
     }
 

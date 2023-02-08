@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
@@ -35,11 +36,11 @@ import com.aiavatar.app.databinding.FragmentAvatarPreviewBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
 import com.aiavatar.app.databinding.LargePresetPreviewBinding
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
-import com.aiavatar.app.feature.home.presentation.catalog.*
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.feature.home.presentation.util.AutoCenterLayoutManger
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.viewmodels.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -49,6 +50,7 @@ import kotlin.math.abs
 @AndroidEntryPoint
 class AvatarPreviewFragment : Fragment() {
 
+    private val userViewModel: UserViewModel by viewModels()
     private val viewModel: AvatarPreviewViewModel by viewModels()
 
     private val storagePermissions: Array<String> = arrayOf(
@@ -148,6 +150,9 @@ class AvatarPreviewFragment : Fragment() {
                 when (event) {
                     is AvatarPreviewUiEvent.ShowToast -> {
                         context?.showToast(event.message.asString(requireContext()))
+                    }
+                    is AvatarPreviewUiEvent.ShareLink -> {
+                        handleShareLink(event.link)
                     }
                 }
             }
@@ -281,8 +286,14 @@ class AvatarPreviewFragment : Fragment() {
         icDownload.isVisible = false
         icShare.isVisible = true
 
+        bindShareProgress(
+            uiState = uiState,
+            uiAction = uiAction
+        )
+
         bindClick(
-            uiState = uiState
+            uiState = uiState,
+            uiAction = uiAction
         )
 
         bindToolbar(
@@ -290,9 +301,22 @@ class AvatarPreviewFragment : Fragment() {
         )
     }
 
-    private fun FragmentAvatarPreviewBinding.bindClick(uiState: StateFlow<AvatarPreviewState>) {
+    private fun FragmentAvatarPreviewBinding.bindClick(
+        uiState: StateFlow<AvatarPreviewState>,
+        uiAction: (AvatarPreviewUiAction) -> Unit
+    ) {
+        icShare.isVisible = true
         icShare.setOnClickListener {
-            context?.showToast("Coming soon!")
+            // TODO: check if login is necessary
+            if (userViewModel.authenticationState.value.isAuthenticated()) {
+                if (uiState.value.shareLinkData != null) {
+                    handleShareLink(uiState.value.shareLinkData!!.shortLink)
+                } else {
+                    uiAction(AvatarPreviewUiAction.GetShareLink)
+                }
+            } else {
+                gotoLogin()
+            }
         }
 
         icDownload.isVisible = false
@@ -373,6 +397,37 @@ class AvatarPreviewFragment : Fragment() {
         }
     }
 
+    private fun FragmentAvatarPreviewBinding.bindShareProgress(
+        uiState: StateFlow<AvatarPreviewState>,
+        uiAction: (AvatarPreviewUiAction) -> Unit
+    ) {
+        val loadStateFlow = uiState.map { it.shareLoadState }
+            .distinctUntilChangedBy { it.refresh }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                if (loadState.refresh is LoadState.Loading) {
+                    icShare.setImageResource(R.drawable.ic_share)
+                    icShare.isEnabled = false
+                    shareProgressBar.isVisible = true
+                } else {
+                    icShare.setImageResource(R.drawable.ic_share_outline)
+                    icShare.isEnabled = true
+                    shareProgressBar.isVisible = false
+                }
+            }
+        }
+    }
+
+    private fun handleShareLink(link: String) {
+        val shareIntent = ShareCompat.IntentBuilder(requireContext())
+            .setText(link)
+            .setType("text/plain")
+            .setChooserTitle("Share with")
+            .intent
+
+        startActivity(Intent.createChooser(shareIntent, "Share with"))
+    }
+
     private fun checkStoragePermission(): Boolean {
         return storagePermissions.all {
             ContextCompat.checkSelfPermission(requireContext(), it) ==
@@ -412,6 +467,20 @@ class AvatarPreviewFragment : Fragment() {
     private fun askStoragePermission() {
         storagePermissionLauncher.launch(storagePermissions)
     }
+
+    private fun gotoLogin() {
+        Timber.d("User login: opening login..")
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder().build()
+            val args = Bundle().apply {
+                /* 'popup' means previous page, the one who fired it expects the result */
+                putString(Constant.EXTRA_FROM, "popup")
+                putInt(Constant.EXTRA_POP_ID, R.id.profile)
+            }
+            navigate(R.id.login_fragment, args, navOpts)
+        }
+    }
+
 
     private fun gotoPlans(modelId: String) = safeCall {
         findNavController().apply {
