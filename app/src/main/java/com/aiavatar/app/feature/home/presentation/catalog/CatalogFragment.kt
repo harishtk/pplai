@@ -26,6 +26,7 @@ import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.feature.onboard.presentation.walkthrough.LegalsBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow

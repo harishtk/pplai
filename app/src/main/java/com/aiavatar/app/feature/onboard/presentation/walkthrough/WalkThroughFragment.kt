@@ -9,6 +9,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
+import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.R
 import com.aiavatar.app.autoCleared
 import com.aiavatar.app.databinding.FragmentWalkThroughBinding
@@ -107,22 +108,30 @@ class WalkThroughFragment : Fragment() {
             if (walkthroughPager.currentItem < adapter.itemCount - 1) {
                 walkthroughPager.setCurrentItem(++walkthroughPager.currentItem, true)
             } else {
-                try {
-                    ApplicationDependencies.getPersistentStore()
-                        .setOnboardPresented(true)
-                    gotoUploadSteps()
-                    /*findNavController().apply {
-                        val args = bundleOf(
-                            Constant.EXTRA_FROM to "walk_through"
-                        )
-                        val navOpts = NavOptions.Builder()
-                            .setEnterAnim(R.anim.fade_scale_in)
-                            .setExitAnim(R.anim.fade_scale_out)
-                            .setPopUpTo(R.id.walkthrough_fragment, inclusive = true, saveState = true)
-                            .build()
-                        navigate(R.id.login_fragment, args, navOpts)
-                    }*/
-                } catch (ignore: Exception) {}
+                if (checkLegal()) {
+                    try {
+                        ApplicationDependencies.getPersistentStore()
+                            .setOnboardPresented(true)
+                        gotoUploadSteps()
+                        /*findNavController().apply {
+                            val args = bundleOf(
+                                Constant.EXTRA_FROM to "walk_through"
+                            )
+                            val navOpts = NavOptions.Builder()
+                                .setEnterAnim(R.anim.fade_scale_in)
+                                .setExitAnim(R.anim.fade_scale_out)
+                                .setPopUpTo(R.id.walkthrough_fragment, inclusive = true, saveState = true)
+                                .build()
+                            navigate(R.id.login_fragment, args, navOpts)
+                        }*/
+                    } catch (ignore: Exception) {}
+                } else {
+                    showLegal {
+                        ApplicationDependencies.getPersistentStore()
+                            .setOnboardPresented(true)
+                        gotoUploadSteps()
+                    }
+                }
             }
         }
     }
@@ -151,6 +160,22 @@ class WalkThroughFragment : Fragment() {
     private fun gotoUploadSteps() = safeCall {
         findNavController().apply {
             navigate(WalkThroughFragmentDirections.actionWalkThroughToUploadStep())
+        }
+    }
+
+    private fun checkLegal(): Boolean {
+        return ApplicationDependencies.getPersistentStore().isLegalAgreed
+    }
+
+    private fun showLegal(cont: () -> Unit) {
+        val f = childFragmentManager.findFragmentByTag(LegalsBottomSheet.FRAGMENT_TAG)
+        if (f == null) {
+            LegalsBottomSheet {
+                ApplicationDependencies.getPersistentStore().setLegalAgreed()
+                cont.invoke()
+            }.also {
+                it.show(childFragmentManager, LegalsBottomSheet.FRAGMENT_TAG)
+            }
         }
     }
 }

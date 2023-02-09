@@ -42,24 +42,17 @@ import com.aiavatar.app.databinding.ItemUploadPreviewPlaceholderBinding
 import com.aiavatar.app.feature.home.domain.model.SelectedMediaItem
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.bumptech.glide.Glide
-import com.google.android.gms.tasks.Task
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.core.util.BlurTransformation
-import com.aiavatar.app.feature.home.presentation.create.util.FaceDetectionPipe
 import com.aiavatar.app.feature.home.presentation.create.util.ImageProcessorPipeline
 import com.google.android.gms.common.moduleinstall.ModuleInstall
 import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import dagger.hilt.android.AndroidEntryPoint
-import io.github.devzwy.nsfw.NSFWHelper
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class UploadStep2Fragment : Fragment() {
@@ -382,32 +375,62 @@ class UploadStep2Fragment : Fragment() {
             kotlin.runCatching {
                 isFaceDetectionRunning = true
                 viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
-                val result = HashMap<String, Boolean>()
+
                 val faceDetectorOpts = FaceDetectorOptions.Builder()
                     .setMinFaceSize(0.5F)
                     .build()
                 val faceDetector = FaceDetection.getClient(faceDetectorOpts)
 
-                ifDebug {
-                    ImageProcessorPipeline.Builder(
-                        context = requireContext(),
-                        imageUris = pickedUris
-                    )
-                        .detectNsfw()
-                        .detectFaces(faceDetector)
-                        .build().apply {
-                            val startTime = SystemClock.uptimeMillis()
-                            this.start().awaitAll().onEach { pipeResult ->
-                                Timber.d("Pipeline: result = $pipeResult")
-                            }.also {
-                                val delta = (SystemClock.uptimeMillis() - startTime)
-                                Timber.d("Pipeline: completed in ${delta}ms")
-                            }
+                val moduleInstallClient = ModuleInstall.getClient(requireActivity())
+                moduleInstallClient
+                    .areModulesAvailable(faceDetector)
+                    .addOnSuccessListener {
+                        if (it.areModulesAvailable()) {
+                            Timber.d("FaceDetector: available")
+                        } else {
+                            Timber.d("FaceDetector: not available")
                         }
-                }
+                    }
+                    .addOnFailureListener { t ->
+                        ifDebug { Timber.e(t) }
+                    }
 
                 var inappropriateDetected = false
-                val previewModelList = pickedUris.map { imageUri ->
+                ImageProcessorPipeline.Builder(
+                    context = requireContext(),
+                    imageUris = pickedUris
+                )
+                    .detectNsfw()
+                    .detectFaces()
+                    .build().apply {
+                        val startTime = SystemClock.uptimeMillis()
+                        val previewModelList = this.start(scope = viewLifecycleOwner.lifecycleScope).awaitAll().map { pipeResult ->
+                            Timber.d("Pipeline: result = $pipeResult")
+                            val (faces, nsfwScore) = pipeResult.faces to pipeResult.nsfwScoreBean
+                            if (nsfwScore != null && nsfwScore.nsfwScore > 0.5) {
+                                if (!inappropriateDetected) {
+                                    inappropriateDetected = true
+                                }
+                                UploadPreviewUiModel.Item(
+                                    SelectedMediaItem(pipeResult.uri),
+                                    faces = 0,
+                                    nsfw = true
+                                )
+                            } else {
+                                UploadPreviewUiModel.Item(
+                                    SelectedMediaItem(pipeResult.uri),
+                                    faces = faces?.size ?: 0,
+                                    nsfw = false
+                                )
+                            }
+                        }.also {
+                            val delta = (SystemClock.uptimeMillis() - startTime)
+                            Timber.d("Pipeline: completed in ${delta}ms")
+                        }
+                        viewModel.setPickedUris(previewModelList)
+                    }
+
+                /*val previewModelList = pickedUris.map { imageUri ->
                     val bmp = Glide.with(requireActivity())
                         .asBitmap()
                         .load(imageUri)
@@ -437,37 +460,13 @@ class UploadStep2Fragment : Fragment() {
                         )
                     }
 
-                }
-                viewModel.setPickedUris(previewModelList)
+                }*/
 
                 withContext(Dispatchers.Main) {
                     if (inappropriateDetected) {
                         context?.showToast("Some unsafe content has been detected!")
                     }
                 }
-
-                /*
-                val countDownLatch = CountDownLatch(pickedUris.size)
-                val taskList: List<Task<List<Face>>> = pickedUris.mapIndexed { index, uri ->
-                    val ft = faceDetector.process(InputImage.fromFilePath(requireContext(), uri))
-                        .addOnCompleteListener { countDownLatch.countDown() }
-                        .addOnFailureListener { countDownLatch.countDown() }
-                    ft
-                }*/
-
-                val moduleInstallClient = ModuleInstall.getClient(requireActivity())
-                moduleInstallClient
-                    .areModulesAvailable(faceDetector)
-                    .addOnSuccessListener {
-                        if (it.areModulesAvailable()) {
-                            Timber.d("FaceDetector: available")
-                        } else {
-                            Timber.d("FaceDetector: not available")
-                        }
-                    }
-                    .addOnFailureListener { t ->
-                        ifDebug { Timber.e(t) }
-                    }
 
                 /*runBlocking(Dispatchers.IO) {
                     countDownLatch.await(1, TimeUnit.MINUTES)
@@ -647,7 +646,7 @@ class UploadPreviewAdapter(
                     Glide.with(view1)
                         .load(data.selectedMediaItem.uri)
                         .placeholder(R.color.white_grey)
-                        .transform(BlurTransformation(binding.root.context, 0.25F, 3F))
+                        .transform(BlurTransformation(binding.root.context, 0.25F, 5F))
                         .into(view1)
                 } else {
                     Glide.with(view1)

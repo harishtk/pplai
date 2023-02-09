@@ -55,4 +55,6 @@
 
     <color name="image_placeholder_fill">#FFFFFFFF</color>
     <color name="icon_tint">@color/transparent_black_40</color>
+
+    <color name="bottom_sheet_background">@color/core_white</color>
 </resources>

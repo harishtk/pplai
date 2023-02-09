@@ -99,6 +99,7 @@
     <string name="walkthrough2_title_1">Create stunning, mesmerizing avatars from your photos.</string>
     <string name="good_examples">Good Examples</string>
     <string name="content_description_create">Create</string>
+    <string name="label_next">Next</string>
 
     <plurals name="hours_ago">
         <item quantity="one">@string/hours_single</item>

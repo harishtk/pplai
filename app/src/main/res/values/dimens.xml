@@ -50,6 +50,7 @@
     <dimen name="default_touchable_padding">4dp</dimen>
     <dimen name="touchable_padding_large">10dp</dimen>
     <dimen name="default_touchable_inset">4dp</dimen>
+    <dimen name="default_touchable_large">10dp</dimen>
     <dimen name="touchable_inset_small">2dp</dimen>
     <dimen name="comments_min_width">120dp</dimen>
     <dimen name="multiline_text_max_height">80dp</dimen>

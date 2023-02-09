@@ -10,6 +10,40 @@
         <item name="android:textColor">@color/black</item>
     </style>
 
+    <!-- Bottom sheet -->
+    <style name="Widget.App.BottomSheetDialog" parent="Theme.MaterialComponents.BottomSheetDialog">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.BottomSheetDialog</item>
+        <item name="android:windowAnimationStyle">@style/DialogStyle</item>
+        <item name="bottomAppBarStyle">@style/BottomDialogStyle.Modal</item>
+
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.3</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowIsFloating">true</item>
+    </style>
+
+    <style name="Widget.App.BottomSheetDialog.NoFloating" parent="Theme.MaterialComponents.BottomSheetDialog">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.BottomSheetDialog</item>
+        <item name="android:windowAnimationStyle">@style/DialogStyle</item>
+        <item name="bottomSheetStyle">@style/BottomDialogStyle.Modal</item>
+
+        <item name="android:windowSoftInputMode">adjustResize</item>
+
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowIsFloating">false</item>
+    </style>
+
+    <style name="BottomDialogStyle.Modal" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="DialogStyle">
+        <item name="android:windowEnterAnimation">@anim/slide_up</item>
+        <item name="android:windowExitAnimation">@anim/slide_bottom</item>
+    </style>
+    <!-- END - Bottom sheet -->
+
     <style name="ThemeOverlay.App.Snackbar" parent="">
         <item name="colorPrimary">@color/yellow_200</item>
         <item name="colorSurface">@color/blue_grey_700</item>
@@ -142,6 +176,16 @@
         <item name="android:paddingEnd">20dp</item>
     </style>
 
+    <style name="Widget.App.TextButton.Small" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
+        <item name="android:textSize">@dimen/text_size_very_small</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:paddingStart">15dp</item>
+        <item name="android:paddingEnd">15dp</item>
+    </style>
+
     <style name="Widget.App.TextButton.Alt" parent="Widget.MaterialComponents.Button.TextButton">
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton.Alt</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
@@ -164,7 +208,7 @@
     </style>
 
     <style name="Widget.App.Button.Small" parent="Widget.App.Button">
-        <item name="android:textColor">@color/white</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
         <item name="android:textSize">16sp</item>
         <item name="android:paddingTop">5dp</item>
         <item name="android:paddingBottom">5dp</item>
@@ -236,9 +280,8 @@
     <style name="Widget.App.Button.Outline" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.MediumComponent.Rounded</item>
-        <item name="android:textColor">?attr/colorSecondary</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
-        <item name="strokeColor">?attr/colorSecondary</item>
+        <item name="strokeColor">?attr/colorPrimary</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
         <item name="android:paddingStart">20dp</item>

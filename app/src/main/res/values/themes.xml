@@ -88,11 +88,34 @@
         <item name="colorOnSurface">@color/white</item>
         <item name="colorOnSurfaceInverse">@color/black</item>
     </style>
+    
+    <style name="ThemeOverlay.App.MaterialDialog" parent="ThemeOverlay.MaterialComponents.Dialog">
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorSecondary">@color/white</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="alertDialogStyle">@style/MaterialAlertDialog.App</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.App.Title.Text</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.App.TextButton.Small</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.App.TextButton.Small</item>
+
+        <item name="textAppearanceBody1">@style/Base.TextAppearance</item>
+        <item name="textAppearanceBody2">@style/Base.TextAppearance</item>
+        <item name="textAppearanceSubtitle1">@style/Base.TextAppearance</item>
+    </style>
 
     <!-- Progress Indicator -->
     <style name="ThemeOverlay.App.LinearProgressIndicator" parent="">
         <item name="android:colorPrimary">@color/yellow_200</item>
         <item name="colorPrimary">@color/yellow_200</item>
     </style>
+
+    <!-- Bottom sheet -->
+    <style name="ThemeOverlay.App.BottomSheetDialog" parent="">
+        <item name="colorSecondary">@color/yellow_200</item>
+        <item name="colorOnSurface">@color/black</item>
+    </style>
+    <!-- END - Bottom sheet -->
 
 </resources>

@@ -58,6 +58,9 @@ class PersistentStore private constructor(
     val userPreferredTheme: Int
         get() = getAppPreferences().getInt(UserPreferenceKeys.USER_PREFERRED_THEME, DEFAULT_USER_PREFERRED_THEME)
 
+    val isLegalAgreed: Boolean
+        get() = getAppPreferences().getBoolean(UserPreferenceKeys.LEGAL_AGREEMENT, false)
+
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
         return this
@@ -127,6 +130,12 @@ class PersistentStore private constructor(
         getAppPreferences().edit { putInt(UserPreferenceKeys.USER_PREFERRED_THEME, theme) }
         return this
     }
+
+    fun setLegalAgreed(): PersistentStore {
+        getAppPreferences().edit { putBoolean(UserPreferenceKeys.LEGAL_AGREEMENT, true) }
+        return this
+    }
+
 
     fun logout() {
         setUserId(null)
@@ -223,6 +232,7 @@ class PersistentStore private constructor(
             const val USER_PREFERRED_THEME = "user_preferred_theme"
             const val DEEPLINK_KEY_TYPE = "deep_link_key_type"
             const val DEEPLINK_KEY_VALUE = "deep_link_key_value"
+            const val LEGAL_AGREEMENT = "legal_agreement"
         }
 
         object AppEssentialKeys {

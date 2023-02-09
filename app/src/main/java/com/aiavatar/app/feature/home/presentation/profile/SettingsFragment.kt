@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.home.presentation.profile
 
+import android.content.DialogInterface
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -27,6 +28,7 @@ import com.aiavatar.app.feature.home.presentation.util.SettingsListType
 import com.aiavatar.app.safeCall
 import com.aiavatar.app.showToast
 import com.aiavatar.app.viewmodels.UserViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -80,10 +82,12 @@ class SettingsFragment : Fragment() {
             override fun onItemClick(position: Int) {
                 when (settingsListData[position].id) {
                     5 -> {
-                        userViewModel.logout()
-                        ApplicationDependencies.getPersistentStore().logout()
-                        context?.showToast("Logged out!")
-                        gotoUploadStep1()
+                        confirmLogout {
+                            userViewModel.logout()
+                            ApplicationDependencies.getPersistentStore().logout()
+                            context?.showToast("Logged out!")
+                            gotoUploadStep1()
+                        }
                     }
                 }
             }
@@ -99,6 +103,23 @@ class SettingsFragment : Fragment() {
 
         settingsList.adapter = settingsAdapter
         settingsAdapter.submitList(settingsListData)
+    }
+
+    private fun confirmLogout(cont: () -> Unit) {
+        val clickListener: DialogInterface.OnClickListener =
+            DialogInterface.OnClickListener { dialog, which ->
+                when (which) {
+                    DialogInterface.BUTTON_POSITIVE -> {
+                        cont()
+                    }
+                }
+                dialog.dismiss()
+            }
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialDialog)
+            .setMessage("Are you sure?")
+            .setPositiveButton("YES", clickListener)
+            .setNegativeButton("NO", clickListener)
+            .show()
     }
 
     private fun gotoUploadStep1() {

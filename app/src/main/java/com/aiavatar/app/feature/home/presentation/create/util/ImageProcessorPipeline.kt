@@ -2,25 +2,20 @@ package com.aiavatar.app.feature.home.presentation.create.util
 
 import android.content.Context
 import android.net.Uri
-import android.os.CancellationSignal
-import android.os.SystemClock
-import android.text.Html.ImageGetter
 import com.bumptech.glide.Glide
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetector
+import com.google.mlkit.vision.face.FaceDetectorOptions
 import io.github.devzwy.nsfw.NSFWHelper
 import io.github.devzwy.nsfw.NSFWScoreBean
 import kotlinx.coroutines.*
 import timber.log.Timber
-import java.time.Clock
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.suspendCoroutine
 
-@Deprecated("not yet written")
+
 class ImageProcessorPipeline(
     private val context: Context,
     private val imageUris: List<Uri>
@@ -30,14 +25,19 @@ class ImageProcessorPipeline(
     }
     private val coroutineContext: CoroutineContext =
         Dispatchers.IO + SupervisorJob() + exceptionHandler
-    val scope = CoroutineScope(coroutineContext)
+    private val scope = CoroutineScope(coroutineContext)
 
     var detectFaces: Boolean = false
         private set
     var detectNsfw: Boolean = false
         private set
 
-    private val faceDetector by lazy { FaceDetection.getClient() }
+    private val faceDetector by lazy {
+        val faceDetectorOpts = FaceDetectorOptions.Builder()
+            .setMinFaceSize(0.5F)
+            .build()
+        FaceDetection.getClient(faceDetectorOpts)
+    }
 
     fun start(scope: CoroutineScope = this.scope): List<Deferred<Result>> {
         Timber.d("Pipeline: start() detectNsfw = $detectNsfw detectFaces = $detectFaces")
@@ -100,7 +100,7 @@ class ImageProcessorPipeline(
     class Builder(context: Context, imageUris: List<Uri>) {
         val instance = ImageProcessorPipeline(context, imageUris)
 
-        fun detectFaces(faceDetector: FaceDetector): Builder {
+        fun detectFaces(): Builder {
             instance.detectFaces = true
             return this
         }

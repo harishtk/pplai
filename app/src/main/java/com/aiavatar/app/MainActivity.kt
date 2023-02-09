@@ -65,16 +65,9 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AppStartup.getInstance().onCriticalRenderEventStart()
+        setUserPreferredTheme()
         installSplashScreen()
         super.onCreate(savedInstanceState)
-
-        ifDebug {
-            lifecycleScope.launch {
-                ApplicationDependencies.getPersistentStore().userPreferredTheme.let { theme ->
-                    THEME_MAP[theme]?.let { AppCompatDelegate.setDefaultNightMode(it) }
-                }
-            }
-        }
 
         checkSecureMode()
         setContentView(R.layout.activity_main)
@@ -384,6 +377,26 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 WindowManager.LayoutParams.FLAG_SECURE,
                 WindowManager.LayoutParams.FLAG_SECURE
             )
+        }
+    }
+
+    private fun setUserPreferredTheme() {
+        ifDebug {
+            ApplicationDependencies.getPersistentStore().userPreferredTheme.let { theme ->
+                val mode = when (theme) {
+                    THEME_MODE_AUTO -> {
+                        AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                    }
+                    THEME_MODE_DARK -> {
+                        AppCompatDelegate.MODE_NIGHT_YES
+                    }
+                    THEME_MODE_LIGHT -> {
+                        AppCompatDelegate.MODE_NIGHT_NO
+                    }
+                    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                }
+                AppCompatDelegate.setDefaultNightMode(mode)
+            }
         }
     }
 

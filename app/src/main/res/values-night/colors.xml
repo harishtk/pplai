@@ -4,4 +4,6 @@
     <color name="image_placeholder_fill">#FF000000</color>
 
     <color name="icon_tint">@color/transparent_white_40</color>
+
+    <color name="bottom_sheet_background">@color/blue_grey_700</color>
 </resources>
