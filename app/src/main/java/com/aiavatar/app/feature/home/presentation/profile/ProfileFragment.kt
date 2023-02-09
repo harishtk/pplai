@@ -210,7 +210,7 @@ class ProfileFragment : Fragment() {
             val delta = (kotlin.math.abs(verticalOffset)) / appBarLayout.totalScrollRange.toFloat()
             // Timber.d("Offset: $verticalOffset total: ${appBarLayout.totalScrollRange} delta = $delta")
 
-            toolbarSettings.rotation = (180F * delta)
+            toolbarSettings.rotation = (90F * delta)
 
             (1.0F - delta).let { scale ->
                 profileImageExpanded.scaleX = scale
