@@ -5,10 +5,7 @@ import android.animation.ObjectAnimator
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
@@ -32,9 +29,7 @@ import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.*
-import com.aiavatar.app.Constant.MIME_TYPE_IMAGE
 import com.aiavatar.app.Constant.MIME_TYPE_JPEG
-import com.aiavatar.app.Constant.MIME_TYPE_PNG
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.HapticUtil
@@ -53,10 +48,13 @@ import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.core.util.BlurTransformation
+import com.aiavatar.app.feature.home.presentation.create.util.FaceDetectionPipe
+import com.aiavatar.app.feature.home.presentation.create.util.ImageProcessorPipeline
 import com.google.android.gms.common.moduleinstall.ModuleInstall
-import com.google.android.gms.common.moduleinstall.ModuleInstallClient
 import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.devzwy.nsfw.NSFWHelper
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -389,13 +387,73 @@ class UploadStep2Fragment : Fragment() {
                     .setMinFaceSize(0.5F)
                     .build()
                 val faceDetector = FaceDetection.getClient(faceDetectorOpts)
+
+                ifDebug {
+                    ImageProcessorPipeline.Builder(
+                        context = requireContext(),
+                        imageUris = pickedUris
+                    )
+                        .detectNsfw()
+                        .detectFaces(faceDetector)
+                        .build().apply {
+                            val startTime = SystemClock.uptimeMillis()
+                            this.start().awaitAll().onEach { pipeResult ->
+                                Timber.d("Pipeline: result = $pipeResult")
+                            }.also {
+                                val delta = (SystemClock.uptimeMillis() - startTime)
+                                Timber.d("Pipeline: completed in ${delta}ms")
+                            }
+                        }
+                }
+
+                var inappropriateDetected = false
+                val previewModelList = pickedUris.map { imageUri ->
+                    val bmp = Glide.with(requireActivity())
+                        .asBitmap()
+                        .load(imageUri)
+                        .submit(512, 512)
+                        .get()
+                    val score = NSFWHelper.getNSFWScore(bmp)
+                    if (score.nsfwScore > 0.5) {
+                        if (!inappropriateDetected) {
+                            inappropriateDetected = true
+                        }
+                        UploadPreviewUiModel.Item(
+                            SelectedMediaItem(imageUri),
+                            faces = 0,
+                            nsfw = true
+                        )
+                    } else {
+                        val faces = FaceDetectionPipe(
+                            context = requireContext(),
+                            faceDetector = faceDetector,
+                            imageUri = imageUri
+                        ).process()
+                        Timber.d("Detecting: uri = $imageUri faces ${faces.size} nsfw score = $score")
+                        UploadPreviewUiModel.Item(
+                            SelectedMediaItem(imageUri),
+                            faces = faces.size,
+                            nsfw = score.nsfwScore > 0.5
+                        )
+                    }
+
+                }
+                viewModel.setPickedUris(previewModelList)
+
+                withContext(Dispatchers.Main) {
+                    if (inappropriateDetected) {
+                        context?.showToast("Some unsafe content has been detected!")
+                    }
+                }
+
+                /*
                 val countDownLatch = CountDownLatch(pickedUris.size)
                 val taskList: List<Task<List<Face>>> = pickedUris.mapIndexed { index, uri ->
                     val ft = faceDetector.process(InputImage.fromFilePath(requireContext(), uri))
                         .addOnCompleteListener { countDownLatch.countDown() }
                         .addOnFailureListener { countDownLatch.countDown() }
                     ft
-                }
+                }*/
 
                 val moduleInstallClient = ModuleInstall.getClient(requireActivity())
                 moduleInstallClient
@@ -411,21 +469,22 @@ class UploadStep2Fragment : Fragment() {
                         ifDebug { Timber.e(t) }
                     }
 
-                runBlocking(Dispatchers.IO) {
+                /*runBlocking(Dispatchers.IO) {
                     countDownLatch.await(1, TimeUnit.MINUTES)
                     val previewModelList = taskList.mapIndexed { index, task ->
                         val trackedIds = task.result.mapNotNull { it.trackingId }.distinct()
-                        result[pickedUris[index].toString()] = task.result.isNotEmpty()/* &&
-                        trackedIds.size == 1*/
+                        result[pickedUris[index].toString()] = task.result.isNotEmpty()*//* &&
+                        trackedIds.size == 1*//*
                         Timber.d("Detecting: id = $index faces $trackedIds")
                         UploadPreviewUiModel.Item(
                             SelectedMediaItem(pickedUris[index]),
-                            selected = task.result.isNotEmpty()
+                            faces = task.result.size,
+                            nsfw = false
                         )
                     }
                     viewModel.setPickedUris(previewModelList)
                     Timber.d("Detected Faces: $result")
-                }
+                }*/
                 isFaceDetectionRunning = false
                 viewModel.setFaceDetectionRunning(isFaceDetectionRunning)
             }.onFailure { t ->
@@ -584,10 +643,18 @@ class UploadPreviewAdapter(
 
         fun bind(data: UploadPreviewUiModel.Item, selected: Boolean, callback: Callback) =
             with(binding) {
-                Glide.with(view1)
-                    .load(data.selectedMediaItem.uri)
-                    .placeholder(R.color.white_grey)
-                    .into(view1)
+                if (data.nsfw) {
+                    Glide.with(view1)
+                        .load(data.selectedMediaItem.uri)
+                        .placeholder(R.color.white_grey)
+                        .transform(BlurTransformation(binding.root.context, 0.25F, 3F))
+                        .into(view1)
+                } else {
+                    Glide.with(view1)
+                        .load(data.selectedMediaItem.uri)
+                        .placeholder(R.color.white_grey)
+                        .into(view1)
+                }
                 view1.strokeColor = null
                 view1.strokeWidth = 0f
 
@@ -603,10 +670,10 @@ class UploadPreviewAdapter(
             selectionIndicator.isVisible = true
             if (selected) {
                 selectionIndicator.setImageResource(R.drawable.ic_thumbs_up)
-                view1.alpha = 1.0F
+                // view1.alpha = 1.0F
             } else {
                 selectionIndicator.setImageResource(R.drawable.ic_thumbs_down)
-                view1.alpha = 0.5F
+                // view1.alpha = 0.5F
             }
             /*if (selected) {
                 // profileImage.isVisible = false

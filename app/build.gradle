@@ -88,6 +88,10 @@ android {
         pickFirst "**/lib/**"
     }
 
+    aaptOptions {
+        noCompress "tflite"
+    }
+
     flavorDimensions "default"
     productFlavors {
         dev {
@@ -252,6 +256,9 @@ dependencies {
     /* Tab Indicator */
     /*implementation 'me.relex:circleindicator:2.1.6'*/
     implementation 'com.github.zhpanvip:viewpagerindicator:1.2.1'
+
+    // NSFW Detector
+    implementation("io.github.devzwy:nsfw:1.5.1")
 
     // Core library
     def  androidXTestVersion = '1.5.0'

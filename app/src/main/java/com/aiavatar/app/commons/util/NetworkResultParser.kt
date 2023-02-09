@@ -1,9 +1,6 @@
 package com.aiavatar.app.commons.util
 
-import com.aiavatar.app.commons.util.net.ApiException
-import com.aiavatar.app.commons.util.net.BadResponseException
-import com.aiavatar.app.commons.util.net.EmptyResponseException
-import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.commons.util.net.*
 import com.google.android.gms.common.api.Api
 import timber.log.Timber
 
@@ -32,7 +29,7 @@ interface NetworkResultParser {
                 Result.Error(cause)
             }
             is NetworkResult.UnAuthorized -> {
-                val cause = IllegalStateException("Something went wrong")
+                val cause = UnAuthorizedException("Session expired!")
                 Result.Error(ApiException(networkResult.message, cause))
             }
         }

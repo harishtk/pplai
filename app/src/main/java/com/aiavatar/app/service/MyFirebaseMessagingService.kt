@@ -17,6 +17,7 @@ import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.WakeLockUtil
 import com.aiavatar.app.core.di.GsonParser
+import com.aiavatar.app.core.domain.model.request.AvatarStatusRequest
 import com.aiavatar.app.core.domain.model.request.SendFcmTokenRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.core.domain.util.JsonParser
@@ -28,6 +29,8 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.annotations.SerializedName
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.greenrobot.eventbus.EventBus
 import org.json.JSONObject
 import timber.log.Timber
@@ -136,6 +139,14 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         ServiceUtil.getNotificationManager(this)
             .notify(AVATAR_STATUS_NOTIFICATION_ID, notification)
+
+        runBlocking(Dispatchers.IO) {
+            fcmData.modelData?.statusId?.let { statusId ->
+                AvatarStatusRequest(statusId).apply {
+                    appRepository.avatarStatusSync(this)
+                }
+            }
+        }
     }
 
     private fun handleNotification(json: JSONObject) {

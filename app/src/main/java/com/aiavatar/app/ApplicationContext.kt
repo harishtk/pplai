@@ -1,6 +1,7 @@
 package com.aiavatar.app
 
 import android.app.Application
+import android.content.Context
 import android.os.StrictMode
 import android.util.Log
 import androidx.core.os.bundleOf
@@ -15,6 +16,7 @@ import com.aiavatar.app.di.ApplicationDependencyProvider
 import com.aiavatar.app.service.websocket.AppWebSocket
 import com.aiavatar.app.service.websocket.WebSocketConnectionState
 import dagger.hilt.android.HiltAndroidApp
+import io.github.devzwy.nsfw.NSFWHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -48,6 +50,13 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
 
         Timber.plant(Timber.DebugTree())
         AndroidThreeTen.init(this)
+
+        ifDebug { NSFWHelper.openDebugLog() }
+        NSFWHelper.initHelper(
+            context = this,
+            isOpenGPU = false
+            // modelPath = "nsfw.tflite",
+        )
 
         AppStartup.getInstance()
             .addBlocking("app-dependencies", this::initApplicationDependencies)

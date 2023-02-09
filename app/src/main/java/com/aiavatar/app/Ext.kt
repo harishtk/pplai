@@ -49,7 +49,11 @@ fun Boolean.toggle(): Boolean {
 }
 
 fun NavController.isOnBackStack(@IdRes id: Int): Boolean =
-    try { getBackStackEntry(id); true } catch (e: Throwable) { false }
+    try {
+        getBackStackEntry(id); true
+    } catch (e: Throwable) {
+        false
+    }
 
 
 fun EditText.allowOnlyAlphaNumericCharacters() {
@@ -118,9 +122,12 @@ object Log {
 }
 
 inline fun <R> safeCall(block: () -> R): R? {
-    return try { block() }
-    catch (e: Exception) {
-        if (BuildConfig.DEBUG) { Timber.e(e) }
+    return try {
+        block()
+    } catch (e: Exception) {
+        if (BuildConfig.DEBUG) {
+            Timber.e(e)
+        }
         null
     }
 }
@@ -143,5 +150,9 @@ internal inline fun <T> T?.ifNullAlso(block: () -> Unit): T? = this.also {
     if (it == null) {
         block()
     }
+}
+
+fun Boolean.assertBoolean(onTrue: () -> Unit, onFalse: () -> Unit) {
+    if (this) onTrue() else onFalse()
 }
 

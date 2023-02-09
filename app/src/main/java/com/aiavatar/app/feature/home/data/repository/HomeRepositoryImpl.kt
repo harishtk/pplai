@@ -35,7 +35,7 @@ import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
 val DEFAULT_CACHE_TIME_TO_LIVE: Long = TimeUnit.DAYS.toMillis(1)
-val SHORT_CACHE_TIME_TO_LIVE: Long = TimeUnit.HOURS.toMillis(1)
+val SHORT_CACHE_TIME_TO_LIVE: Long = TimeUnit.HOURS.toMillis(3)
 
 class HomeRepositoryImpl @Inject constructor(
     private val remoteDataSource: HomeRemoteDataSource,
@@ -305,24 +305,34 @@ class HomeRepositoryImpl @Inject constructor(
         emit(Result.Loading)
         val cache = observeAllCategoryInternal().first()
 
-        if (forceRefresh || cache.isEmpty()) {
+        var shouldFetch = false
+        if (cache.isNotEmpty()) {
             val cacheKeys = cacheLocalDataSource.getCacheKeys(
                 CacheKeyProvider.getAvatarCategoriesCacheKey()
             )
             if (cacheKeys != null) {
-                if (cacheKeys.expired() || forceRefresh) {
-                    localDataSource.deleteAllCategories()
-                } else {
+                if (!forceRefresh && cacheKeys.expired()) {
                     Timber.d("Cache keys: ${cacheKeys.key} expired")
+                    localDataSource.deleteAllCategories()
+                    shouldFetch = true
+                } else if (forceRefresh && !cacheKeys.expired()) {
+                    Timber.d("Cache keys: ${cacheKeys.key} valid")
                     val delta = (System.currentTimeMillis() - cacheKeys.createdAt).coerceAtLeast(0)
                     val lastUpdate = TimeUnit.MILLISECONDS.toMinutes(delta)
                     val message = "Can't refresh. Last updated $lastUpdate minutes ago"
                     val t = BuenoCacheException(lastUpdate, message)
                     // Timber.d(t, "Cache keys: $message")
-                    throw t
+                    emit(Result.Error(t))
                 }
+            } else {
+                shouldFetch = true
             }
+        } else {
+            shouldFetch = true
+        }
 
+        Timber.d("Cache keys: should fetch = $shouldFetch")
+        if (shouldFetch) {
             /* Get data from remote */
             when (val result = refreshCategoriesInternal()) {
                 is Result.Error -> {
@@ -349,24 +359,33 @@ class HomeRepositoryImpl @Inject constructor(
         emit(Result.Loading)
         val cache = observeAllCatalogListInternal(request.category).first()
 
-        if (forceRefresh || cache.isEmpty()) {
+        var shouldFetch = false
+        if (cache.isNotEmpty()) {
             val cacheKeys = cacheLocalDataSource.getCacheKeys(
                 CacheKeyProvider.getCatalogListCacheKey(request.category)
             )
             if (cacheKeys != null) {
-                if (cacheKeys.expired() || forceRefresh) {
+                if (!forceRefresh && cacheKeys.expired()) {
                     Timber.d("Cache keys: ${cacheKeys.key} expired")
                     localDataSource.deleteAllCatalogList(request.category)
-                } else {
+                    shouldFetch = true
+                } else if (forceRefresh && !cacheKeys.expired()) {
                     val delta = (System.currentTimeMillis() - cacheKeys.createdAt).coerceAtLeast(0)
                     val lastUpdate = TimeUnit.MILLISECONDS.toMinutes(delta)
                     val message = "Can't refresh. Last updated $lastUpdate minutes ago"
                     val t = BuenoCacheException(lastUpdate, message)
                     // Timber.d(t, "Cache keys: $message")
-                    throw t
+                    emit(Result.Error(t))
                 }
+            } else {
+                shouldFetch = true
             }
+        } else {
+            shouldFetch = true
+        }
 
+        Timber.d("Cache keys: should fetch = $shouldFetch")
+        if (shouldFetch) {
             /* Get data from remote */
             when (val result = refreshCatalogListInternal(request)) {
                 is Result.Error -> {

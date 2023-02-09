@@ -28,7 +28,7 @@ data class CacheKeysEntity(
 
     internal fun expired(): Boolean {
         val delta = (System.currentTimeMillis() - createdAt).coerceAtLeast(0)
-        Timber.d("Cache keys: current = ${System.currentTimeMillis()} expires = $expiresAt (${Date(expiresAt)}) delta = $delta created = $createdAt")
+        Timber.d("Cache keys: current = ${System.currentTimeMillis()} expires = $expiresAt (${Date(expiresAt)}) delta = ${TimeUnit.MILLISECONDS.toSeconds(delta)}s created = $createdAt ${Date(createdAt)}")
         return System.currentTimeMillis() >= expiresAt
     }
 }

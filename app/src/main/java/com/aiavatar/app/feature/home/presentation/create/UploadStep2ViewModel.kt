@@ -89,7 +89,7 @@ class UploadStep2ViewModel @Inject constructor(
                 entity.localUriString.toUri()
             }?.let { pickedUris ->
                 setPickedUris(
-                    pickedUris.map { UploadPreviewUiModel.Item(SelectedMediaItem(it), selected = true) }
+                    pickedUris.map { UploadPreviewUiModel.Item(SelectedMediaItem(it), faces = 1, nsfw = false) }
                 )
             }
     }
@@ -255,8 +255,14 @@ interface UploadStep2UiEvent {
 }
 
 interface UploadPreviewUiModel {
-    data class Item(val selectedMediaItem: SelectedMediaItem, val selected: Boolean) :
-        UploadPreviewUiModel
+    data class Item(
+        val selectedMediaItem: SelectedMediaItem,
+        val faces: Int = 0,
+        val nsfw: Boolean = false,
+    ) : UploadPreviewUiModel {
+        val selected: Boolean
+            get() = faces > 0 && !nsfw
+    }
     data class Placeholder(val position: Int) : UploadPreviewUiModel
 }
 

@@ -28,6 +28,7 @@ import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.StorageUtil
+import com.aiavatar.app.commons.util.net.ConnectivityManagerLiveData
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.UnAuthorizedEvent
 import com.aiavatar.app.viewmodels.SharedViewModel
@@ -251,6 +252,14 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                     if (forceUpdate) {
                         checkForUpdates()
                     }
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                sharedViewModel.connectionStateSharedFlow.collectLatest { connected ->
+                    Timber.d("Network: connected = $connected")
                 }
             }
         }
