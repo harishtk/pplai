@@ -19,6 +19,9 @@ fun <T> List<T>.mapButReplace(targetItem: T, newItem: T) = map {
     }
 }
 
+fun <T, U> List<T>.intersect(uList: List<U>, filterPredicate: (T, U) -> Boolean) =
+    filter { m -> uList.any { filterPredicate(m, it) } }
+
 fun String?.nullAsEmpty(): String {
     return this ?: ""
 }

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
+import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.core.fragment.BaseBottomSheetDialogFragment
 import com.aiavatar.app.databinding.DialogLegalsBinding
@@ -71,6 +72,13 @@ class LegalsBottomSheet(
                 privacyPolicyString to privacyClicked
             )
         )
+
+        tvTermsReadMore.setOnClickListener {
+            it.touchInteractFeedback()
+        }
+        tvPrivacyReadMore.setOnClickListener {
+            it.touchInteractFeedback()
+        }
 
         btnNext.setOnClickListener {
             if (cbAcceptTerms.isChecked && cbAcceptPrivacy.isChecked) {

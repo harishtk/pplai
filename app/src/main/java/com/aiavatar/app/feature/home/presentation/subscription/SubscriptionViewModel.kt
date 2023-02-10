@@ -60,7 +60,7 @@ class SubscriptionViewModel @Inject constructor(
     private var subscriptionPurchaseJob: Job? = null
 
     init {
-        val subscriptionPlanModelFlow = uiState.map { it.subscriptionPlans }
+        val subscriptionPlanModelFlow = uiState.map { it.subscriptionPlansUiModels }
             .distinctUntilChanged()
         combine(
             selectedToggleFlow,
@@ -78,7 +78,7 @@ class SubscriptionViewModel @Inject constructor(
         }.onEach { subscriptionModelList ->
             _uiState.update { state ->
                 state.copy(
-                    subscriptionPlans = subscriptionModelList
+                    subscriptionPlansUiModels = subscriptionModelList
                 )
             }
             Timber.d("Plans: $subscriptionModelList")
@@ -125,12 +125,41 @@ class SubscriptionViewModel @Inject constructor(
         }
     }
 
+    fun setSubscriptionUiModelList(
+        newUiModelList: List<SubscriptionUiModel>
+    ) {
+        _uiState.update { state ->
+            state.copy(
+                subscriptionPlansUiModels = newUiModelList
+            )
+        }
+    }
+
+    fun setError(
+        e: Exception?,
+        uiErrorText: UiText?
+    ) {
+        _uiState.update { state ->
+            state.copy(
+                exception = e,
+                uiErrorText = uiErrorText
+            )
+        }
+    }
+
+    fun setLoading(
+        loadType: LoadType,
+        loadState: LoadState
+    ) {
+        setLoadingInternal(loadType, loadState)
+    }
+
     private fun startPurchaseFlowInternal() {
         // TODO: start Google Play purchase
         viewModelScope.launch {
             val modelId = uiState.value.modelId
             if (modelId != null) {
-                val selectedPlan = uiState.value.subscriptionPlans
+                val selectedPlan = uiState.value.subscriptionPlansUiModels
                     .filterIsInstance<SubscriptionUiModel.Plan>()
                     .find { it.selected }?.subscriptionPlan
 
@@ -165,6 +194,7 @@ class SubscriptionViewModel @Inject constructor(
     }
 
     private fun refreshInternal() {
+        _uiState.update { state -> state.copy(subscriptionPlansCache = null) }
         getSubscriptionPlans()
     }
 
@@ -178,7 +208,7 @@ class SubscriptionViewModel @Inject constructor(
         subscriptionPlanFetchJob = viewModelScope.launch {
             homeRepository.getSubscriptionPlans().collectLatest { result ->
                 when (result) {
-                    is Result.Loading -> setLoading(LoadType.REFRESH, LoadState.Loading())
+                    is Result.Loading -> setLoadingInternal(LoadType.REFRESH, LoadState.Loading())
                     is Result.Error -> {
                         when (result.exception) {
                             is ApiException -> {
@@ -198,11 +228,16 @@ class SubscriptionViewModel @Inject constructor(
                                 }
                             }
                         }
-                        setLoading(LoadType.REFRESH, LoadState.Error(result.exception))
+                        setLoadingInternal(LoadType.REFRESH, LoadState.Error(result.exception))
                     }
                     is Result.Success -> {
-                        setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
-                        val plans: List<SubscriptionUiModel> = result.data.mapIndexed { index, subscriptionPlan ->
+                        setLoadingInternal(LoadType.REFRESH, LoadState.NotLoading.InComplete)
+                        _uiState.update { state ->
+                            state.copy(
+                                subscriptionPlansCache = result.data
+                            )
+                        }
+                        /*val plans: List<SubscriptionUiModel> = result.data.mapIndexed { index, subscriptionPlan ->
                             if (subscriptionPlan.bestSeller) {
                                 selectedPlanId = subscriptionPlan.id
                             }
@@ -210,9 +245,9 @@ class SubscriptionViewModel @Inject constructor(
                         }
                         _uiState.update { state ->
                             state.copy(
-                                subscriptionPlans = plans
+                                subscriptionPlansUiModels = plans
                             )
-                        }
+                        }*/
                     }
                 }
             }
@@ -231,7 +266,7 @@ class SubscriptionViewModel @Inject constructor(
         subscriptionPurchaseJob = viewModelScope.launch {
             homeRepository.purchasePlan(request).collectLatest { result ->
                 when (result) {
-                    is Result.Loading -> setLoading(LoadType.ACTION, LoadState.Loading())
+                    is Result.Loading -> setLoadingInternal(LoadType.ACTION, LoadState.Loading())
                     is Result.Error -> {
                         when (result.exception) {
                             is ApiException -> {
@@ -251,10 +286,10 @@ class SubscriptionViewModel @Inject constructor(
                                 }
                             }
                         }
-                        setLoading(LoadType.ACTION, LoadState.Error(result.exception))
+                        setLoadingInternal(LoadType.ACTION, LoadState.Error(result.exception))
                     }
                     is Result.Success -> {
-                        setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
+                        setLoadingInternal(LoadType.ACTION, LoadState.NotLoading.Complete)
                         ApplicationDependencies.getPersistentStore().apply {
                             setProcessingModel(true)
                         }
@@ -273,7 +308,7 @@ class SubscriptionViewModel @Inject constructor(
         }
     }
 
-    private fun setLoading(
+    private fun setLoadingInternal(
         loadType: LoadType,
         loadState: LoadState
     ) {
@@ -294,7 +329,8 @@ class SubscriptionViewModel @Inject constructor(
 data class SubscriptionState(
     val loadState: LoadStates = LoadStates.IDLE,
     val modelId: String? = null,
-    val subscriptionPlans: List<SubscriptionUiModel> = emptyList(),
+    val subscriptionPlansUiModels: List<SubscriptionUiModel> = emptyList(),
+    val subscriptionPlansCache: List<SubscriptionPlan>? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )

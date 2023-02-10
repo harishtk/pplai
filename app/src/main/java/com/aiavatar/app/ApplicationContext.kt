@@ -11,6 +11,9 @@ import com.jakewharton.threetenabp.AndroidThreeTen
 import com.aiavatar.app.commons.util.AppForegroundObserver
 import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.Util
+import com.aiavatar.app.commons.util.logging.timber.NoopTree
+import com.aiavatar.app.core.Env
+import com.aiavatar.app.core.envForConfig
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.di.ApplicationDependencyProvider
 import com.aiavatar.app.service.websocket.AppWebSocket
@@ -48,7 +51,6 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
                 .build()
         )
 
-        Timber.plant(Timber.DebugTree())
         AndroidThreeTen.init(this)
 
         ifDebug { NSFWHelper.openDebugLog() }
@@ -59,6 +61,7 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
         )
 
         AppStartup.getInstance()
+            .addBlocking("init-logging", this::initializeLogging)
             .addBlocking("app-dependencies", this::initApplicationDependencies)
             .addBlocking("lifecycle-observer") {
                 ApplicationDependencies.getAppForegroundObserver().addListener(this)
@@ -77,6 +80,18 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
             ApplicationDependencyProvider(this)
         )
     }
+
+    private fun initializeLogging() {
+        when (envForConfig(BuildConfig.ENV)) {
+            Env.DEV -> {
+                Timber.plant(Timber.DebugTree())
+            }
+            else -> {
+                Timber.plant(NoopTree())
+            }
+        }
+    }
+
 
     private fun initializeSocketIfRequired() {
         ApplicationDependencies.getAppWebSocket().apply {
