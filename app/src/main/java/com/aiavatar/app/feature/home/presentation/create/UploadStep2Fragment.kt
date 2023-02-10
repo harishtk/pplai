@@ -273,7 +273,7 @@ class UploadStep2Fragment : Fragment() {
             val picked = uiState.value.previewModelList
                 .filterIsInstance<UploadPreviewUiModel.Item>()
                 .count { it.selected }
-            if (picked > 0) {
+            if (picked >= MIN_IMAGES) {
                 viewModel.startUpload(requireContext())
             } else {
                 launchPhotoPicker()
@@ -287,9 +287,9 @@ class UploadStep2Fragment : Fragment() {
                 Timber.d("Remaining photos: $remainingPhotos")
                 val btnTextString = when {
                     remainingPhotos > MIN_IMAGES -> "Select 10 - 20 selfies"
-                    else -> "Continue"
+                    else -> "Generate"
                 }
-                btnNext.setText(btnTextString)
+                btnNext.idleText = btnTextString
                 if (remainingPhotos != MAX_IMAGES) {
                     previewListTitle.isVisible = true
                     previewListTitle.text = "${MAX_IMAGES - remainingPhotos} photos selected"

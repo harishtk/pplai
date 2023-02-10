@@ -2,35 +2,148 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:padding="@dimen/inset_very_small"
+    android:layout_height="match_parent"
+    android:padding="@dimen/inset_large_medium"
     tools:layout_gravity="bottom"
     xmlns:tools="http://schemas.android.com/tools">
 
     <Space android:id="@+id/spacer1"
         android:layout_width="match_parent"
         android:layout_height="@dimen/spacer_size_very_small"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="  parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView android:id="@+id/iv_terms_and_service"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/ic_terms_and_conditions"
+        app:layout_constraintTop_toBottomOf="@id/spacer1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/top_barrier"
+        app:layout_constraintWidth_percent="0.16"
+        app:layout_constraintDimensionRatio="H,1:1" />
+
     <TextView android:id="@+id/title"
-        style="@style/TextStyle.VerySmall.Bold"
+        style="@style/TextStyle.Medium.Bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
+        android:text="Terms of Service"
         android:textColor="?attr/colorOnSurfaceInverse"
-        android:padding="@dimen/inset_large_medium"
-        app:layout_constraintStart_toStartOf="parent"
+        android:paddingHorizontal="@dimen/inset_small"
+        app:layout_constraintStart_toEndOf="@id/iv_terms_and_service"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/spacer1" />
+        app:layout_constraintTop_toBottomOf="@id/spacer1"
+        app:layout_constraintBottom_toTopOf="@id/tv_last_updated"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintVertical_chainStyle="packed"/>
+
+    <TextView android:id="@+id/tv_last_updated"
+        style="@style/TextStyle.VerySmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="@dimen/inset_small"
+        android:text="Updated 17/02/2023"
+        android:textColor="@color/text_secondary_alt"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintStart_toEndOf="@id/iv_terms_and_service"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/top_barrier"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintVertical_chainStyle="packed"/>
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/top_barrier"
         app:barrierDirection="bottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="title" />
+        app:constraint_referenced_ids="title,iv_terms_and_service,tv_last_updated" />
+
+    <LinearLayout android:orientation="vertical"
+        android:id="@+id/terms_description_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/inset_small"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_barrier"
+        app:layout_constraintBottom_toTopOf="@id/privacy_description_container"
+        app:layout_constraintVertical_chainStyle="spread">
+
+        <TextView android:id="@+id/terms_description_title"
+            style="@style/TextStyle.VerySmall.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Terms &amp; Conditions"
+            android:textColor="@color/signal_inverse_primary"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="4"
+            android:ellipsize="end"
+            android:text="@string/test_terms_paragraph"
+            android:textColor="@color/signal_inverse_primary"
+            tools:text="@tools:sample/lorem/random" />
+
+        <TextView android:id="@+id/tv_terms_read_more"
+            style="@style/TextStyle.VerySmall.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Read more.."
+            android:textColor="@color/yellow_200" />
+
+    </LinearLayout>
+
+    <LinearLayout android:orientation="vertical"
+        android:id="@+id/privacy_description_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/inset_small"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/terms_description_container"
+        app:layout_constraintBottom_toTopOf="@id/separator"
+        app:layout_constraintVertical_chainStyle="spread">
+
+        <TextView android:id="@+id/privacy_description_title"
+            style="@style/TextStyle.VerySmall.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Privacy Policy"
+            android:textColor="@color/signal_inverse_primary"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="4"
+            android:ellipsize="end"
+            android:text="@string/test_terms_paragraph"
+            android:textColor="@color/signal_inverse_primary"
+            tools:text="@tools:sample/lorem/random"/>
+
+        <TextView android:id="@+id/tv_privacy_read_more"
+            style="@style/TextStyle.VerySmall.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Read more.."
+            android:textColor="@color/yellow_200" />
+
+    </LinearLayout>
+
+    <Space android:id="@+id/separator"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/privacy_description_container"
+        app:layout_constraintBottom_toTopOf="@id/tv_legal_description"
+        app:layout_constraintVertical_chainStyle="spread_inside"
+        app:layout_constraintHeight_default="spread"
+        app:layout_constrainedHeight="false"/>
 
     <TextView android:id="@+id/tv_legal_description"
         style="@style/TextStyle.VerySmall"
@@ -41,21 +154,21 @@
         android:textColor="@color/signal_inverse_primary"
         app:layout_constrainedWidth="true"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/top_barrier"
+        app:layout_constraintTop_toBottomOf="@id/separator"
         app:layout_constraintBottom_toTopOf="@id/legal_container"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <LinearLayout android:id="@+id/legal_container"
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="@dimen/spacer_size_small"
         app:layout_constraintTop_toBottomOf="@id/tv_legal_description"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/bottom_barrier">
 
         <LinearLayout android:orientation="horizontal"
+            android:id="@+id/terms_action_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -77,6 +190,7 @@
         </LinearLayout>
 
         <LinearLayout android:orientation="horizontal"
+            android:id="@+id/privacy_action_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 

@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.PopupWindow
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -31,6 +32,8 @@ import timber.log.Timber
 
 class LandingPageFragment : Fragment() {
 
+    private var pendingPopupWindow: PopupWindow? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -45,8 +48,11 @@ class LandingPageFragment : Fragment() {
 
         binding.bindState()
         setupObservers()
+        handleBackPressed()
 
-        showGuidedSteps(view)
+        if (!ApplicationDependencies.getPersistentStore().isLandingUserGuideShown) {
+            showGuidedSteps(view)
+        }
     }
 
     private fun FragmentLandingPageBinding.bindState() {
@@ -123,6 +129,23 @@ class LandingPageFragment : Fragment() {
         }
     }
 
+    private fun handleBackPressed() {
+        activity?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Do nothing. The page automatically closes
+                    if (pendingPopupWindow?.isShowing == true) {
+                        pendingPopupWindow?.dismiss()
+                        pendingPopupWindow = null
+                    } else {
+                        findNavController().apply {
+                            navigateUp()
+                        }
+                    }
+                }
+            })
+    }
+
     private fun showGuidedSteps(anchorView: View?) {
         showProfileIconGuidedStep(anchorView)
     }
@@ -136,11 +159,13 @@ class LandingPageFragment : Fragment() {
         )
 
         val popupWindow = PopupWindow(popupView1, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            .also { pendingPopupWindow = it }
         popupWindow.showAtLocation(anchorView, Gravity.CENTER, 0, 0)
 
         popupView1.setOnTouchListener { _, _ ->
             popupWindow.dismiss()
             showExploreMoreGuidedStep(anchorView)
+            pendingPopupWindow = null
             true
         }
     }
@@ -154,11 +179,13 @@ class LandingPageFragment : Fragment() {
         )
 
         val popupWindow = PopupWindow(popupView1, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            .also { pendingPopupWindow = it }
         popupWindow.showAtLocation(anchorView, Gravity.CENTER, 0, 0)
 
         popupView1.setOnTouchListener { _, _ ->
             popupWindow.dismiss()
-            // TODO: update prefs
+            pendingPopupWindow = null
+            ApplicationDependencies.getPersistentStore().setLandingUserGuideShown()
             true
         }
     }

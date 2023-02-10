@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.PopupWindow
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -54,6 +56,8 @@ class CatalogFragment : Fragment() {
     private val binding: FragmentCatalogBinding
         get() = _binding!!
 
+    private var pendingPopupWindow: PopupWindow? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -73,6 +77,8 @@ class CatalogFragment : Fragment() {
         )
 
         setupObservers()
+        // handleBackPressed()
+
         if (!ApplicationDependencies.getPersistentStore().isHomeUserGuideShown) {
             showGuidedSteps(view.rootView)
         }
@@ -338,6 +344,21 @@ class CatalogFragment : Fragment() {
         }
     }
 
+    private fun handleBackPressed() {
+        activity?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // Do nothing. The page automatically closes
+                    if (pendingPopupWindow?.isShowing == true) {
+                        pendingPopupWindow?.dismiss()
+                        pendingPopupWindow = null
+                    } else {
+
+                    }
+                }
+            })
+    }
+
     private fun showGuidedSteps(anchorView: View?) {
         showProfileIconGuidedStep(anchorView)
     }
@@ -351,16 +372,20 @@ class CatalogFragment : Fragment() {
         )
 
         val popupWindow = PopupWindow(popupView1, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            .also { pendingPopupWindow = it }
         popupWindow.showAtLocation(anchorView, Gravity.CENTER, 0, 0)
 
         popupView1.findViewById<View>(R.id.guide_profile_container).setOnClickListener {
             popupWindow.dismiss()
             gotoProfile()
+            ApplicationDependencies.getPersistentStore().setHomeUserGuideShown()
+            pendingPopupWindow = null
         }
 
         popupView1.setOnTouchListener { _, _ ->
             popupWindow.dismiss()
             ApplicationDependencies.getPersistentStore().setHomeUserGuideShown()
+            pendingPopupWindow = null
             true
         }
     }

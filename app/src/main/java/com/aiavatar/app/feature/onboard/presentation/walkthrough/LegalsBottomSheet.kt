@@ -1,25 +1,29 @@
 package com.aiavatar.app.feature.onboard.presentation.walkthrough
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import com.aiavatar.app.R
-import com.aiavatar.app.core.fragment.BaseBottomSheetDialog
+import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
+import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.core.fragment.BaseBottomSheetDialogFragment
 import com.aiavatar.app.databinding.DialogLegalsBinding
 import com.aiavatar.app.makeLinks
 import com.aiavatar.app.showToast
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+
 
 class LegalsBottomSheet(
-    val cont: () -> Unit
+    val cont: () -> Unit,
 ) : BaseBottomSheetDialogFragment(R.color.bottom_sheet_background) {
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.dialog_legals, container, false)
     }
@@ -27,6 +31,17 @@ class LegalsBottomSheet(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = DialogLegalsBinding.bind(view)
+
+        view.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                val dialog = dialog as BottomSheetDialog?
+                val bottomSheet = dialog!!.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                    ?: return
+                val behavior: BottomSheetBehavior<*> = BottomSheetBehavior.from<View>(bottomSheet)
+                behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                behavior.peekHeight = 0
+            }
+        })
 
         binding.bindState()
     }
@@ -61,7 +76,14 @@ class LegalsBottomSheet(
             if (cbAcceptTerms.isChecked && cbAcceptPrivacy.isChecked) {
                 cont.invoke()
             } else {
-                context?.showToast("Please read and accept.")
+                if (!cbAcceptTerms.isChecked) {
+                    termsActionContainer.shakeNow()
+                }
+                if (!cbAcceptPrivacy.isChecked) {
+                    privacyActionContainer.shakeNow()
+                }
+                HapticUtil.createErrorAlt(requireContext())
+                // context?.showToast("Please read and accept.")
             }
         }
     }

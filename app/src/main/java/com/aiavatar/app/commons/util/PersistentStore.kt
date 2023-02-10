@@ -65,6 +65,9 @@ class PersistentStore private constructor(
     val isHomeUserGuideShown: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.HOME_USER_GUIDE_SHOWN, false)
 
+    val isLandingUserGuideShown: Boolean
+        get() = getAppPreferences().getBoolean(UserPreferenceKeys.LANDING_USER_GUIDE_SHOWN, false)
+
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
         return this
@@ -145,6 +148,10 @@ class PersistentStore private constructor(
         return this
     }
 
+    fun setLandingUserGuideShown(shown: Boolean = true): PersistentStore {
+        getAppPreferences().edit { putBoolean(UserPreferenceKeys.LANDING_USER_GUIDE_SHOWN, shown) }
+        return this
+    }
 
     fun logout() {
         setUserId(null)
@@ -159,6 +166,7 @@ class PersistentStore private constructor(
 
         ifDebug {
             setHomeUserGuideShown(false)
+            setLandingUserGuideShown(false)
             setOnboardPresented(false)
             setLegalAgreed(false)
         }
