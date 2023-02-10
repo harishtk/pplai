@@ -8,8 +8,8 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/view1"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="@dimen/default_adapter_circle_image_size"
+        android:layout_height="@dimen/default_adapter_circle_image_size"
         app:srcCompat="@color/red"
         app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
         app:layout_constraintStart_toStartOf="parent"

@@ -1,23 +1,27 @@
 package com.aiavatar.app.feature.home.presentation.landing
 
-import android.content.Intent
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.SpannedString
 import android.text.style.UnderlineSpan
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
+import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.ActionOnlyNavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
+import androidx.vectordrawable.graphics.drawable.AnimationUtilsCompat
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.util.AnimationUtil
 import com.aiavatar.app.databinding.FragmentLandingPageBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
@@ -41,6 +45,8 @@ class LandingPageFragment : Fragment() {
 
         binding.bindState()
         setupObservers()
+
+        showGuidedSteps(view)
     }
 
     private fun FragmentLandingPageBinding.bindState() {
@@ -114,6 +120,46 @@ class LandingPageFragment : Fragment() {
                 .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
                 .build()
             navigate(R.id.catalog_list, null, navOptions)
+        }
+    }
+
+    private fun showGuidedSteps(anchorView: View?) {
+        showProfileIconGuidedStep(anchorView)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun showProfileIconGuidedStep(anchorView: View?) {
+        val layoutInflater = LayoutInflater.from(context)
+        val popupView1 = layoutInflater.inflate(R.layout.profile_icon_guide, null)
+        popupView1.findViewById<View>(R.id.profile_icon_pulsator).startAnimation(
+            AnimationUtils.loadAnimation(requireContext(), R.anim.pulsator)
+        )
+
+        val popupWindow = PopupWindow(popupView1, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        popupWindow.showAtLocation(anchorView, Gravity.CENTER, 0, 0)
+
+        popupView1.setOnTouchListener { _, _ ->
+            popupWindow.dismiss()
+            showExploreMoreGuidedStep(anchorView)
+            true
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun showExploreMoreGuidedStep(anchorView: View?) {
+        val layoutInflater = LayoutInflater.from(context)
+        val popupView1 = layoutInflater.inflate(R.layout.explore_more_guide, null)
+        popupView1.findViewById<View>(R.id.guide_explore_more_title).startAnimation(
+            AnimationUtils.loadAnimation(requireContext(), R.anim.pulsator_x)
+        )
+
+        val popupWindow = PopupWindow(popupView1, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        popupWindow.showAtLocation(anchorView, Gravity.CENTER, 0, 0)
+
+        popupView1.setOnTouchListener { _, _ ->
+            popupWindow.dismiss()
+            // TODO: update prefs
+            true
         }
     }
 }

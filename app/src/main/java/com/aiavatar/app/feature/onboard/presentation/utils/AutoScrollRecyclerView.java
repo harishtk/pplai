@@ -12,10 +12,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import java.sql.Time;
+
+import timber.log.Timber;
+
 public class AutoScrollRecyclerView extends RecyclerView {
 
     private static final String TAG = AutoScrollRecyclerView.class.getSimpleName();
-    private static final int SPEED = 50;
+    private static final int SPEED = 100;
     /**
      * Sliding estimator
      */
@@ -377,7 +381,6 @@ public class AutoScrollRecyclerView extends RecyclerView {
         private int getActualPosition(int position) {
             int itemCount = mAdapter.getItemCount();
             return position >= itemCount ? position % itemCount : position;
-
         }
 
         private boolean getLoopEnable() {

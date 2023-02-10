@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false">
+
+    <scale android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:toXScale="1.2"
+        android:toYScale="1.2"
+        android:pivotX="50%p"
+        android:pivotY="50%p"
+        android:fillAfter="false"
+        android:fillBefore="false"
+        android:repeatMode="reverse"
+        android:repeatCount="infinite"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:duration="1000" />
+
+    <scale android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:toXScale="1.4"
+        android:toYScale="1.4"
+        android:pivotX="50%p"
+        android:pivotY="50%p"
+        android:fillAfter="false"
+        android:fillBefore="false"
+        android:repeatMode="restart"
+        android:repeatCount="infinite"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:duration="800"
+        android:startOffset="200" />
+
+    <alpha android:fromAlpha="1.0"
+        android:toAlpha="0.1"
+        android:repeatMode="restart"
+        android:repeatCount="infinite"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:duration="800"
+        android:startOffset="200"/>
+
+    <alpha android:fromAlpha="1.0"
+        android:toAlpha="0.4"
+        android:repeatMode="restart"
+        android:repeatCount="infinite"
+        android:interpolator="@android:interpolator/fast_out_slow_in"
+        android:duration="1000" />
+
+</set>

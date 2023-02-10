@@ -1,9 +1,13 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
+import android.widget.PopupWindow
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -26,6 +30,7 @@ import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.LegalsBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
@@ -68,6 +73,9 @@ class CatalogFragment : Fragment() {
         )
 
         setupObservers()
+        if (!ApplicationDependencies.getPersistentStore().isHomeUserGuideShown) {
+            showGuidedSteps(view.rootView)
+        }
     }
 
     private fun FragmentCatalogBinding.bindState(
@@ -327,6 +335,33 @@ class CatalogFragment : Fragment() {
             }
             // args.putParcelable(Constant.EXTRA_DATA, category)
             navigate(R.id.action_catalog_list_to_more_catalog, args)
+        }
+    }
+
+    private fun showGuidedSteps(anchorView: View?) {
+        showProfileIconGuidedStep(anchorView)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun showProfileIconGuidedStep(anchorView: View?) = anchorView?.post {
+        val layoutInflater = LayoutInflater.from(context)
+        val popupView1 = layoutInflater.inflate(R.layout.profile_icon_guide, null)
+        popupView1.findViewById<View>(R.id.profile_icon_pulsator).startAnimation(
+            AnimationUtils.loadAnimation(requireContext(), R.anim.pulsator)
+        )
+
+        val popupWindow = PopupWindow(popupView1, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        popupWindow.showAtLocation(anchorView, Gravity.CENTER, 0, 0)
+
+        popupView1.findViewById<View>(R.id.guide_profile_container).setOnClickListener {
+            popupWindow.dismiss()
+            gotoProfile()
+        }
+
+        popupView1.setOnTouchListener { _, _ ->
+            popupWindow.dismiss()
+            ApplicationDependencies.getPersistentStore().setHomeUserGuideShown()
+            true
         }
     }
 

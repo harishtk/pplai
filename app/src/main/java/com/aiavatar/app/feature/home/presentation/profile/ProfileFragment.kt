@@ -1,10 +1,14 @@
 package com.aiavatar.app.feature.home.presentation.profile
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
+import android.widget.PopupWindow
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -29,6 +33,7 @@ import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -187,6 +192,26 @@ class ProfileFragment : Fragment() {
                 adapter.submitList(modelList)
 
                 // emptyListContainer.isVisible = modelList.isEmpty()
+            }
+        }
+
+        val emptyModelListFlow = modelListUiModelsFlow
+            .map { it.isEmpty() }
+            .distinctUntilChanged()
+
+        val loadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChangedBy { it.refresh }
+            .map { it.refresh !is LoadState.Loading }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            combine(
+                emptyModelListFlow,
+                loadStateFlow,
+                Boolean::and
+            ).collectLatest { isEmpty ->
+                if (isEmpty) {
+                    // showProfileCreateModelGuidedStep(view)
+                }
             }
         }
     }
@@ -399,6 +424,28 @@ class ProfileFragment : Fragment() {
             viewModel.refresh(true)
         }
     }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun showProfileCreateModelGuidedStep(anchorView: View?) = anchorView?.post {
+        val layoutInflater = LayoutInflater.from(context)
+        val popupView1 = layoutInflater.inflate(R.layout.profile_create_model_guide, null)
+        popupView1.findViewById<View>(R.id.profile_icon_pulsator).startAnimation(
+            AnimationUtils.loadAnimation(requireContext(), R.anim.pulsator)
+        )
+        popupView1.findViewById<FloatingActionButton>(R.id.guide_fab_create).setOnClickListener {
+            gotoUploadSteps()
+        }
+
+        val popupWindow = PopupWindow(popupView1, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        popupWindow.showAtLocation(anchorView, Gravity.CENTER, 0, 0)
+
+        popupView1.setOnTouchListener { _, _ ->
+            popupWindow.dismiss()
+            // ApplicationDependencies.getPersistentStore().setHomeUserGuideShown()
+            true
+        }
+    }
+
 
     companion object {
         private const val UI_RENDER_WAIT_TIME = 50L

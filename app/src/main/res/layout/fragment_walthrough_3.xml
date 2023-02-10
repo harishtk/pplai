@@ -79,7 +79,7 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="visible"
+            android:visibility="gone"
             app:lottie_autoPlay="true"
             app:lottie_loop="true"
             app:lottie_rawRes="@raw/walthrough_3"
@@ -87,7 +87,8 @@
 
         <LinearLayout android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
 
             <com.aiavatar.app.feature.onboard.presentation.utils.AutoScrollRecyclerView
                 android:id="@+id/list1"
@@ -96,7 +97,7 @@
                 android:layout_height="wrap_content"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 android:layout_weight="1"
-                android:visibility="gone"
+                android:visibility="visible"
                 tools:listitem="@layout/item_circle_image" />
 
             <com.aiavatar.app.feature.onboard.presentation.utils.AutoScrollRecyclerView
@@ -106,7 +107,7 @@
                 android:layout_height="wrap_content"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 android:layout_weight="1"
-                android:visibility="gone"
+                android:visibility="visible"
                 tools:listitem="@layout/item_circle_image" />
 
             <com.aiavatar.app.feature.onboard.presentation.utils.AutoScrollRecyclerView
@@ -116,7 +117,7 @@
                 android:layout_height="wrap_content"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 android:layout_weight="1"
-                android:visibility="gone"
+                android:visibility="visible"
                 tools:listitem="@layout/item_circle_image" />
 
         </LinearLayout>

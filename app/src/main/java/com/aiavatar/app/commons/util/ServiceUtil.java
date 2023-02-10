@@ -18,6 +18,7 @@ import android.os.Vibrator;
 import android.os.storage.StorageManager;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
+import android.view.LayoutInflater;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.InputMethodManager;
@@ -107,5 +108,9 @@ public class ServiceUtil {
 
   public static KeyguardManager getKeyguardManager(@NotNull Context context) {
     return ContextCompat.getSystemService(context, KeyguardManager.class);
+  }
+
+  public static LayoutInflater getLayoutInflaterService(@NotNull Context context) {
+    return (LayoutInflater) ContextCompat.getSystemService(context, LayoutInflater.class);
   }
 }

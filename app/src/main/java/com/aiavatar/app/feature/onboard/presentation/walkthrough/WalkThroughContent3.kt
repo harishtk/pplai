@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentWalthrough3Binding
 import com.aiavatar.app.databinding.ItemCircleImageBinding
+import com.aiavatar.app.getDisplaySize
+import timber.log.Timber
 
 class WalkThroughContent3 : Fragment() {
 
@@ -39,14 +41,55 @@ class WalkThroughContent3 : Fragment() {
             R.color.tag_fourth_color,
             R.color.tag_fifth_color,
         )
+        val row1 = listOf<Int>(
+            R.drawable.walkthrough_3_r1c1,
+            R.drawable.walkthrough_3_r1c2,
+            R.drawable.walkthrough_3_r1c3,
+            R.drawable.walkthrough_3_r1c4,
+            R.drawable.walkthrough_3_r1c5,
+            R.drawable.walkthrough_3_r1c6,
+            R.drawable.walkthrough_3_r1c7,
+            R.drawable.walkthrough_3_r1c8,
+        )
 
-        /*val adapter = CircleImageAdapter()
-        list1.adapter = adapter
-        list2.adapter = adapter
-        list3.adapter = adapter
+        val row2 = listOf<Int>(
+            R.drawable.walkthrough_3_r2c1,
+            R.drawable.walkthrough_3_r2c2,
+            R.drawable.walkthrough_3_r2c3,
+            R.drawable.walkthrough_3_r2c4,
+            R.drawable.walkthrough_3_r2c5,
+            R.drawable.walkthrough_3_r2c6,
+            R.drawable.walkthrough_3_r2c7,
+            R.drawable.walkthrough_3_r2c8,
+        )
 
-        adapter.submitList(colors)
+        val row3 = listOf<Int>(
+            R.drawable.walkthrough_3_r3c1,
+            R.drawable.walkthrough_3_r3c2,
+            R.drawable.walkthrough_3_r3c3,
+            R.drawable.walkthrough_3_r3c4,
+            R.drawable.walkthrough_3_r3c5,
+            R.drawable.walkthrough_3_r3c6,
+            R.drawable.walkthrough_3_r3c7,
+            R.drawable.walkthrough_3_r3c8,
+        )
 
+        val adapter1 = CircleImageAdapter().apply {
+            submitList(row1)
+        }
+        val adapter2 = CircleImageAdapter().apply {
+            submitList(row2)
+        }
+        val adapter3 = CircleImageAdapter().apply {
+            submitList(row3)
+        }
+
+        list1.adapter = adapter1
+        list2.adapter = adapter2
+        list3.adapter = adapter3
+
+        val halfScreen = activity?.getDisplaySize()?.width?.div(2) ?: 0
+        Timber.d("Half screen: $halfScreen")
         list1.apply {
             isLoopEnabled = true
             setCanTouch(false)
@@ -56,14 +99,14 @@ class WalkThroughContent3 : Fragment() {
             isLoopEnabled = true
             reverse = true
             setCanTouch(false)
-            openAutoScroll(30, true)
+            openAutoScroll(100, true)
         }
 
         list3.apply {
             isLoopEnabled = true
             setCanTouch(false)
             startAutoScroll()
-        }*/
+        }
     }
 }
 
@@ -83,9 +126,9 @@ class CircleImageAdapter : ListAdapter<Int, ViewHolder>(DIFF_CALLBACK) {
         private val binding: ItemCircleImageBinding
     ) : ViewHolder(binding.root) {
 
-        fun bind(@ColorRes color: Int) = with(binding) {
+        fun bind(@DrawableRes drawableRes: Int) = with(binding) {
             val context = binding.root.context
-            view1.setImageDrawable(ColorDrawable(context.getColor(color)))
+            view1.setImageResource(drawableRes)
         }
 
         companion object {

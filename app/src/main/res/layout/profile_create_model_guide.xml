@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/transparent_black_60"
+        android:translationZ="1dp">
+
+        <TextView android:id="@+id/guide_title_create_model"
+            style="@style/Base.TextAppearance.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/inset_large_medium"
+            android:textColor="@color/core_white"
+            android:textSize="@dimen/text_size_giant"
+            android:text="Tap here to create your first model"
+            app:layout_constraintEnd_toStartOf="@id/guide_create_model_container"
+            app:layout_constraintBottom_toTopOf="@id/guide_create_model_container"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constrainedWidth="true" />
+
+        <ImageView android:id="@+id/guide_pointer_create_model"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="@dimen/touchable_inset_small"
+            android:src="@drawable/curved_pointing_arrow"
+            app:tint="@color/core_white"
+            android:rotation="70"
+            android:scaleY="-1"
+            app:layout_constraintBottom_toTopOf="@id/guide_create_model_container"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/guide_title_create_model"
+            app:layout_constraintHorizontal_bias="0.2"/>
+
+        <FrameLayout android:id="@+id/guide_create_model_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="1.0"
+            app:layout_constraintHorizontal_bias="1.0">
+
+            <View android:id="@+id/profile_icon_pulsator"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_transparent_rounded_60"
+                android:backgroundTint="@color/yellow_200"/>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/guide_fab_create"
+                app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/default_fab_inset"
+                android:contentDescription="@string/content_description_create"
+                android:src="@drawable/baseline_add_24"
+                android:layout_gravity="center"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintVertical_bias="1.0"
+                app:layout_constraintHorizontal_bias="1.0"/>
+
+        </FrameLayout>
+
+        <TextView style="@style/TextStyle.VerySmall"
+            android:layout_height="wrap_content"
+            android:text="Tap anywhere to continue"
+            android:textColor="@color/white"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintVertical_bias="0.2"
+            android:layout_width="wrap_content" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

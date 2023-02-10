@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/coordinator_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:background="@android:color/transparent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ImageView android:id="@+id/backdrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/app_background_1"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/content_description_backdrop"
+        android:translationZ="0dp"/>
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
         app:elevation="0dp"
         android:elevation="0dp">
 
@@ -34,6 +41,7 @@
                     android:rotation="180"
                     style="@style/Widget.App.ImageButton"
                     app:tint="?attr/colorOnPrimary"
+                    android:visibility="gone"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/left_barrier"
@@ -43,6 +51,7 @@
                     android:id="@+id/left_barrier"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    app:barrierAllowsGoneWidgets="false"
                     app:barrierMargin="8dp"
                     app:barrierDirection="right"
                     app:constraint_referenced_ids="toolbar_navigation_icon" />
@@ -51,6 +60,7 @@
                     android:layout_width="@dimen/xlarge_icon_size"
                     android:layout_height="@dimen/xlarge_icon_size"
                     android:src="@mipmap/ic_splash_1"
+                    android:visibility="gone"
                     app:layout_constraintStart_toEndOf="@id/left_barrier"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/right_barrier"
@@ -65,7 +75,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/inset_very_small"
                     android:includeFontPadding="false"
-                    tools:text="Avatar"
+                    android:text="@string/app_name"
                     app:layout_constraintStart_toEndOf="@id/brand"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/right_barrier"
@@ -101,14 +111,6 @@
                         android:visibility="gone"
                         tools:visibility="gone"/>
 
-                    <ImageView android:id="@+id/iv_theme"
-                        style="@style/Widget.App.ImageButton"
-                        android:layout_width="@dimen/large_icon_size"
-                        android:layout_height="@dimen/large_icon_size"
-                        android:layout_margin="@dimen/touchable_padding_large"
-                        android:src="@drawable/baseline_auto_mode_24"
-                        android:layout_gravity="center"/>
-
                     <FrameLayout android:id="@+id/profile_container"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -119,21 +121,24 @@
                             android:layout_height="@dimen/xxlarge_icon_size"
                             android:layout_margin="@dimen/touchable_padding_large"
                             android:src="@drawable/ic_account_outline"
+                            app:tint="?attr/colorOnPrimary"
                             android:background="@drawable/ripple_rounded"
                             android:contentDescription="@string/content_description_profile"
                             android:visibility="visible"
                             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
-                            tools:visibility="visible"/>
+                            tools:visibility="visible" />
 
                         <TextView android:id="@+id/profile_name"
                             style="@style/Base.TextAppearance.Bold"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:text="A"
                             android:textSize="@dimen/text_size_large"
                             android:textColor="@color/black"
                             android:gravity="center"
                             android:includeFontPadding="false"
-                            android:layout_gravity="center" />
+                            android:layout_gravity="center"
+                            android:visibility="gone" />
 
                     </FrameLayout>
 
@@ -142,96 +147,84 @@
         </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipe_refresh_layout"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+        android:background="@color/transparent_black_60"
+        android:translationZ="1dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <TextView android:id="@+id/guide_title_profile"
+            style="@style/Base.TextAppearance.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/default_spacer_size"
+            android:textColor="@color/core_white"
+            android:text="Start exploring now!"
+            android:textSize="@dimen/text_size_giant"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/guide_explore_more_container"/>
+
+        <FrameLayout android:id="@+id/guide_explore_more_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0"
+            app:layout_constrainedWidth="true"
+            app:layout_constrainedHeight="true">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/catalog_list"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
-                app:spanCount="2"
-                android:layoutAnimation="@anim/layout_animation_from_bottom"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
-                tools:layoutAnimation="@null"
-                tools:listitem="@layout/item_big_avatar" />
-
-            <ProgressBar android:id="@+id/progress_bar"
+            <TextView android:id="@+id/guide_explore_more_title"
+                style="@style/TextStyle.VerySmall.Bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
-
-            <androidx.constraintlayout.widget.Barrier
-                android:id="@+id/bottom_barrier"
-                app:barrierDirection="top"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:constraint_referenced_ids="btn_create_master_piece"/>
-
-            <com.google.android.material.button.MaterialButton
-                style="@style/Widget.App.Button"
-                android:id="@+id/btn_create_master_piece"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:insetBottom="@dimen/inset_large"
-                android:insetLeft="@dimen/inset_large"
-                android:insetTop="@dimen/inset_large"
-                android:insetRight="@dimen/inset_large"
-                android:text="@string/create_your_masterpiece"
-                app:icon="@drawable/baseline_add_24"
-                app:iconGravity="textStart"
-                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:visibility="visible"/>
-
-            <TextView
-                android:id="@+id/emptyList"
-                style="@style/TextStyle.Medium"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="No Catalogs available right now."
-                android:textColor="?attr/colorSurface"
+                android:padding="@dimen/touchable_padding_large"
+                android:text="Explore More"
+                android:textColor="@color/core_white"
                 android:layout_gravity="center"
-                android:visibility="gone"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintVertical_chainStyle="packed"
-                tools:visibility="visible"/>
-
-            <Button
-                android:id="@+id/retry_button"
-                style="@style/Widget.App.Button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/retry"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.8"
-                tools:visibility="visible" />
+                app:layout_constraintEnd_toEndOf="parent" />
+        </FrameLayout>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView style="@style/TextStyle.VerySmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tap anywhere to continue"
+            android:textColor="@color/white"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintVertical_bias="0.2"/>
 
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:translationZ="0dp"
+        android:visibility="gone">
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/bottom_barrier"
+            app:barrierDirection="top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="tv_explore_more" />
+
+        <TextView android:id="@+id/tv_explore_more"
+            style="@style/TextStyle.VerySmall.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/touchable_padding_large"
+            android:text="Explore More"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

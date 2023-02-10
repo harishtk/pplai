@@ -7,6 +7,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.aiavatar.app.ifDebug
 import com.aiavatar.app.nullAsEmpty
 import com.google.firebase.crashlytics.internal.model.CrashlyticsReport.Session.User
 import java.util.*
@@ -60,6 +61,9 @@ class PersistentStore private constructor(
 
     val isLegalAgreed: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.LEGAL_AGREEMENT, false)
+
+    val isHomeUserGuideShown: Boolean
+        get() = getAppPreferences().getBoolean(UserPreferenceKeys.HOME_USER_GUIDE_SHOWN, false)
 
     fun setDeviceToken(newToken: String): PersistentStore {
         getAppPreferences().edit().putString(UserPreferenceKeys.DEVICE_TOKEN, newToken).apply()
@@ -131,8 +135,13 @@ class PersistentStore private constructor(
         return this
     }
 
-    fun setLegalAgreed(): PersistentStore {
-        getAppPreferences().edit { putBoolean(UserPreferenceKeys.LEGAL_AGREEMENT, true) }
+    fun setLegalAgreed(agreed: Boolean = true): PersistentStore {
+        getAppPreferences().edit { putBoolean(UserPreferenceKeys.LEGAL_AGREEMENT, agreed) }
+        return this
+    }
+
+    fun setHomeUserGuideShown(shown: Boolean = true): PersistentStore {
+        getAppPreferences().edit { putBoolean(UserPreferenceKeys.HOME_USER_GUIDE_SHOWN, shown) }
         return this
     }
 
@@ -146,8 +155,13 @@ class PersistentStore private constructor(
         setSocialImage(null)
         setProcessingModel(false)
         setUploadStepSkipped(false)
-        // setOnboardPresented(false)
         setUserPreferredTheme(DEFAULT_USER_PREFERRED_THEME)
+
+        ifDebug {
+            setHomeUserGuideShown(false)
+            setOnboardPresented(false)
+            setLegalAgreed(false)
+        }
     }
 
     fun resetPreferences() {
@@ -233,6 +247,8 @@ class PersistentStore private constructor(
             const val DEEPLINK_KEY_TYPE = "deep_link_key_type"
             const val DEEPLINK_KEY_VALUE = "deep_link_key_value"
             const val LEGAL_AGREEMENT = "legal_agreement"
+            const val LANDING_USER_GUIDE_SHOWN = "landing_user_guide_shown"
+            const val HOME_USER_GUIDE_SHOWN = "home_user_guide_shown"
         }
 
         object AppEssentialKeys {
