@@ -118,27 +118,31 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun handleAvatarNotification(fcmData: FcmPushMessageDto.Data) {
-        val channelId = getString(R.string.general_notifications_channel_id)
+        if (ApplicationDependencies.getPersistentStore().notifyMe) {
+            val channelId = getString(R.string.general_notifications_channel_id)
 
-        val args = Bundle().apply {
-            putString(Constant.ARG_STATUS_ID, fcmData.modelData?.statusId)
+            val args = Bundle().apply {
+                putString(Constant.ARG_STATUS_ID, fcmData.modelData?.statusId)
+            }
+
+            val pendingIntent = NavDeepLinkBuilder(this)
+                .setGraph(R.navigation.home_nav_graph)
+                .setDestination(R.id.avatar_status)
+                .setArguments(args)
+                .setComponentName(MainActivity::class.java)
+                .createPendingIntent()
+
+            val notification = defaultNotificationBuilder(channelId)
+                .setContentTitle("AI Avatar")
+                .setContentText(fcmData.content)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            ServiceUtil.getNotificationManager(this)
+                .notify(AVATAR_STATUS_NOTIFICATION_ID, notification)
+        } else {
+            Timber.tag(TAG).d("User isn't enabled 'notify me'. Ignoring notification")
         }
-
-        val pendingIntent = NavDeepLinkBuilder(this)
-            .setGraph(R.navigation.home_nav_graph)
-            .setDestination(R.id.avatar_status)
-            .setArguments(args)
-            .setComponentName(MainActivity::class.java)
-            .createPendingIntent()
-
-        val notification = defaultNotificationBuilder(channelId)
-            .setContentTitle("AI Avatar")
-            .setContentText(fcmData.content)
-            .setContentIntent(pendingIntent)
-            .build()
-
-        ServiceUtil.getNotificationManager(this)
-            .notify(AVATAR_STATUS_NOTIFICATION_ID, notification)
 
         runBlocking(Dispatchers.IO) {
             fcmData.modelData?.statusId?.let { statusId ->
