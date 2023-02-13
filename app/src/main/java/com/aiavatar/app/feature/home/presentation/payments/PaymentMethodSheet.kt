@@ -14,6 +14,10 @@ import com.aiavatar.app.core.fragment.BaseBottomSheetDialogFragment
 import com.aiavatar.app.databinding.DialogPaymentMethodBinding
 import com.aiavatar.app.databinding.ItemPaymentMethodBinding
 import com.aiavatar.app.setOnSingleClickListener
+import com.google.android.material.shape.CornerFamily
+import com.google.android.material.shape.CornerSize
+import com.google.android.material.shape.EdgeTreatment
+import com.google.android.material.shape.ShapeAppearanceModel
 
 class PaymentMethodSheet(
     private val paymentMethods: List<PaymentMethodData>,

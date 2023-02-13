@@ -31,6 +31,7 @@ import com.aiavatar.app.feature.home.presentation.util.EmptyInAppProductsExcepti
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.pay.billing.InAppPurchaseActivity
+import com.aiavatar.app.pay.billing.ResultCode
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.android.billingclient.api.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -50,6 +51,20 @@ class SubscriptionFragment : Fragment() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         // TODO: Handle in-app purchase results
+        Timber.d("Payment: resultCode = ${result.resultCode} extras = ${result.data?.extras?.toString()}")
+        Timber.d("Payment: debug message = ${result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_DEBUG_MESSAGE)}")
+        when (result.resultCode) {
+            ResultCode.SUCCESS -> {
+                result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_MESSAGE)?.let { message ->
+                    context?.showToast(message)
+                }
+            }
+            else -> {
+                result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_ERROR_MESSAGE)?.let { message ->
+                    context?.showToast(message)
+                }
+            }
+        }
     }
 
     private val purchaseUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
@@ -259,61 +274,71 @@ class SubscriptionFragment : Fragment() {
         uiState: StateFlow<SubscriptionState>,
         uiAction: (SubscriptionUiAction) -> Unit
     ) {
+        val billingConnectionStateFlow = uiState.map { it.billingConnectionState }
+            .distinctUntilChanged()
         val internalSubscriptionPlansFlow = uiState.map { it.subscriptionPlansCache }
             .distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
-            internalSubscriptionPlansFlow.collectLatest { internalPlans ->
-                if (internalPlans != null) {
-                    viewModel.setLoading(LoadType.REFRESH, LoadState.Loading())
+            combine(
+                billingConnectionStateFlow,
+                internalSubscriptionPlansFlow,
+                ::Pair
+            ).collectLatest { (connected, internalPlans) ->
+                if (connected) {
+                    if (internalPlans != null) {
+                        viewModel.setLoading(LoadType.REFRESH, LoadState.Loading())
 
-                    val productList = ArrayList<QueryProductDetailsParams.Product>()
-                    internalPlans.forEach { plan ->
-                        QueryProductDetailsParams.Product.newBuilder()
-                            .setProductId(plan.productId)
-                            .setProductType(BillingClient.ProductType.INAPP)
-                            .build().also {
-                                productList.add(it)
-                            }
-                    }
-
-                    val params = QueryProductDetailsParams.newBuilder()
-                        .setProductList(productList)
-                        .build()
-
-                    val productDetailsResult = withContext(Dispatchers.IO) {
-                        billingClient.queryProductDetails(params)
-                    }
-
-                    val productDetailsList = productDetailsResult.productDetailsList
-                    if (productDetailsList != null && productDetailsList.isNotEmpty()) {
-                        val uiModelList = internalPlans.intersect(productDetailsList) { l, r ->
-                            l.productId == r.productId
-                        }.map { plan ->
-                            if (plan.bestSeller) {
-                                uiAction(SubscriptionUiAction.ToggleSelectedPlan(plan.id))
-                            }
-                            SubscriptionUiModel.Plan(plan)
-                        }
-                        viewModel.setSubscriptionUiModelList(uiModelList)
-                        viewModel.setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
-                    } else {
-                        val responseCode = productDetailsResult.billingResult.responseCode
-                        val t = EmptyInAppProductsException("Cannot get plans from Billing Client code = $responseCode")
-                        Timber.v(t)
-                        viewModel.setLoading(LoadType.REFRESH, LoadState.Error(t))
-                        viewModel.setError(t, UiText.DynamicString("Failed to fetch plans. Code: 1000"))
-                        ifEnvDev {
-                            viewModel.setSubscriptionUiModelList(
-                                internalPlans.map { plan ->
-                                    if (plan.bestSeller) {
-                                        uiAction(SubscriptionUiAction.ToggleSelectedPlan(plan.id))
-                                    }
-                                    SubscriptionUiModel.Plan(plan)
+                        val productList = ArrayList<QueryProductDetailsParams.Product>()
+                        internalPlans.forEach { plan ->
+                            QueryProductDetailsParams.Product.newBuilder()
+                                .setProductId(plan.productId)
+                                .setProductType(BillingClient.ProductType.INAPP)
+                                .build().also {
+                                    productList.add(it)
                                 }
-                            )
+                        }
+
+                        val params = QueryProductDetailsParams.newBuilder()
+                            .setProductList(productList)
+                            .build()
+
+                        val productDetailsResult = withContext(Dispatchers.IO) {
+                            billingClient.queryProductDetails(params)
+                        }
+
+                        val productDetailsList = productDetailsResult.productDetailsList
+                        if (productDetailsList != null && productDetailsList.isNotEmpty()) {
+                            val uiModelList = internalPlans.intersect(productDetailsList) { l, r ->
+                                l.productId == r.productId
+                            }.map { plan ->
+                                if (plan.bestSeller) {
+                                    uiAction(SubscriptionUiAction.ToggleSelectedPlan(plan.id))
+                                }
+                                SubscriptionUiModel.Plan(plan)
+                            }
+                            viewModel.setSubscriptionUiModelList(uiModelList)
                             viewModel.setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
+                        } else {
+                            val responseCode = productDetailsResult.billingResult.responseCode
+                            val t = EmptyInAppProductsException("Cannot get plans from Billing Client code = $responseCode")
+                            Timber.v(t)
+                            viewModel.setLoading(LoadType.REFRESH, LoadState.Error(t))
+                            viewModel.setError(t, UiText.DynamicString("Failed to fetch plans. Code: 1000"))
+                            ifEnvDev {
+                                viewModel.setSubscriptionUiModelList(
+                                    internalPlans.map { plan ->
+                                        if (plan.bestSeller) {
+                                            uiAction(SubscriptionUiAction.ToggleSelectedPlan(plan.id))
+                                        }
+                                        SubscriptionUiModel.Plan(plan)
+                                    }
+                                )
+                                viewModel.setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
+                            }
                         }
                     }
+                } else {
+                    Timber.d("Billing client is not ready.")
                 }
             }
         }
@@ -365,15 +390,18 @@ class SubscriptionFragment : Fragment() {
     ) {
         val paymentMethodModes = arrayListOf(
             PaymentMethodData(
-                PaymentMethod.IN_APP, "Google Play", "Complete your purchase with Google Play."
+                paymentMethod = PaymentMethod.IN_APP,
+                title = "Google Play",
+                description = "Complete your purchase with Google Play.",
+                brandLogo = R.drawable.ic_brand_play_store
             )
         )
         ifEnvDev {
             paymentMethodModes.add(
                 PaymentMethodData(
-                    PaymentMethod.OTHER,
-                    "Test",
-                    "Bypass the payment."
+                    paymentMethod = PaymentMethod.OTHER,
+                    title = "Test",
+                    description = "Bypass the payment."
                 )
             )
         }
@@ -386,6 +414,7 @@ class SubscriptionFragment : Fragment() {
                     // TODO: launch in-app purchase flow
                     viewModel.getSelectedPlan()?.let { selectedPlan ->
                         Intent(requireActivity(), InAppPurchaseActivity::class.java).apply {
+                            putExtra(InAppPurchaseActivity.EXTRA_PRODUCT_SKU, selectedPlan.productId)
                             inAppPurchaseResultLauncher.launch(this)
                         }
                     }.ifNull {
@@ -407,6 +436,7 @@ class SubscriptionFragment : Fragment() {
            billingClient.startConnection(object : BillingClientStateListener {
                override fun onBillingSetupFinished(p0: BillingResult) {
                    isBillingClientConnected = true
+                   viewModel.setBillingConnectionState(isBillingClientConnected)
                    val msg = "Billing client setup finished"
                    Timber.v(msg)
                    Timber.d("code = ${p0.responseCode} ${p0.debugMessage} ")
@@ -414,6 +444,7 @@ class SubscriptionFragment : Fragment() {
 
                override fun onBillingServiceDisconnected() {
                    isBillingClientConnected = false
+                   viewModel.setBillingConnectionState(isBillingClientConnected)
                    val msg = "Billing client disconnected"
                    val t = IllegalStateException(msg)
                    Timber.w(t)

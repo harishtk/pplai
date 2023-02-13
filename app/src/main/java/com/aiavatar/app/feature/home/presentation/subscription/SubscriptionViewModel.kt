@@ -135,6 +135,10 @@ class SubscriptionViewModel @Inject constructor(
         }
     }
 
+    fun setBillingConnectionState(connected: Boolean) {
+        _uiState.update { state -> state.copy(billingConnectionState = connected) }
+    }
+
     fun setError(
         e: Exception?,
         uiErrorText: UiText?
@@ -337,6 +341,7 @@ data class SubscriptionState(
     val modelId: String? = null,
     val subscriptionPlansUiModels: List<SubscriptionUiModel> = emptyList(),
     val subscriptionPlansCache: List<SubscriptionPlan>? = null,
+    val billingConnectionState: Boolean = false,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )

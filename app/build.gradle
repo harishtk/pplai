@@ -12,7 +12,7 @@ plugins {
 ext {
     versionMajor = 0 // Major
     versionMinor = 0 // Minor
-    versionPatch = 1 // Patches, updates
+    versionPatch = 2 // Patches, updates
     versionClassifier = null
     versionRevision = "-revision-1"
     isSnapshot = false

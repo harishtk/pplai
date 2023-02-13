@@ -18,7 +18,9 @@
             android:layout_height="wrap_content">
 
             <include android:id="@+id/toolbar_included"
-                layout="@layout/transparent_app_toolbar" />
+                layout="@layout/transparent_app_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
         </com.google.android.material.appbar.MaterialToolbar>
     </com.google.android.material.appbar.AppBarLayout>
 

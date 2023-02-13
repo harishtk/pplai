@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.Flow
 interface ModelAvatarDao {
 
     @Query("SELECT * FROM ${ModelAvatarTable.name} " +
-            "WHERE ${ModelAvatarTable.Columns.MODEL_ID} = :modelId")
+            "WHERE ${ModelAvatarTable.Columns.MODEL_ID} = :modelId " +
+            "ORDER BY ${ModelAvatarTable.Columns.ID} DESC")
     fun getModelAvatars(modelId: String): Flow<List<ModelAvatarEntity>>
 
     @Query("UPDATE ${ModelAvatarTable.name} SET ${ModelAvatarTable.Columns.PROGRESS} = :progress " +

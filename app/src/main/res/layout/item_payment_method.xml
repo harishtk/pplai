@@ -21,8 +21,7 @@
             android:id="@+id/iv_brand"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="@dimen/inset_very_small"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
+            android:padding="@dimen/inset_large_medium"
             android:src="@color/signal_inverse_transparent_15" />
 
         <TextView android:id="@+id/tv_brand_single_letter"
@@ -33,7 +32,8 @@
             android:textColor="@color/signal_inverse_primary"
             android:textSize="@dimen/text_size_giant"
             android:includeFontPadding="false"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            tools:visibility="visible"/>
 
     </FrameLayout>
 
