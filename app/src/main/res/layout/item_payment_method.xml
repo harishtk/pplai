@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/inset_large_medium"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <FrameLayout android:id="@+id/brand_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintWidth_percent="0.15"
+        app:layout_constraintDimensionRatio="H,1:1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/left_barrier"
+        app:layout_constrainedHeight="true">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_brand"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="@dimen/inset_very_small"
+            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.Circle"
+            android:src="@color/signal_inverse_transparent_15" />
+
+        <TextView android:id="@+id/tv_brand_single_letter"
+            style="@style/Base.TextAppearance.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="G"
+            android:textColor="@color/signal_inverse_primary"
+            android:textSize="@dimen/text_size_giant"
+            android:includeFontPadding="false"
+            android:layout_gravity="center" />
+
+    </FrameLayout>
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/left_barrier"
+        app:barrierDirection="right"
+        app:barrierMargin="@dimen/inset_very_small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="brand_container" />
+
+    <TextView android:id="@+id/tv_item_title"
+        style="@style/TextStyle.VerySmall.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Google Play"
+        android:textColor="@color/signal_inverse_primary"
+        app:layout_constraintStart_toEndOf="@id/left_barrier"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tv_item_description_1"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintHorizontal_bias="0.0"/>
+
+    <TextView android:id="@+id/tv_item_description_1"
+        style="@style/TextStyle.Tiny"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Complete your purchase with Google Play"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:textColor="@color/text_secondary_alt"
+        app:layout_constraintTop_toBottomOf="@id/tv_item_title"
+        app:layout_constraintStart_toEndOf="@id/left_barrier"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintHorizontal_bias="0.0"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

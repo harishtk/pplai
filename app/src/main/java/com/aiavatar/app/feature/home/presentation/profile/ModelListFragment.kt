@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
- * TODO: show download progress
+ * TODO: -done- show download progress
  */
 @AndroidEntryPoint
 class ModelListFragment : Fragment() {
@@ -444,7 +444,6 @@ class ModelListFragment : Fragment() {
                 val args = Bundle().apply {
                     modelId?.let { putString(ModelDetailFragment.ARG_MODEL_ID, it) }
                     data.avatar._id?.let { putLong(ModelDetailFragment.ARG_JUMP_TO_ID, it) }
-                    putString(ModelDetailFragment.ARG_JUMP_TO_IMAGE_NAME, data.avatar.remoteFile)
                 }
                 navigate(R.id.model_detail, args, navOpts)
             }

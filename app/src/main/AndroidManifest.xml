@@ -83,6 +83,9 @@
 
             <nav-graph android:value="@navigation/home_nav_graph" />
         </activity>
+        <activity android:name=".pay.billing.InAppPurchaseActivity"
+            android:theme="@style/AppTheme.Payments"
+            android:exported="false" />
 
         <service
             android:name=".service.MyFirebaseMessagingService"

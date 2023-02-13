@@ -1,9 +1,12 @@
 package com.aiavatar.app.feature.home.presentation.subscription
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -21,9 +24,13 @@ import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.databinding.FragmentSubscriptionBinding
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
+import com.aiavatar.app.feature.home.presentation.payments.PaymentMethod
+import com.aiavatar.app.feature.home.presentation.payments.PaymentMethodData
+import com.aiavatar.app.feature.home.presentation.payments.PaymentMethodSheet
 import com.aiavatar.app.feature.home.presentation.util.EmptyInAppProductsException
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
+import com.aiavatar.app.pay.billing.InAppPurchaseActivity
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.android.billingclient.api.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -38,6 +45,12 @@ class SubscriptionFragment : Fragment() {
 
     private val userViewModel: UserViewModel by viewModels()
     private val viewModel: SubscriptionViewModel by viewModels()
+
+    private val inAppPurchaseResultLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        // TODO: Handle in-app purchase results
+    }
 
     private val purchaseUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
         // TODO("Not yet implemented")
@@ -228,7 +241,8 @@ class SubscriptionFragment : Fragment() {
         uiAction: (SubscriptionUiAction) -> Unit,
     ) {
         btnNext.setOnClickListener {
-            uiAction(SubscriptionUiAction.NextClick)
+            confirmPaymentMethod(uiAction)
+            // uiAction(SubscriptionUiAction.NextClick)
         }
 
         btnClose.setOnClickListener {
@@ -288,7 +302,7 @@ class SubscriptionFragment : Fragment() {
                         Timber.v(t)
                         viewModel.setLoading(LoadType.REFRESH, LoadState.Error(t))
                         viewModel.setError(t, UiText.DynamicString("Failed to fetch plans. Code: 1000"))
-                        ifDebug {
+                        ifEnvDev {
                             viewModel.setSubscriptionUiModelList(
                                 internalPlans.map { plan ->
                                     if (plan.bestSeller) {
@@ -343,6 +357,47 @@ class SubscriptionFragment : Fragment() {
                 putInt(Constant.EXTRA_POP_ID, R.id.subscription_plans)
             }
             navigate(R.id.login_fragment, args, navOpts)
+        }
+    }
+
+    private fun confirmPaymentMethod(
+        uiAction: (SubscriptionUiAction) -> Unit
+    ) {
+        val paymentMethodModes = arrayListOf(
+            PaymentMethodData(
+                PaymentMethod.IN_APP, "Google Play", "Complete your purchase with Google Play."
+            )
+        )
+        ifEnvDev {
+            paymentMethodModes.add(
+                PaymentMethodData(
+                    PaymentMethod.OTHER,
+                    "Test",
+                    "Bypass the payment."
+                )
+            )
+        }
+
+        PaymentMethodSheet(
+            paymentMethodModes
+        ) { data ->
+            when (data.paymentMethod) {
+                PaymentMethod.IN_APP -> {
+                    // TODO: launch in-app purchase flow
+                    viewModel.getSelectedPlan()?.let { selectedPlan ->
+                        Intent(requireActivity(), InAppPurchaseActivity::class.java).apply {
+                            inAppPurchaseResultLauncher.launch(this)
+                        }
+                    }.ifNull {
+                        context?.showToast("Cannot complete your purchase right now")
+                    }
+                }
+                PaymentMethod.OTHER -> {
+                    uiAction(SubscriptionUiAction.NextClick)
+                }
+            }
+        }.also {
+            it.show(childFragmentManager, PaymentMethodSheet.TAG)
         }
     }
 

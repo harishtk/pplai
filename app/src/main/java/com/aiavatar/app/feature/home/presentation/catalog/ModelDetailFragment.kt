@@ -51,6 +51,9 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.abs
 
+/**
+ * TODO: change jump to id logic
+ */
 @AndroidEntryPoint
 class ModelDetailFragment : Fragment() {
 
@@ -164,6 +167,9 @@ class ModelDetailFragment : Fragment() {
                     is ModelDetailUiEvent.ShareLink -> {
                         handleShareLink(event.link)
                     }
+                    is ModelDetailUiEvent.ScrollToPosition -> {
+                        catalogPreviewPager.setCurrentItem(event.position, false)
+                    }
                 }
             }
         }
@@ -247,6 +253,14 @@ class ModelDetailFragment : Fragment() {
             override fun onPageScrollStateChanged(state: Int) {
                 super.onPageScrollStateChanged(state)
                 // indicatorView.onPageScrollStateChanged(state)
+                if (state == ViewPager2.SCROLL_STATE_IDLE) {
+                    val isValidJumpToPos = (jumpToPosition != null && jumpToPosition!! >=0
+                            && jumpToPosition!! < catalogPresetAdapter.itemCount)
+                    Timber.d("Jump to position: onPageScrollStateChanged() jump to = $jumpToPosition valid = $isValidJumpToPos")
+                    if (isValidJumpToPos) {
+                        // TODO: jump to position
+                    }
+                }
             }
         })
 
@@ -294,10 +308,9 @@ class ModelDetailFragment : Fragment() {
                             .lastOrNull()?.let { _jumpToPosition ->
                                 jumpToPosition = _jumpToPosition
                                 Timber.d("Jump to position: $jumpToPosition")
-                                try {
-                                    catalogPreviewPager.setCurrentItem(_jumpToPosition, false)
-                                } catch (e: Exception) {
-                                    Timber.d(e)
+                                jumpToPosition?.let { position ->
+                                    viewModel.toggleSelection(position)
+                                    viewModel.jumpToPosition(position)
                                 }
                             }
                     }
@@ -670,9 +683,7 @@ class ModelDetailFragment : Fragment() {
         private const val SCROLL_ANIMATION_THRESHOLD = 40
 
         const val ARG_MODEL_ID = "com.aiavatar.app.args.MODEL_ID"
-        const val ARG_STATUS_ID = "com.aiavatar.app.args.STATUS_ID"
         const val ARG_JUMP_TO_ID = "com.aiavatar.app.args.JUMP_TO_ID"
-        const val ARG_JUMP_TO_IMAGE_NAME = "com.aiavatar.app.JUMP_TO_IMAGE_NAME"
     }
 }
 

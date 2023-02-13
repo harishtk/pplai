@@ -39,6 +39,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.mukesh.mukeshotpview.completeListener.MukeshOtpCompleteListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -316,6 +317,13 @@ class LoginFragment : Fragment() {
         }
 
         edOtp.addTextChangedListener(afterTextChanged = { updateTypedOtpValue(uiAction) })
+
+        edOtp.setOtpCompletionListener(object : MukeshOtpCompleteListener {
+            override fun otpCompleteListener(otp: String?) {
+                updateTypedOtpValue(uiAction)
+                uiAction(LoginUiAction.NextClick)
+            }
+        })
     }
 
     private fun FragmentLoginBinding.updateTypedEmailValue(

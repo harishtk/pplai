@@ -48,6 +48,9 @@ import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import kotlin.math.abs
 
+/**
+ * TODO: refactor jump to logic
+ */
 @AndroidEntryPoint
 class AvatarPreviewFragment : Fragment() {
 
@@ -525,7 +528,6 @@ class AvatarPreviewFragment : Fragment() {
         const val ARG_MODEL_ID = "com.aiavatar.app.args.MODEL_ID"
         const val ARG_STATUS_ID = "com.aiavatar.app.args.STATUS_ID"
         const val ARG_JUMP_TO_ID = "com.aiavatar.app.args.JUMP_TO_ID"
-        const val ARG_JUMP_TO_IMAGE_NAME = "com.aiavatar.app.JUMP_TO_IMAGE_NAME"
     }
 }
 

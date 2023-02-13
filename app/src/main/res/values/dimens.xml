@@ -67,6 +67,10 @@
     <dimen name="profile_image_size_xxlarge">110dp</dimen>
     <dimen name="profile_image_size_xxxlarge">130dp</dimen>
 
+    <dimen name="image_size_small">30dp</dimen>
+    <dimen name="image_size_large_medium">48dp</dimen>
+    <dimen name="image_size_large">54dp</dimen>
+
     <dimen name="default_stroke_width">1dp</dimen>
     <dimen name="icon_overlay_progress_size">54dp</dimen>
     <dimen name="otp_view_item_spacing">10dp</dimen>

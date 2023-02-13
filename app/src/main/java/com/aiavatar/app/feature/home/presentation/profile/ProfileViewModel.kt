@@ -12,6 +12,8 @@ import com.aiavatar.app.feature.home.domain.model.ModelListWithModel
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.delayed
+import com.aiavatar.app.ifEmpty
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -95,6 +97,14 @@ class ProfileViewModel @Inject constructor(
                                     )
                                 }
                             }
+                            else -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
+                                    )
+                                }
+                            }
                         }
                         setLoading(loadType, LoadState.Error(result.exception))
                     }
@@ -106,6 +116,13 @@ class ProfileViewModel @Inject constructor(
                                         ProfileListUiModel.Item(modelListWithModel = modelData)
                                     }
                                 )
+                            }
+                        }
+                        result.data.ifEmpty {
+                            viewModelScope.launch {
+                                delayed(500) {
+                                    sendEvent(ProfileUiEvent.ShowUserGuide(true))
+                                }
                             }
                         }
                         setLoading(loadType, LoadState.NotLoading.Complete)
@@ -142,6 +159,7 @@ interface ProfileUiAction {
 
 interface ProfileUiEvent {
     data class ShowToast(val message: UiText) : ProfileUiEvent
+    data class ShowUserGuide(val show: Boolean) : ProfileUiEvent
 }
 
 interface ProfileListUiModel {

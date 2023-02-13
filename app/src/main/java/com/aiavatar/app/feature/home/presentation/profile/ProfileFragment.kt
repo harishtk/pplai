@@ -47,6 +47,8 @@ class ProfileFragment : Fragment() {
     private val viewModel: ProfileViewModel by viewModels()
     private val userViewModel: UserViewModel by activityViewModels()
 
+    private var pendingPopupWindow: PopupWindow? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -85,6 +87,16 @@ class ProfileFragment : Fragment() {
                 when (event) {
                     is ProfileUiEvent.ShowToast -> {
                         context?.showToast(event.message.asString(requireContext()))
+                    }
+                    is ProfileUiEvent.ShowUserGuide -> {
+                        if (event.show) {
+                            if (pendingPopupWindow == null) {
+                                showProfileCreateModelGuidedStep(root)
+                            }
+                        } else {
+                            pendingPopupWindow?.dismiss()
+                            pendingPopupWindow = null
+                        }
                     }
                 }
             }
@@ -434,13 +446,17 @@ class ProfileFragment : Fragment() {
         )
         popupView1.findViewById<FloatingActionButton>(R.id.guide_fab_create).setOnClickListener {
             gotoUploadSteps()
+            pendingPopupWindow?.dismiss()
+            pendingPopupWindow = null
         }
 
         val popupWindow = PopupWindow(popupView1, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            .also { pendingPopupWindow = it }
         popupWindow.showAtLocation(anchorView, Gravity.CENTER, 0, 0)
 
         popupView1.setOnTouchListener { _, _ ->
             popupWindow.dismiss()
+            pendingPopupWindow = null
             // ApplicationDependencies.getPersistentStore().setHomeUserGuideShown()
             true
         }

@@ -283,3 +283,8 @@ fun getRandomHexCode(): String {
     val int = random.nextInt(0xffffff + 1)
     return String.format("#%06x", int)
 }
+
+suspend inline fun delayed(millis: Long, block: () -> Unit) {
+    delay(millis)
+    block()
+}

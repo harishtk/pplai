@@ -196,6 +196,10 @@ class ModelDetailViewModel @Inject constructor(
         selectedToggleFlow.update { selectedToggleFlow.value.not() }
     }
 
+    fun jumpToPosition(position: Int) {
+        sendEvent(ModelDetailUiEvent.ScrollToPosition(selectedAvatarPosition))
+    }
+
     private fun getModelDetail(modelId: String) {
         modelDetailFetchJob?.cancel(CancellationException("New request"))
         modelDetailFetchJob = viewModelScope.launch {
@@ -246,6 +250,14 @@ class ModelDetailViewModel @Inject constructor(
                                     state.copy(
                                         exception = result.exception,
                                         uiErrorText = UiText.noInternet
+                                    )
+                                }
+                            }
+                            else -> {
+                                _uiState.update { state ->
+                                    state.copy(
+                                        exception = result.exception,
+                                        uiErrorText = UiText.somethingWentWrong
                                     )
                                 }
                             }
@@ -496,6 +508,7 @@ interface ModelDetailUiEvent {
     data class StartDownload(val downloadSessionId: Long) : ModelDetailUiEvent
     data class DownloadComplete(val savedUri: Uri) : ModelDetailUiEvent
     data class ShareLink(val link: String) : ModelDetailUiEvent
+    data class ScrollToPosition(val position: Int) : ModelDetailUiEvent
 }
 
 interface SelectableAvatarUiModel {

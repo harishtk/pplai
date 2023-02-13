@@ -4,11 +4,12 @@ import android.content.Context
 import android.text.InputFilter
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
-import android.widget.TimePicker
 import android.widget.Toast
 import androidx.annotation.IdRes
 import androidx.navigation.NavController
 import com.aiavatar.app.commons.util.ServiceUtil
+import com.aiavatar.app.core.Env
+import com.aiavatar.app.core.envForConfig
 import timber.log.Timber
 
 fun <T> List<T>.mapButReplace(targetItem: T, newItem: T) = map {
@@ -21,6 +22,10 @@ fun <T> List<T>.mapButReplace(targetItem: T, newItem: T) = map {
 
 fun <T, U> List<T>.intersect(uList: List<U>, filterPredicate: (T, U) -> Boolean) =
     filter { m -> uList.any { filterPredicate(m, it) } }
+
+fun <T> Collection<T>.ifEmpty(block: () -> Unit) {
+    if (this.isEmpty()) { block() }
+}
 
 fun String?.nullAsEmpty(): String {
     return this ?: ""
@@ -137,6 +142,12 @@ inline fun <R> safeCall(block: () -> R): R? {
 
 inline fun ifDebug(block: () -> Unit) {
     if (BuildConfig.DEBUG) {
+        block()
+    }
+}
+
+inline fun ifEnvDev(block: () -> Unit) {
+    if (envForConfig(BuildConfig.ENV) == Env.DEV) {
         block()
     }
 }

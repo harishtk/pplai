@@ -154,6 +154,12 @@ class SubscriptionViewModel @Inject constructor(
         setLoadingInternal(loadType, loadState)
     }
 
+    fun getSelectedPlan(): SubscriptionPlan? {
+        return uiState.value.subscriptionPlansUiModels
+            .filterIsInstance<SubscriptionUiModel.Plan>()
+            .find { it.selected }?.subscriptionPlan
+    }
+
     private fun startPurchaseFlowInternal() {
         // TODO: start Google Play purchase
         viewModelScope.launch {
