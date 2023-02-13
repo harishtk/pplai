@@ -227,6 +227,10 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    private fun createNotificationChannels(context: Context) {
+        // TODO: create status notification id.
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createGeneralNotificationChannels(context: Context) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as

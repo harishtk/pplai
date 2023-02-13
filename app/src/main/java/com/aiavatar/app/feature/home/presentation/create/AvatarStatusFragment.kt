@@ -230,7 +230,7 @@ class AvatarStatusFragment : Fragment() {
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
 
-                            dismissModelStatusNotification()
+                            // dismissModelStatusNotification()
                         }
                         ModelStatus.TRAINING_FAILED -> {
                             // TODO: retry uploading fresh images
