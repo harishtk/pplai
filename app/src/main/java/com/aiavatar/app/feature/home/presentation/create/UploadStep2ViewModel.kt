@@ -19,6 +19,7 @@ import com.aiavatar.app.feature.home.domain.model.SelectedMediaItem
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.feature.home.presentation.create.UploadStep2Fragment.Companion.MAX_IMAGES
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -139,8 +140,8 @@ class UploadStep2ViewModel @Inject constructor(
                 val selectedCount = count { model ->
                     model is UploadPreviewUiModel.Item && model.selected
                 }
-                if (selectedCount < MAX_IMAGE_COUNT) {
-                    remainingPhotoCount = (MAX_IMAGE_COUNT - selectedCount)
+                if (selectedCount < MAX_IMAGES) {
+                    remainingPhotoCount = (MAX_IMAGES - selectedCount)
                     add(UploadPreviewUiModel.Placeholder(size))
                 }
             }
@@ -245,7 +246,7 @@ data class UploadStep2State(
     val loadState: LoadStates = LoadStates.IDLE,
     val detectingFaces: Boolean = false,
     val previewModelList: List<UploadPreviewUiModel> = emptyList(),
-    val remainingPhotoCount: Int = MAX_IMAGE_COUNT,
+    val remainingPhotoCount: Int = MAX_IMAGES,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
@@ -265,7 +266,5 @@ interface UploadPreviewUiModel {
     }
     data class Placeholder(val position: Int) : UploadPreviewUiModel
 }
-
-private const val MAX_IMAGE_COUNT = 20
 
 private const val KEY_CACHED_UPLOAD_SESSION_ID = "cached_session_upload_id"

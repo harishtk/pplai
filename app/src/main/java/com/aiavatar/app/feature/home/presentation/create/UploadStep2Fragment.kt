@@ -213,6 +213,7 @@ class UploadStep2Fragment : Fragment() {
                 examplesContainer.isVisible = shouldShowExamples
                 privacyDisclosureContainer.isVisible = shouldShowExamples
                 listContainer.isVisible = !shouldShowExamples
+                smallDescription1.isVisible = !shouldShowExamples
             }
         }
 
@@ -286,10 +287,10 @@ class UploadStep2Fragment : Fragment() {
             remainingPhotosCountFlow.collectLatest { remainingPhotos ->
                 Timber.d("Remaining photos: $remainingPhotos")
                 val btnTextString = when {
-                    remainingPhotos > MIN_IMAGES -> "Select 10 - 20 selfies"
+                    (MAX_IMAGES - remainingPhotos) < MIN_IMAGES -> "Select $MIN_IMAGES - $MAX_IMAGES selfies"
                     else -> "Generate"
                 }
-                btnNext.idleText = btnTextString
+                btnNext.setIdleText(btnTextString)
                 if (remainingPhotos != MAX_IMAGES) {
                     previewListTitle.isVisible = true
                     previewListTitle.text = "${MAX_IMAGES - remainingPhotos} photos selected"
@@ -575,8 +576,8 @@ class UploadStep2Fragment : Fragment() {
     }
 
     companion object {
-        const val MAX_IMAGES = 20
-        const val MIN_IMAGES = 10
+        const val MAX_IMAGES = 10
+        const val MIN_IMAGES = 7
 
         const val ARG_CACHED_SESSION_ID = "cached_session_id"
     }

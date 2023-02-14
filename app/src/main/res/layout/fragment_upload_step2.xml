@@ -77,18 +77,19 @@
                 android:lineSpacingMultiplier="0.9"
                 android:textAlignment="center"/>
 
-            <TextView android:id="@+id/small_description1"
+            <TextView android:id="@+id/small_description_1"
                 style="@style/TextStyle.VerySmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="@dimen/inset_large"
-                android:text="@string/upload_step_des1"
+                android:padding="@dimen/inset_very_small"
+                android:text="@string/upload_step_2_des_1"
                 android:textColor="@color/text_secondary"
                 android:textAlignment="center"
                 app:layout_constraintTop_toBottomOf="@id/content"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                tools:visibility="visible"/>
 
             <TextView android:id="@+id/big_description_2"
                 style="@style/Base.TextAppearance.Bold"
