@@ -12,7 +12,7 @@ plugins {
 ext {
     versionMajor = 0 // Major
     versionMinor = 0 // Minor
-    versionPatch = 2 // Patches, updates
+    versionPatch = 3 // Patches, updates
     versionClassifier = null
     versionRevision = "-revision-1"
     isSnapshot = false
@@ -106,6 +106,21 @@ android {
             buildConfigField "String", "ENV", '"dev"'
             buildConfigField "boolean", "IS_SECURED", "false"
             buildConfigField "String", "S3_BUCKET", '"https://d19quh86lv8eyv.cloudfront.net"'
+            versionNameSuffix "-dev$versionRevision"
+        }
+
+        internal {
+            dimension "default"
+
+            // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
+            buildConfigField "String", "BASE_URL", '"https://ai.hifrds.com/api/v1/"'
+            buildConfigField "String", "THUMBNAIL_BASE_URL", '"http://43.205.53.52/thumbnail/"'
+            // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
+            buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
+            buildConfigField "String", "ENV", '"internal"'
+            buildConfigField "boolean", "IS_SECURED", "false"
+            buildConfigField "String", "S3_BUCKET", '"https://d19quh86lv8eyv.cloudfront.net"'
+            versionNameSuffix "-internal"
         }
 
         prod {

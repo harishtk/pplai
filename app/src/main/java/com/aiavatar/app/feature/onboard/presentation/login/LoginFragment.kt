@@ -322,6 +322,7 @@ class LoginFragment : Fragment() {
             override fun otpCompleteListener(otp: String?) {
                 updateTypedOtpValue(uiAction)
                 uiAction(LoginUiAction.NextClick)
+                edOtp.hideKeyboard()
             }
         })
     }

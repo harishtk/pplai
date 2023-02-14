@@ -341,8 +341,10 @@ class AvatarStatusFragment : Fragment() {
                     val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorText
                     if (e != null) {
                         Timber.e(e)
-                        if (btnCreateAvatar.isVisible) {
-                            btnCreateAvatar.shakeNow()
+                        if (e !is NoInternetException) {
+                            if (btnCreateAvatar.isVisible) {
+                                btnCreateAvatar.shakeNow()
+                            }
                         }
                         retryButton.isVisible = e is NoInternetException
                         uiErr?.let { uiText -> context?.showToast(uiText.asString(requireContext())) }

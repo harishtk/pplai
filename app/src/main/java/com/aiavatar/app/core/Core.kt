@@ -9,7 +9,7 @@ import com.aiavatar.app.Constant
 annotation class AppEnv
 
 enum class Env {
-    DEV, STAGE, PROD, SPECIAL
+    DEV, STAGE, PROD, SPECIAL, INTERNAL
 }
 
 fun envForConfig(config: String): Env = when (config) {
@@ -17,6 +17,7 @@ fun envForConfig(config: String): Env = when (config) {
     "staging" -> Env.STAGE
     "sp" -> Env.SPECIAL
     "prod" -> Env.PROD
+    "internal" -> Env.INTERNAL
     else -> throw IllegalStateException("Unknown Environment $config")
 }
 

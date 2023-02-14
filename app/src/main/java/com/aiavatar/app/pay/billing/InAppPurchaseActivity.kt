@@ -9,16 +9,15 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.aiavatar.app.BuildConfig
+import com.aiavatar.app.*
 import com.aiavatar.app.databinding.ActivityInappPurchaseBinding
-import com.aiavatar.app.debugToast
 import com.aiavatar.app.ifNull
-import com.aiavatar.app.showToast
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.BillingResponseCode
 import com.android.billingclient.api.Purchase.PurchaseState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -38,15 +37,33 @@ class InAppPurchaseActivity : AppCompatActivity() {
                     // TODO: save and send the purchase details to server
                     viewModel.setPaymentSequence(PaymentSequence.PAYMENT_PROCESSING)
                     purchases.firstOrNull()?.let { purchase ->
+                        Timber.d("purchaseUpdatedListener: state = ${purchase.purchaseState} token = ${purchase.purchaseToken}")
                         when (purchase.purchaseState) {
                             PurchaseState.PURCHASED -> {
-                                handlePurchase(purchase)
+                                lifecycleScope.launch { handlePurchase(purchase) }
                             }
-                            PurchaseState.PENDING -> {
-
+                            in setOf(
+                                PurchaseState.PENDING,
+                                PurchaseState.UNSPECIFIED_STATE
+                            ) -> {
+                                // TODO: wait for pending purchase to complete
+                                showToast("Please wait..")
                             }
-                            PurchaseState.UNSPECIFIED_STATE -> {
-
+                            PURCHASE_STATE_FAILED -> {
+                                val msg = "The payment was unable to complete."
+                                setResultInternal(
+                                    code = ResultCode.FAILED,
+                                    errorMessage = msg,
+                                    debugMessage = msg + " Invalid purchase state $PURCHASE_STATE_FAILED"
+                                )
+                            }
+                            else -> {
+                                val msg = "Something went wrong."
+                                setResultInternal(
+                                    code = ResultCode.FAILED,
+                                    errorMessage = msg,
+                                    debugMessage = msg + " Invalid purchase state"
+                                )
                             }
                         }
                     }.ifNull {
@@ -56,21 +73,19 @@ class InAppPurchaseActivity : AppCompatActivity() {
                             errorMessage = msg,
                             debugMessage = msg + " ${billingResult.responseCode}: Payment done. But no purchase returned."
                         )
-                        finish()
+                        viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
                     }
                 } else {
-                    viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
                     val msg = "Purchase failed. "
                     setResultInternal(
                         code = ResultCode.FAILED,
                         errorMessage = msg,
                         debugMessage = msg + " ${billingResult.responseCode}: Payment done. But no purchase returned."
                     )
-                    finish()
+                    viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
                 }
             }
             BillingResponseCode.DEVELOPER_ERROR -> {
-                viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
                 debugToast("Purchase failed")
                 val msg = "Purchase failed. "
                 setResultInternal(
@@ -78,10 +93,34 @@ class InAppPurchaseActivity : AppCompatActivity() {
                     errorMessage = msg,
                     debugMessage = msg + " ${billingResult.responseCode}: Developer error"
                 )
-                finish()
+                viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
+            }
+            BillingResponseCode.ERROR -> {
+                val msg = "Purchase failed. "
+                setResultInternal(
+                    code = ResultCode.FAILED,
+                    errorMessage = msg,
+                    debugMessage = msg + " ${billingResult.responseCode}: ${billingResult.debugMessage}"
+                )
+                viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
+            }
+            BillingResponseCode.USER_CANCELED -> {
+                val msg = "User canceled"
+                setResultInternal(
+                    code = ResultCode.USER_CANCELED,
+                    errorMessage = msg,
+                    debugMessage = msg + " ${billingResult.responseCode}: User ignored the payment flow."
+                )
+                viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
             }
             else -> {
                 // TODO: handle distinguished error
+                val msg = "Purchase failed."
+                setResultInternal(
+                    code = ResultCode.FAILED,
+                    errorMessage = msg,
+                    debugMessage = msg + " ${billingResult.responseCode}"
+                )
                 viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
             }
         }
@@ -96,7 +135,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
 
     // Helper flags
     private var isBillingClientConnected: Boolean = false
-    private var billingConnectionRetryCount: Int = 0
+    private var billingConnectionRetries: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -144,14 +183,14 @@ class InAppPurchaseActivity : AppCompatActivity() {
                         validateProductSku(uiState.value.productSku!!)
                     }
                     PaymentSequence.BILLING_CONNECTION_FAILED -> {
-                        if (billingConnectionRetryCount < MAX_BILLING_CLIENT_CONNECTION_ATTEMPTS) {
+                        if (billingConnectionRetries < MAX_BILLING_CLIENT_CONNECTION_ATTEMPTS) {
                             initBillingClientIfRequired()
                         } else {
                             val msg = "Failed to initiate purchase. "
                             setResultInternal(
                                 ResultCode.ERROR,
                                 errorMessage = msg,
-                                debugMessage = "Failed to initialize billing client."
+                                debugMessage = "Failed to initialize billing client. Service unavailable"
                             )
                         }
                     }
@@ -266,6 +305,8 @@ class InAppPurchaseActivity : AppCompatActivity() {
                         BillingResponseCode.SERVICE_DISCONNECTED,
                         BillingResponseCode.SERVICE_UNAVAILABLE -> {
                             // service error
+                            // This causes the billing client not to retry
+                            billingConnectionRetries = MAX_BILLING_CLIENT_CONNECTION_ATTEMPTS
                             viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
                         }
                         BillingResponseCode.ERROR -> {
@@ -300,14 +341,13 @@ class InAppPurchaseActivity : AppCompatActivity() {
     }
 
     /* Play Billing */
-
     private fun initBillingClientIfRequired() {
         if (!isBillingClientConnected) {
             viewModel.setPaymentSequence(PaymentSequence.CONNECTING_BILLING)
             billingClient.startConnection(object : BillingClientStateListener {
                 override fun onBillingSetupFinished(p0: BillingResult) {
                     isBillingClientConnected = true
-                    billingConnectionRetryCount = 0
+                    billingConnectionRetries = 0
                     viewModel.setPaymentSequence(PaymentSequence.BILLING_CONNECTED)
                     val msg = "Billing client setup finished"
                     Timber.v(msg)
@@ -316,7 +356,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
 
                 override fun onBillingServiceDisconnected() {
                     isBillingClientConnected = false
-                    billingConnectionRetryCount = billingConnectionRetryCount.plus(1)
+                    billingConnectionRetries++
                     viewModel.setPaymentSequence(PaymentSequence.BILLING_CONNECTION_FAILED)
                     val msg = "Billing client disconnected"
                     val t = IllegalStateException(msg)
@@ -326,36 +366,49 @@ class InAppPurchaseActivity : AppCompatActivity() {
         }
     }
 
-    private fun handlePurchase(purchase: Purchase) {
-        viewModel.setPaymentSequence(PaymentSequence.CONSUMING_PRODUCT)
-        val consumeParams = ConsumeParams.newBuilder()
-            .setPurchaseToken(purchase.purchaseToken)
+    private suspend fun consume(purchaseToken: String): ConsumeResult {
+        val params = ConsumeParams.newBuilder()
+            .setPurchaseToken(purchaseToken)
             .build()
 
-        billingClient.consumeAsync(consumeParams
-        ) { billingResult, purchaseToken ->
-            if (billingResult.responseCode == BillingResponseCode.OK) {
-                viewModel.setPaymentSequence(PaymentSequence.PURCHASE_VALIDATION_PENDING)
-                val extras = Bundle().apply {
-                    putString(EXTRA_PURCHASE_TOKEN, purchaseToken)
+        return billingClient.consumePurchase(params)
+    }
+
+    private suspend fun handlePurchase(purchase: Purchase) {
+        viewModel.setPaymentSequence(PaymentSequence.CONSUMING_PRODUCT)
+
+        withContext(Dispatchers.IO) {
+            val initialDelay = 0L
+            val retries = 3
+            val retryFactor = 2
+
+            consume(purchase.purchaseToken).let { consumeResult ->
+                val billingResult = consumeResult.billingResult
+                val purchaseToken = consumeResult.purchaseToken
+
+                if (billingResult.responseCode == BillingResponseCode.OK) {
+                    viewModel.setPaymentSequence(PaymentSequence.PURCHASE_VALIDATION_PENDING)
+                    val extras = Bundle().apply {
+                        putString(EXTRA_PURCHASE_TOKEN, purchaseToken)
+                    }
+                    setResultInternal(
+                        code = ResultCode.SUCCESS,
+                        data = extras,
+                        message = "Purchase successful",
+                        debugMessage = "Purchase successful for purchaseToken = $purchaseToken",
+                    )
+                    finish()
+                } else {
+                    viewModel.setPaymentSequence(PaymentSequence.CONSUME_FAILED)
+                    // TODO: handle consume failed
+                    val msg = "Purchase failed"
+                    setResultInternal(
+                        code = ResultCode.FAILED,
+                        message = "Purchase failed",
+                        debugMessage = msg + " for purchaseToken = $purchaseToken"
+                    )
+                    finish()
                 }
-                setResultInternal(
-                    code = ResultCode.SUCCESS,
-                    data = extras,
-                    message = "Purchase successful",
-                    debugMessage = "Purchase successful for purchaseToken = $purchaseToken",
-                )
-                finish()
-            } else {
-                viewModel.setPaymentSequence(PaymentSequence.CONSUME_FAILED)
-                // TODO: handle consume failed
-                val msg = "Purchase failed"
-                setResultInternal(
-                    code = ResultCode.FAILED,
-                    message = "Purchase failed",
-                    debugMessage = msg + " for purchaseToken = $purchaseToken"
-                )
-                finish()
             }
         }
     }
@@ -369,6 +422,34 @@ class InAppPurchaseActivity : AppCompatActivity() {
             )
         }
     }
+
+    /* Util */
+    private suspend fun <T> exponentialRetry(
+        maxTries: Int = Int.MAX_VALUE,
+        initialDelay: Long = Long.MAX_VALUE,
+        retryFactor: Int = Int.MAX_VALUE,
+        block: suspend () -> T
+    ): T? {
+        var currentDelay = initialDelay
+        var retryAttempt = 1
+        do {
+            kotlin.runCatching {
+                delay(currentDelay)
+                block()
+            }
+                .onSuccess {
+                    return@onSuccess;
+                }
+                .onFailure { t ->
+                    ifDebug { Timber.e(t, "Retry Failed") }
+                }
+            currentDelay *= retryFactor
+            retryAttempt++
+        } while (retryAttempt < maxTries)
+
+        return block()
+    }
+    /* END - Util */
 
     private fun setResultInternal(
         code: Int,
@@ -400,6 +481,24 @@ class InAppPurchaseActivity : AppCompatActivity() {
         const val EXTRA_PURCHASE_TOKEN = "com.aiavatar.app.extras.PURCHASE_TOKEN"
 
         const val MAX_BILLING_CLIENT_CONNECTION_ATTEMPTS = 3
+        const val PURCHASE_STATE_FAILED = 4
+
+        val retriableBillingResponses = setOf(
+            BillingResponseCode.SERVICE_TIMEOUT,
+            BillingResponseCode.SERVICE_DISCONNECTED,
+            BillingResponseCode.SERVICE_UNAVAILABLE,
+            BillingResponseCode.BILLING_UNAVAILABLE,
+            BillingResponseCode.ERROR,
+            BillingResponseCode.ITEM_ALREADY_OWNED,
+            BillingResponseCode.ITEM_NOT_OWNED
+        )
+
+        val nonRetriableBillingResponses = setOf(
+            BillingResponseCode.FEATURE_NOT_SUPPORTED,
+            BillingResponseCode.USER_CANCELED,
+            BillingResponseCode.ITEM_UNAVAILABLE,
+            BillingResponseCode.DEVELOPER_ERROR
+        )
     }
 
 }

@@ -141,7 +141,7 @@ inline fun <R> safeCall(block: () -> R): R? {
 }
 
 inline fun ifDebug(block: () -> Unit) {
-    if (BuildConfig.DEBUG) {
+    if (BuildConfig.DEBUG || envForConfig(BuildConfig.ENV) == Env.INTERNAL) {
         block()
     }
 }

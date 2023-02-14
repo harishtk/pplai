@@ -34,7 +34,7 @@ object URLProvider {
                     }
                 }
             }
-            Env.PROD -> when (source) {
+            Env.PROD, Env.INTERNAL -> when (source) {
                 URLSource.AVATAR -> {
                     when (sourceCategory) {
                         SourceCategory.THUMBNAIL -> "$baseUrl/aiAvatar/"
@@ -43,7 +43,7 @@ object URLProvider {
                 }
             }
             Env.STAGE,
-            Env.SPECIAL -> {
+            Env.SPECIAL, -> {
                 ""
             }
         }

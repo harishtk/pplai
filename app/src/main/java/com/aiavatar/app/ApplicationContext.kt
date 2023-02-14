@@ -83,7 +83,7 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
 
     private fun initializeLogging() {
         when (envForConfig(BuildConfig.ENV)) {
-            Env.DEV -> {
+            Env.DEV, Env.INTERNAL -> {
                 Timber.plant(Timber.DebugTree())
             }
             else -> {

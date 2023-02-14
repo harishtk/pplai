@@ -161,7 +161,9 @@ class ProfileFragment : Fragment() {
                     if (loadState.refresh is LoadState.Error) {
                         errorContainer.isVisible = true
                         HapticUtil.createError(requireContext())
-                        retryButton.shakeNow()
+                        if (retryButton.isVisible) {
+                            retryButton.shakeNow()
+                        }
                     }
                     progressBar.isVisible = false
                 }
