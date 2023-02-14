@@ -48,23 +48,14 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun downloadFilesDao(): DownloadFilesDao
 
-    companion object {
-        @Volatile
-        var INSTANCE: AppDatabase? = null
-
-        @Synchronized
-        fun getInstance(appContext: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: buildDatabase(appContext).also {
-                    INSTANCE = it
-                }
-            }
-        }
-
-        private fun buildDatabase(appContext: Context): AppDatabase =
+    class Factory {
+        fun createInstance(appContext: Context): AppDatabase =
             Room.databaseBuilder(appContext, AppDatabase::class.java, "app_db")
                 .fallbackToDestructiveMigration()
                 .build()
+    }
+
+    companion object {
 
         /* Tables Names */
         const val TABLE_UPLOAD_SESSION      = "upload_session"
