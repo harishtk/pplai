@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -61,7 +62,7 @@ class AvatarPreviewFragment : Fragment() {
     @Inject
     lateinit var analyticsLogger: AnalyticsLogger
 
-    private val userViewModel: UserViewModel by viewModels()
+    private val userViewModel: UserViewModel by activityViewModels()
     private val viewModel: AvatarPreviewViewModel by viewModels()
 
     private val storagePermissions: Array<String> = arrayOf(

@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.home.data.repository
 
+import android.net.Network
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.commons.util.NetworkResultParser
 import com.aiavatar.app.commons.util.Result
@@ -23,10 +24,7 @@ import com.aiavatar.app.feature.home.data.source.remote.model.toCatalogList
 import com.aiavatar.app.feature.home.data.source.remote.model.toCategory
 import com.aiavatar.app.feature.home.data.source.remote.model.toListAvatar
 import com.aiavatar.app.feature.home.domain.model.*
-import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
-import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
-import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
-import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
+import com.aiavatar.app.feature.home.domain.model.request.*
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -604,6 +602,23 @@ class HomeRepositoryImpl @Inject constructor(
 
     override suspend fun getAvatars2Sync(getAvatarsRequest: GetAvatarsRequest): Result<List<ModelAvatar>> {
         return Result.Loading
+    }
+
+    override fun subscriptionLog(request: SubscriptionLogRequest): Flow<Result<String>> {
+        return remoteDataSource.subscriptionLog(request.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val message = networkResult.data.message
+                        Result.Success(message)
+                    } else {
+                        badResponse(networkResult)
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
     }
 
     private fun parseGetAvatarsResponse(networkResult: NetworkResult<GetAvatarsResponse>): Result<List<ListAvatar>> {

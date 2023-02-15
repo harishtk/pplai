@@ -329,7 +329,9 @@ class ProfileFragment : Fragment() {
                         /*if (isLoggedIn != true) {
                             safeCall { findNavController().navigateUp() }
                         }*/
-                        clearNavigationResult<Boolean>(LoginFragment.LOGIN_RESULT)
+                        if (isLoggedIn == true) {
+                            clearNavigationResult<Boolean>(LoginFragment.LOGIN_RESULT)
+                        }
                     }
                 }
             }

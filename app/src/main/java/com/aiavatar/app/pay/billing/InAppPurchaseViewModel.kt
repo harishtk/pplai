@@ -7,6 +7,8 @@ import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
 import com.aiavatar.app.commons.util.loadstate.LoadType
+import com.aiavatar.app.feature.home.domain.model.request.SubscriptionLogRequest
+import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,6 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class InAppPurchaseViewModel @Inject constructor(
+    private val homeRepository: HomeRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     
@@ -40,6 +43,20 @@ class InAppPurchaseViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun updatePaymentLog(
+        transactionId: String,
+        paymentStatus: String,
+        purchaseToken: String = ""
+    ) {
+        val request = SubscriptionLogRequest(
+            transactionId = transactionId,
+            purchaseToken = purchaseToken,
+            paymentStatus = paymentStatus
+        )
+        homeRepository.subscriptionLog(request)
+            .launchIn(viewModelScope)
     }
 
     fun setProductSku(sku: String) {

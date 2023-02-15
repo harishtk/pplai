@@ -522,6 +522,7 @@ class UploadStep2Fragment : Fragment() {
             photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.SingleMimeType(
                 MIME_TYPE_JPEG)))
         } else {
+            Timber.w("No photo picker available. Using generic picker.")
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 if (!checkStoragePermission()) {
                     askStoragePermission()

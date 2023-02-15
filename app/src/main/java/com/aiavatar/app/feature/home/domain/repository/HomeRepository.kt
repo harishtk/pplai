@@ -4,10 +4,7 @@ import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.feature.home.data.model.ModelListWithModelEntity
 import com.aiavatar.app.feature.home.data.source.local.entity.ModelAvatarEntity
 import com.aiavatar.app.feature.home.domain.model.*
-import com.aiavatar.app.feature.home.domain.model.request.CatalogDetailRequest
-import com.aiavatar.app.feature.home.domain.model.request.GenerateAvatarRequest
-import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
-import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRequest
+import com.aiavatar.app.feature.home.domain.model.request.*
 import kotlinx.coroutines.flow.Flow
 
 interface HomeRepository {
@@ -40,4 +37,6 @@ interface HomeRepository {
     fun getCatalog2(forceRefresh: Boolean): Flow<Result<List<Category>>>
 
     fun getCatalogList2(request: CatalogDetailRequest, forceRefresh: Boolean): Flow<Result<CatalogDetailData>>
+
+    fun subscriptionLog(request: SubscriptionLogRequest): Flow<Result<String>>
 }

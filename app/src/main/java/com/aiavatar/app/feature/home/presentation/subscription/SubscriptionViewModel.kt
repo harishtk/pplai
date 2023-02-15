@@ -19,6 +19,11 @@ import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRe
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.core.data.source.local.entity.PAYMENT_STATUS_INITIALIZING
+import com.aiavatar.app.core.data.source.local.entity.PaymentsEntity
+import com.aiavatar.app.core.domain.model.LoginUser
+import com.aiavatar.app.feature.home.domain.model.request.SubscriptionLogRequest
+import com.aiavatar.app.nullAsEmpty
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -37,10 +42,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.math.log
 
 @HiltViewModel
 class SubscriptionViewModel @Inject constructor(
     private val homeRepository: HomeRepository,
+    @Deprecated("move to repo")
     private val appDatabase: AppDatabase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -125,6 +132,10 @@ class SubscriptionViewModel @Inject constructor(
         }
     }
 
+    fun setLoginUser(loginUser: LoginUser) {
+        _uiState.update { state -> state.copy(loginUser = loginUser) }
+    }
+
     fun setSubscriptionUiModelList(
         newUiModelList: List<SubscriptionUiModel>
     ) {
@@ -158,10 +169,83 @@ class SubscriptionViewModel @Inject constructor(
         setLoadingInternal(loadType, loadState)
     }
 
+    fun updatePaymentLog(
+        transactionId: String,
+        paymentStatus: String,
+        purchaseToken: String = ""
+    ) {
+        val request = SubscriptionLogRequest(
+            transactionId = transactionId,
+            purchaseToken = purchaseToken,
+            paymentStatus = paymentStatus
+        )
+        homeRepository.subscriptionLog(request)
+            .launchIn(viewModelScope)
+    }
+
     fun getSelectedPlan(): SubscriptionPlan? {
         return uiState.value.subscriptionPlansUiModels
             .filterIsInstance<SubscriptionUiModel.Plan>()
             .find { it.selected }?.subscriptionPlan
+    }
+
+    suspend fun initPayment(selectedPlan: SubscriptionPlan): String {
+        val userId = uiState.value.loginUser?.userId.nullAsEmpty()
+        val txnId = java.lang.StringBuilder("txn")
+            .append("_${userId}_")
+            .append(System.currentTimeMillis()).toString()
+
+        val paymentEntity = PaymentsEntity(
+            transactionId = txnId,
+            status = PAYMENT_STATUS_INITIALIZING,
+            purchaseToken = "",
+            productSku = selectedPlan.productId,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+
+        appDatabase.paymentsDao().insertAll(
+            listOf(paymentEntity)
+        )
+        updatePaymentLog(
+            transactionId = txnId,
+            paymentStatus = paymentEntity.status,
+        )
+        return txnId
+    }
+
+    fun validate(): Boolean {
+        return validateInternal()
+    }
+
+    private fun validateInternal(): Boolean {
+        val modelId = uiState.value.modelId
+        return if (modelId != null) {
+            val selectedPlan = uiState.value.subscriptionPlansUiModels
+                .filterIsInstance<SubscriptionUiModel.Plan>()
+                .find { it.selected }?.subscriptionPlan
+
+            if (selectedPlan == null) {
+                val t = IllegalStateException("No plans selected")
+                _uiState.update { state ->
+                    state.copy(
+                        exception = ResolvableException(t),
+                        uiErrorText = UiText.DynamicString("Please select a plan.")
+                    )
+                }
+                return false
+            }
+            true
+        } else {
+            val t = IllegalStateException("No model id")
+            _uiState.update { state ->
+                state.copy(
+                    exception = ResolvableException(t),
+                    uiErrorText = UiText.DynamicString("Cannot complete your purchase now.")
+                )
+            }
+            false
+        }
     }
 
     private fun startPurchaseFlowInternal() {
@@ -342,6 +426,7 @@ data class SubscriptionState(
     val subscriptionPlansUiModels: List<SubscriptionUiModel> = emptyList(),
     val subscriptionPlansCache: List<SubscriptionPlan>? = null,
     val billingConnectionState: Boolean = false,
+    val loginUser: LoginUser? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )

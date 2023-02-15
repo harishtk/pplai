@@ -46,7 +46,7 @@
     <string name="walkthrough_big_des_1_multicolor">100+</string>
 
     <string name="upload_step_des1">Please be aware that there is a risk of artefacts, inaccuracies, and defects in output images when using the type of Al we employ for Magic Avatars. This is beyond our control. Kindly acknowledge and accept this risk before proceeding.</string>
-    <string name="upload_step_2_des_1">For a maximum result please upload bright photos where your face is fully visible.</string>
+    <string name="upload_step_2_des_1">For more appropriate results please upload bright photos where your face is fully visible.</string>
     <string name="good_examples_des_1">Close-up selfies, same person, adults, variety of backgrounds, facial expression, head tilts and angles</string>
     <string name="bad_examples_des_1">Group shots, full-length, kids, covered faces, animals, monotonous pics, nudes</string>
     <string name="upload_step_3_des1">Let us know which gender best describes you</string>

@@ -60,7 +60,7 @@ class AvatarResultFragment : Fragment() {
     lateinit var analyticsLogger: AnalyticsLogger
 
     private val sharedViewModel: SharedViewModel by activityViewModels()
-    private val userViewModel: UserViewModel by viewModels()
+    private val userViewModel: UserViewModel by activityViewModels()
     private val viewModel: AvatarResultViewModel by viewModels()
 
     private val storagePermissions: Array<String> = arrayOf(

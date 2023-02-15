@@ -1,14 +1,13 @@
 package com.aiavatar.app.feature.home.data.source.remote
 
+import android.net.Network
 import com.aiavatar.app.commons.data.source.remote.BaseRemoteDataSource
 import com.aiavatar.app.commons.util.NetWorkHelper
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.di.IoDispatcher
-import com.aiavatar.app.feature.home.data.source.remote.dto.CatalogDetailRequestDto
-import com.aiavatar.app.feature.home.data.source.remote.dto.GenerateAvatarRequestDto
-import com.aiavatar.app.feature.home.data.source.remote.dto.GetAvatarsRequestDto
-import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPurchaseRequestDto
+import com.aiavatar.app.feature.home.data.source.remote.dto.*
 import com.aiavatar.app.feature.home.data.source.remote.model.*
+import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -80,5 +79,10 @@ class HomeRemoteDataSource @Inject constructor(
 
     suspend fun getAvatarsSync(getAvatarsRequestDto: GetAvatarsRequestDto): NetworkResult<GetAvatarsResponse> =
         safeApiCall { apiService.getAvatars(getAvatarsRequestDto) }
+
+    fun subscriptionLog(subscriptionLogRequestDto: SubscriptionLogRequestDto): Flow<NetworkResult<BaseResponse>> = flow {
+        emit(NetworkResult.Loading())
+        emit(safeApiCall { apiService.subscriptionLog(subscriptionLogRequestDto) })
+    }.flowOn(dispatcher)
 
 }

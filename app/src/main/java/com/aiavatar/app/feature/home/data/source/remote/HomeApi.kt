@@ -1,9 +1,6 @@
 package com.aiavatar.app.feature.home.data.source.remote
 
-import com.aiavatar.app.feature.home.data.source.remote.dto.CatalogDetailRequestDto
-import com.aiavatar.app.feature.home.data.source.remote.dto.GenerateAvatarRequestDto
-import com.aiavatar.app.feature.home.data.source.remote.dto.GetAvatarsRequestDto
-import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPurchaseRequestDto
+import com.aiavatar.app.feature.home.data.source.remote.dto.*
 import com.aiavatar.app.feature.home.data.source.remote.model.*
 import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
 import retrofit2.Response
@@ -36,4 +33,7 @@ interface HomeApi {
 
     @POST("subscription/purchase")
     suspend fun purchasePlan(@Body subscriptionPurchaseRequestDto: SubscriptionPurchaseRequestDto): Response<PurchasePlanResponse>
+
+    @POST("subscription/log")
+    suspend fun subscriptionLog(@Body subscriptionLogRequestDto: SubscriptionLogRequestDto): Response<BaseResponse>
 }

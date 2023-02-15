@@ -10,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -22,6 +23,7 @@ import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.core.data.source.local.entity.*
 import com.aiavatar.app.databinding.FragmentSubscriptionBinding
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.payments.PaymentMethod
@@ -34,17 +36,25 @@ import com.aiavatar.app.pay.billing.InAppPurchaseActivity
 import com.aiavatar.app.pay.billing.ResultCode
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.android.billingclient.api.*
+import com.android.billingclient.api.BillingClient.BillingResponseCode
+import com.android.billingclient.api.BillingClient.ProductType
+import com.google.firebase.crashlytics.internal.model.ImmutableList
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.internal.immutableListOf
 import timber.log.Timber
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
+import kotlin.math.log
 
 @AndroidEntryPoint
 class SubscriptionFragment : Fragment() {
 
-    private val userViewModel: UserViewModel by viewModels()
+    private val userViewModel: UserViewModel by activityViewModels()
     private val viewModel: SubscriptionViewModel by viewModels()
 
     private val inAppPurchaseResultLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
@@ -55,11 +65,51 @@ class SubscriptionFragment : Fragment() {
         Timber.d("Payment: debug message = ${result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_DEBUG_MESSAGE)}")
         when (result.resultCode) {
             ResultCode.SUCCESS -> {
+                transactionId?.let { txnId ->
+                    viewModel.updatePaymentLog(
+                        transactionId = txnId,
+                        paymentStatus = PAYMENT_STATUS_COMPLETE,
+                        purchaseToken = result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_PURCHASE_TOKEN).nullAsEmpty()
+                    )
+                }
                 result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_MESSAGE)?.let { message ->
                     context?.showToast(message)
                 }
             }
+            ResultCode.USER_CANCELED -> {
+                transactionId?.let { txnId ->
+                    viewModel.updatePaymentLog(
+                        transactionId = txnId,
+                        paymentStatus = PAYMENT_STATUS_CANCELED,
+                        purchaseToken = result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_PURCHASE_TOKEN).nullAsEmpty()
+                    )
+                }
+            }
+            ResultCode.ERROR, ResultCode.FAILED -> {
+                transactionId?.let { txnId ->
+                    viewModel.updatePaymentLog(
+                        transactionId = txnId,
+                        paymentStatus = PAYMENT_STATUS_FAILED,
+                        purchaseToken = result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_PURCHASE_TOKEN).nullAsEmpty()
+                    )
+                }
+            }
+            ResultCode.PENDING -> {
+                transactionId?.let { txnId ->
+                    viewModel.updatePaymentLog(
+                        transactionId = txnId,
+                        paymentStatus = PAYMENT_STATUS_FAILED,
+                        purchaseToken = result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_PURCHASE_TOKEN).nullAsEmpty()
+                    )
+                }
+            }
             else -> {
+                when (result.resultCode) {
+                    ResultCode.PENDING -> {
+                        // checkPendingPurchases()
+
+                    }
+                }
                 result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_ERROR_MESSAGE)?.let { message ->
                     context?.showToast(message)
                 }
@@ -69,6 +119,7 @@ class SubscriptionFragment : Fragment() {
 
     private val purchaseUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
         // TODO("Not yet implemented")
+        Timber.d("purchaseUpdatedListener: ${billingResult.responseCode} msg = ${billingResult.debugMessage}")
     }
 
     private val billingClient by lazy {
@@ -80,6 +131,8 @@ class SubscriptionFragment : Fragment() {
 
     // Helper flags
     private var isBillingClientConnected: Boolean = false
+    private var paymentProcessing = false
+    private var transactionId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -164,6 +217,7 @@ class SubscriptionFragment : Fragment() {
                         when (e) {
                             is ResolvableException -> {
                                 btnNext.shakeNow()
+                                HapticUtil.createError(requireContext())
                             }
                             is EmptyInAppProductsException -> {
                                 tvEmptyList.text = uiErr?.asString(requireContext())
@@ -256,7 +310,11 @@ class SubscriptionFragment : Fragment() {
         uiAction: (SubscriptionUiAction) -> Unit,
     ) {
         btnNext.setOnClickListener {
-            confirmPaymentMethod(uiAction)
+            if (!paymentProcessing) {
+                if (viewModel.validate()) {
+                    confirmPaymentMethod(uiAction)
+                }
+            }
             // uiAction(SubscriptionUiAction.NextClick)
         }
 
@@ -307,7 +365,10 @@ class SubscriptionFragment : Fragment() {
                         }
 
                         val productDetailsList = productDetailsResult.productDetailsList
-                        if (productDetailsList != null && productDetailsList.isNotEmpty()) {
+
+                        if (productDetailsResult.billingResult.responseCode == BillingResponseCode.OK
+                            && productDetailsList != null && productDetailsList.isNotEmpty()) {
+
                             val uiModelList = internalPlans.intersect(productDetailsList) { l, r ->
                                 l.productId == r.productId
                             }.map { plan ->
@@ -352,6 +413,7 @@ class SubscriptionFragment : Fragment() {
                 } else {
                     if (loginUser.userId != null) {
                         viewModel.refresh()
+                        viewModel.setLoginUser(loginUser)
                     }
                 }
             }
@@ -411,14 +473,22 @@ class SubscriptionFragment : Fragment() {
         ) { data ->
             when (data.paymentMethod) {
                 PaymentMethod.IN_APP -> {
-                    // TODO: launch in-app purchase flow
-                    viewModel.getSelectedPlan()?.let { selectedPlan ->
-                        Intent(requireActivity(), InAppPurchaseActivity::class.java).apply {
-                            putExtra(InAppPurchaseActivity.EXTRA_PRODUCT_SKU, selectedPlan.productId)
-                            inAppPurchaseResultLauncher.launch(this)
+                    lifecycleScope.launch {
+                        // TODO: launch in-app purchase flow
+                        viewModel.getSelectedPlan()?.let { selectedPlan ->
+                            val txnId = viewModel.initPayment(selectedPlan)
+                            this@SubscriptionFragment.transactionId = txnId
+
+                            Intent(requireActivity(), InAppPurchaseActivity::class.java).apply {
+                                putExtra(InAppPurchaseActivity.EXTRA_PRODUCT_SKU, selectedPlan.productId)
+                                putExtra(InAppPurchaseActivity.EXTRA_TRANSACTION_ID, txnId)
+                                inAppPurchaseResultLauncher.launch(this)
+                            }
+                        }.ifNull {
+                            withContext(Dispatchers.Main) {
+                                context?.showToast("Cannot complete your purchase right now")
+                            }
                         }
-                    }.ifNull {
-                        context?.showToast("Cannot complete your purchase right now")
                     }
                 }
                 PaymentMethod.OTHER -> {
@@ -437,6 +507,7 @@ class SubscriptionFragment : Fragment() {
                override fun onBillingSetupFinished(p0: BillingResult) {
                    isBillingClientConnected = true
                    viewModel.setBillingConnectionState(isBillingClientConnected)
+                   checkPendingPurchases()
                    val msg = "Billing client setup finished"
                    Timber.v(msg)
                    Timber.d("code = ${p0.responseCode} ${p0.debugMessage} ")
@@ -452,5 +523,67 @@ class SubscriptionFragment : Fragment() {
            })
        }
     }
+
+    private suspend fun queryPurchases(): List<Purchase>
+            = suspendCoroutine { continuation ->
+        val params = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.INAPP)
+            .build()
+        billingClient.queryPurchasesAsync(params
+        ) { billingResult, purchases ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                continuation.resume(purchases)
+            } else {
+                val cause = IllegalStateException("${billingResult.responseCode} ${billingResult.debugMessage}")
+                continuation.resumeWithException(cause)
+            }
+        }
+    }
+
+    private fun checkPendingPurchases() {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            kotlin.runCatching { queryPurchases() }
+                .onSuccess { purchases ->
+                    val _p = purchases.map {
+                        immutableListOf(it.products.joinToString(), it.purchaseState, it.signature)
+                    }
+                        .joinToString()
+                    Timber.d("Purchases: $_p")
+                }
+                .onFailure { t ->
+                    Timber.e(t)
+                }
+            checkPurchaseHistory()
+        }
+    }
+
+    private fun checkPurchaseHistory() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            billingClient.queryPurchaseHistory(
+                QueryPurchaseHistoryParams.newBuilder()
+                    .setProductType(ProductType.INAPP)
+                    .build()
+            ).let { purchaseHistoryResult ->
+                val (billingClientResponse, record) = purchaseHistoryResult.billingResult to
+                        purchaseHistoryResult.purchaseHistoryRecordList
+                when (billingClientResponse.responseCode) {
+                    BillingResponseCode.OK -> {
+                        if (record != null) {
+                            Timber.d("Products History: $record")
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
     /* END - Play Billing */
+
+    override fun onResume() {
+        super.onResume()
+
+        if (isBillingClientConnected) {
+            checkPendingPurchases()
+        }
+    }
 }

@@ -3,6 +3,8 @@ package com.aiavatar.app.pay.billing
 import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -10,10 +12,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.aiavatar.app.*
+import com.aiavatar.app.core.data.source.local.entity.PAYMENT_STATUS_CANCELED
+import com.aiavatar.app.core.data.source.local.entity.PAYMENT_STATUS_PROCESSING
 import com.aiavatar.app.databinding.ActivityInappPurchaseBinding
 import com.aiavatar.app.ifNull
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.BillingResponseCode
+import com.android.billingclient.api.BillingClient.ProductType
 import com.android.billingclient.api.Purchase.PurchaseState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -22,11 +27,21 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
+/**
+ * TODO: refactor
+ */
 @AndroidEntryPoint
 class InAppPurchaseActivity : AppCompatActivity() {
 
+    private val WAKE_LOCK_TAG = "aiavtr::payments-wake-lock"
+
     private val viewModel: InAppPurchaseViewModel by viewModels()
+
+    private var transactionId: String? = null
 
     private val purchaseUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
         Timber.d("purchaseUpdatedListener: ${billingResult.responseCode} msg = ${billingResult.debugMessage}")
@@ -47,12 +62,27 @@ class InAppPurchaseActivity : AppCompatActivity() {
                                 PurchaseState.UNSPECIFIED_STATE
                             ) -> {
                                 // TODO: wait for pending purchase to complete
+                                val extras = Bundle().apply {
+                                    putString(EXTRA_PURCHASE_TOKEN, purchase.purchaseToken)
+                                }
                                 showToast("Please wait..")
+                                val msg = "Validating purchase. Please wait.."
+                                setResultInternal(
+                                    code = ResultCode.PENDING,
+                                    data = extras,
+                                    errorMessage = msg,
+                                    debugMessage = msg + " ${billingResult.debugMessage}"
+                                )
+                                finish()
                             }
                             PURCHASE_STATE_FAILED -> {
+                                val extras = Bundle().apply {
+                                    putString(EXTRA_PURCHASE_TOKEN, purchase.purchaseToken)
+                                }
                                 val msg = "The payment was unable to complete."
                                 setResultInternal(
                                     code = ResultCode.FAILED,
+                                    data = extras,
                                     errorMessage = msg,
                                     debugMessage = msg + " Invalid purchase state $PURCHASE_STATE_FAILED"
                                 )
@@ -85,6 +115,12 @@ class InAppPurchaseActivity : AppCompatActivity() {
                     viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
                 }
             }
+            BillingResponseCode.ITEM_ALREADY_OWNED,
+            BillingResponseCode.ITEM_NOT_OWNED,
+            BillingResponseCode.ITEM_UNAVAILABLE -> {
+                // item error
+                viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
+            }
             BillingResponseCode.DEVELOPER_ERROR -> {
                 debugToast("Purchase failed")
                 val msg = "Purchase failed. "
@@ -105,7 +141,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
                 viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
             }
             BillingResponseCode.USER_CANCELED -> {
-                val msg = "User canceled"
+                val msg = "Payment canceled"
                 setResultInternal(
                     code = ResultCode.USER_CANCELED,
                     errorMessage = msg,
@@ -142,6 +178,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
         checkSecureMode()
         val binding = ActivityInappPurchaseBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         binding.bindState(
             uiState = viewModel.uiState,
@@ -152,6 +189,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
         parseIntentInternal(intent)
         val msg = "User canceled the payment."
         setResultInternal(ResultCode.USER_CANCELED, errorMessage = msg, debugMessage = msg + " Untouched.")
+        setupOnBackPressedDispatcher()
     }
 
     private fun ActivityInappPurchaseBinding.bindState(
@@ -238,6 +276,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
 
     private fun parseIntentInternal(newIntent: Intent) {
         val productSku = newIntent.getStringExtra(EXTRA_PRODUCT_SKU)
+        val transactionId = newIntent.getStringExtra(EXTRA_TRANSACTION_ID)
         if (productSku == null || productSku.isBlank()) {
             val msg = "No product sku. Nothing to do."
             setResultInternal(ResultCode.ERROR, errorMessage = msg, debugMessage = msg)
@@ -245,6 +284,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
             return
         }
 
+        this.transactionId = transactionId
         initBillingClientIfRequired()
         viewModel.setProductSku(productSku)
     }
@@ -293,6 +333,12 @@ class InAppPurchaseActivity : AppCompatActivity() {
                     Timber.d("billingResult: ${billingResult.responseCode} msg = ${billingResult.debugMessage}")
                     when (billingResult.responseCode) {
                         BillingResponseCode.OK -> {
+                            transactionId?.let { txnId ->
+                                viewModel.updatePaymentLog(
+                                    transactionId = txnId,
+                                    paymentStatus = PAYMENT_STATUS_PROCESSING
+                                )
+                            }
                             viewModel.setPaymentSequence(PaymentSequence.PRODUCT_PRESENTED)
                         }
                         BillingResponseCode.BILLING_UNAVAILABLE -> {
@@ -401,15 +447,47 @@ class InAppPurchaseActivity : AppCompatActivity() {
                 } else {
                     viewModel.setPaymentSequence(PaymentSequence.CONSUME_FAILED)
                     // TODO: handle consume failed
+                    val extras = Bundle().apply {
+                        putString(EXTRA_PURCHASE_TOKEN, purchaseToken)
+                    }
                     val msg = "Purchase failed"
                     setResultInternal(
                         code = ResultCode.FAILED,
+                        data = extras,
                         message = "Purchase failed",
                         debugMessage = msg + " for purchaseToken = $purchaseToken"
                     )
                     finish()
                 }
             }
+        }
+    }
+
+    private suspend fun queryPurchases(): List<Purchase>
+        = suspendCoroutine { continuation ->
+        val params = QueryPurchasesParams.newBuilder()
+            .setProductType(ProductType.INAPP)
+            .build()
+        billingClient.queryPurchasesAsync(params
+        ) { billingResult, purchases ->
+            if (billingResult.responseCode == BillingResponseCode.OK) {
+                continuation.resume(purchases)
+            } else {
+                val cause = IllegalStateException("${billingResult.responseCode} ${billingResult.debugMessage}")
+                continuation.resumeWithException(cause)
+            }
+        }
+    }
+
+    private fun checkPendingPurchases() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            kotlin.runCatching { queryPurchases() }
+                .onSuccess { purchases ->
+                    Timber.d("Purchases: $purchases")
+                }
+                .onFailure { t ->
+                    Timber.e(t)
+                }
         }
     }
     /* END - Play Billing */
@@ -451,6 +529,27 @@ class InAppPurchaseActivity : AppCompatActivity() {
     }
     /* END - Util */
 
+    private fun setupOnBackPressedDispatcher() {
+        if (VersionCompat.isAtLeastT) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT) {
+                // on back pressed
+                handleBackPressed()
+            }
+        } else {
+            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // on back pressed
+                    handleBackPressed()
+                }
+            })
+        }
+    }
+
+    private fun handleBackPressed(): Boolean {
+        showToast("Please wait while the payment is processing")
+        return true
+    }
+
     private fun setResultInternal(
         code: Int,
         message: String? = null,
@@ -472,8 +571,17 @@ class InAppPurchaseActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        if (isBillingClientConnected) {
+            checkPendingPurchases()
+        }
+    }
+
     companion object {
         const val EXTRA_PRODUCT_SKU = "com.aiavatar.app.extras.PRODUCT_SKU"
+        const val EXTRA_TRANSACTION_ID = "com.aiavatar.app.extras.TRANSACTION_ID"
         const val EXTRA_MESSAGE = "com.aiavatar.app.extras.MESSAGE"
         const val EXTRA_DEBUG_MESSAGE = "com.aiavatar.app.extras.DEBUG_MESSAGE"
         const val EXTRA_ERROR_MESSAGE = "com.aiavatar.app.extras.ERROR_MESSAGE"
@@ -508,4 +616,5 @@ object ResultCode {
     const val USER_CANCELED: Int = -1
     const val FAILED: Int = 1
     const val ERROR: Int = 2
+    const val PENDING: Int = 3
 }

@@ -16,7 +16,7 @@ import com.aiavatar.app.feature.home.data.source.local.entity.*
                 CatalogListEntity::class, ModelEntity::class,
                 LoginUserEntity::class, ModelAvatarEntity::class,
                 DownloadSessionEntity::class, DownloadFilesEntity::class,
-                ModelListItemEntity::class],
+                ModelListItemEntity::class, PaymentsEntity::class],
     version = 1,
     exportSchema = false
 )
@@ -48,14 +48,17 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun downloadFilesDao(): DownloadFilesDao
 
+    abstract fun paymentsDao(): PaymentsDao
+
     class Factory {
         fun createInstance(appContext: Context): AppDatabase =
-            Room.databaseBuilder(appContext, AppDatabase::class.java, "app_db")
+            Room.databaseBuilder(appContext, AppDatabase::class.java, "AiAvatar.db")
                 .fallbackToDestructiveMigration()
                 .build()
     }
 
     companion object {
+        private const val DATABASE_NAME = "app_db"
 
         /* Tables Names */
         const val TABLE_UPLOAD_SESSION      = "upload_session"
@@ -70,6 +73,7 @@ abstract class AppDatabase : RoomDatabase() {
         const val TABLE_LOGIN_USER          = "login_user"
         const val TABLE_DOWNLOAD_SESSION    = "download_session"
         const val TABLE_DOWNLOAD_FILES      = "download_files"
+        const val TABLE_PAYMENTS            = "payments"
 
         const val TABLE_CACHE_KEYS          = "cache_keys"
     }
