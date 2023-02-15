@@ -17,14 +17,23 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.R
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.databinding.FragmentUploadStep1Binding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageAdapter
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageItem
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageUiModel
+import com.aiavatar.app.safeCall
+import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class UploadStep1Fragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -115,18 +124,16 @@ class UploadStep1Fragment : Fragment() {
         adapter.submitList(resList)
 
         btnNext.setOnClickListener {
-            try {
+            analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_1_CONTINUE_BTN_CLICK)
+            safeCall {
                 findNavController().apply {
                     navigate(R.id.action_upload_step_1_to_upload_step_2)
-                }
-            } catch (e: Exception) {
-                if (BuildConfig.DEBUG) {
-                    Timber.e(e)
                 }
             }
         }
 
         tvSkip.setOnClickListener {
+            analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_SKIP_CLICK, null)
             findNavController().apply {
                 val navOpts = NavOptions.Builder()
                     .setPopUpTo(R.id.upload_step_1, inclusive = false, saveState = false)

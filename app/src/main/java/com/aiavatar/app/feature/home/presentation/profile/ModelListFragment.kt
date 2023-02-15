@@ -23,6 +23,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.*
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
@@ -38,12 +40,16 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * TODO: -done- show download progress
  */
 @AndroidEntryPoint
 class ModelListFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val viewModel: ModelListViewModel by viewModels()
 
@@ -118,6 +124,7 @@ class ModelListFragment : Fragment() {
             uiAction = viewModel.accept,
             uiEvent = viewModel.uiEvent
         )
+        analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_PRESENTED)
     }
 
     private fun FragmentModelListBinding.bindState(
@@ -168,6 +175,7 @@ class ModelListFragment : Fragment() {
         val callback = object : ModelListAdapter2.Callback {
             override fun onItemClick(position: Int, data: ModelListUiModel2.AvatarItem) {
                 gotoModelDetail(position, data)
+                analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_ITEM_CLICK)
             }
         }
 
@@ -255,6 +263,7 @@ class ModelListFragment : Fragment() {
             if (modelData.paid) {
                 // TODO: get folder name
                 if (modelData.renamed) {
+                    analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_DOWNLOAD_CLICK)
                     // TODO: if model is renamed directly save the photos
                     // TODO: [severity-10] check storage permissions if required
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
@@ -277,12 +286,14 @@ class ModelListFragment : Fragment() {
                         }
                         // TODO: move 'save to gallery' to a foreground service
                         viewModel.saveModelName(typedName)
+                        analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_FOLDER_NAME_CHANGE)
                         null
                     }.show(childFragmentManager, "folder-name-dialog")
                 }
             } else {
                 // TODO: goto payment
                 gotoPlans(modelData.id)
+                analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_RECREATE_CLICK)
             }
         }
 
@@ -290,6 +301,7 @@ class ModelListFragment : Fragment() {
         btnNext.setOnClickListener {
             uiState.value.modelId?.let { modelId ->
                 gotoPlans(modelId)
+                analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_RECREATE_CLICK)
             }
         }
 
@@ -297,12 +309,16 @@ class ModelListFragment : Fragment() {
         icShare.setOnClickListener {
             if (uiState.value.shareLinkData != null) {
                 handleShareLink(uiState.value.shareLinkData!!.shortLink)
+                analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_SHARE_CLICK)
             } else {
                 uiAction(ModelListUiAction.GetShareLink)
             }
         }
 
-        btnClose.setOnClickListener { findNavController().navigateUp() }
+        btnClose.setOnClickListener {
+            findNavController().navigateUp()
+            analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_BACK_ACTION_CLICK)
+        }
 
         retryButton.setOnClickListener { viewModel.refresh() }
     }

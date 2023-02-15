@@ -21,6 +21,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.aiavatar.app.*
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.HapticUtil
@@ -45,9 +47,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import kotlin.math.log
 
 @AndroidEntryPoint
 class CatalogFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val userViewModel: UserViewModel by activityViewModels()
     private val viewModel: CatalogViewModel by viewModels()
@@ -81,7 +88,9 @@ class CatalogFragment : Fragment() {
 
         if (!ApplicationDependencies.getPersistentStore().isHomeUserGuideShown) {
             showGuidedSteps(view.rootView)
+            analyticsLogger.logEvent(Analytics.Event.HOME_PAGE_PRESENTED)
         }
+        analyticsLogger.logEvent(Analytics.Event.CATALOG_PRESENTED)
     }
 
     private fun FragmentCatalogBinding.bindState(
@@ -102,6 +111,7 @@ class CatalogFragment : Fragment() {
         val avatarsAdapterCallback = object : AvatarsAdapter.Callback {
             override fun onItemClick(position: Int, category: Category) {
                 gotoCatalogDetail(category)
+                analyticsLogger.logEvent(Analytics.Event.CATALOG_ITEM_CLICK)
             }
 
         }
@@ -226,6 +236,7 @@ class CatalogFragment : Fragment() {
                     navigate(CatalogFragmentDirections.actionCatalogListToUploadStep1())
                 }
             }
+            analyticsLogger.logEvent(Analytics.Event.CATALOG_CREATE_CLICK)
         }
 
         toolbarTitle.setOnClickListener {
@@ -247,6 +258,9 @@ class CatalogFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             userViewModel.loginUser.collectLatest { loginUser ->
                 if (loginUser != null) {
+
+                    analyticsLogger.setUserId(loginUser.userId)
+
                     ApplicationDependencies.getPersistentStore().apply {
                         if (isLogged) {
                             /*val initialLetter = ApplicationDependencies.getPersistentStore().username[0].toString().uppercase()
@@ -263,6 +277,9 @@ class CatalogFragment : Fragment() {
                         }
                     }
                 } else {
+
+                    analyticsLogger.setUserId(null)
+
                     profileName.setText(null)
                     profileImage.setImageResource(R.drawable.ic_account_outline)
                 }
@@ -286,6 +303,7 @@ class CatalogFragment : Fragment() {
 
         profileContainer.setOnClickListener {
             gotoProfile()
+            analyticsLogger.logEvent(Analytics.Event.CATALOG_PROFILE_ICON_CLICK)
         }
     }
 

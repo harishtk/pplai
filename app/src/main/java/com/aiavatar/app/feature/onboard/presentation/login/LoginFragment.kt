@@ -27,6 +27,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.*
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
@@ -50,9 +52,13 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val viewModel: LoginViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels()
@@ -107,6 +113,7 @@ class LoginFragment : Fragment() {
         )
         handleBackPressed()
         checkLastSignedInAccount()
+        analyticsLogger.logEvent(Analytics.Event.LOGIN_PAGE_PRESENTED)
     }
 
     private fun FragmentLoginBinding.bindState(
@@ -123,7 +130,6 @@ class LoginFragment : Fragment() {
 
                     is LoginUiEvent.NextScreen -> {
                         // animateAndEnd(nextButton)
-
                         when (from) {
                             "avatar_result" -> {
                                 val modelId = arguments?.getString(Constant.ARG_MODEL_ID, "")
@@ -358,6 +364,7 @@ class LoginFragment : Fragment() {
         cardBackButton.setOnClickListener {
             Timber.d("Back pressed!")
             viewModel.handleBackPressed()
+            analyticsLogger.logEvent(Analytics.Event.LOGIN_BACK_ACTION_CLICK)
         }
 
         edOtp.setOnClickListener {
@@ -371,6 +378,7 @@ class LoginFragment : Fragment() {
                 context?.showToast("Please wait..")
             } else {
                 googleSignIn()
+                analyticsLogger.logEvent(Analytics.Event.LOGIN_SOCIAL_GOOGLE_CLICK)
             }
         }
     }
@@ -520,14 +528,17 @@ class LoginFragment : Fragment() {
                 positiveButtonText = "Sign In",
                 positiveButtonAction = {
                     updateUI(account)
+                    analyticsLogger.logEvent(Analytics.Event.LOGIN_PREVIOUS_ACCOUNT_GOOGLE_SIGN_IN)
                 },
                 negativeButtonText = "Cancel",
                 negativeButtonAction = {
                     googleSignInClient.signOut()
+                    analyticsLogger.logEvent(Analytics.Event.LOGIN_PREVIOUS_ACCOUNT_GOOGLE_CANCELED)
                 },
                 cancellable = false,
                 showCancelButton = false
             ).show()
+            analyticsLogger.logEvent(Analytics.Event.LOGIN_PREVIOUS_ACCOUNT_GOOGLE_PRESENTED)
         }
     }
 

@@ -24,6 +24,8 @@ import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.*
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.cancelSpinning
@@ -45,6 +47,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
+import javax.inject.Inject
 import kotlin.math.log
 
 /**
@@ -52,6 +55,9 @@ import kotlin.math.log
  */
 @AndroidEntryPoint
 class AvatarResultFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private val userViewModel: UserViewModel by viewModels()
@@ -126,6 +132,7 @@ class AvatarResultFragment : Fragment() {
             uiAction = viewModel.accept,
             uiEvent = viewModel.uiEvent
         )
+        analyticsLogger.logEvent(Analytics.Event.AVATAR_RESULTS_PAGE_PRESENTED)
     }
 
     private fun FragmentAvatarResultBinding.bindState(
@@ -176,6 +183,7 @@ class AvatarResultFragment : Fragment() {
         val callback = object : AvatarResultAdapter.Callback {
             override fun onItemClick(position: Int, data: AvatarResultUiModel.AvatarItem) {
                 gotoAvatarPreview(position, data)
+                analyticsLogger.logEvent(Analytics.Event.AVATAR_RESULTS_MODEL_ITEM_CLICK)
             }
         }
 
@@ -232,6 +240,7 @@ class AvatarResultFragment : Fragment() {
         btnNext.setOnClickListener {
             val avatarStatus = uiState.value.avatarStatus ?: return@setOnClickListener
             if (avatarStatus.paid) {
+                analyticsLogger.logEvent(Analytics.Event.AVATAR_RESULTS_DOWNLOAD_BTN_CLICK)
                 // TODO: get folder name
                 if (avatarStatus.modelRenamedByUser) {
                     // TODO: if model is renamed directly save the photos
@@ -271,6 +280,7 @@ class AvatarResultFragment : Fragment() {
             runBlocking {
                 val loginUser = userViewModel.loginUser.first()
                 if (loginUser?.userId != null) {
+                    analyticsLogger.logEvent(Analytics.Event.AVATAR_RESULTS_SHARE_BTN_CLICK)
                     if (uiState.value.shareLinkData != null) {
                         handleShareLink(uiState.value.shareLinkData!!.shortLink)
                     } else {
@@ -282,7 +292,10 @@ class AvatarResultFragment : Fragment() {
             }
         }
 
-        btnClose.setOnClickListener { findNavController().navigateUp() }
+        btnClose.setOnClickListener {
+            findNavController().navigateUp()
+            analyticsLogger.logEvent(Analytics.Event.AVATAR_RESULTS_CLOSE_BTN_CLICK)
+        }
     }
 
     private fun FragmentAvatarResultBinding.bindShareProgress(

@@ -23,6 +23,8 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.work.ForegroundInfo
 import com.aiavatar.app.*
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.cancelSpinning
@@ -52,12 +54,16 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 /**
  * TODO: handle offline status, retry upload.
  */
 @AndroidEntryPoint
 class AvatarStatusFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val viewModel: AvatarStatusViewModel by viewModels()
     private val sharedViewModel: SharedViewModel by activityViewModels()
@@ -103,6 +109,7 @@ class AvatarStatusFragment : Fragment() {
         )
         setupObservers()
         handleBackPressed()
+        analyticsLogger.logEvent(Analytics.Event.AVATAR_STATUS_PAGE_PRESENTED)
     }
 
     private fun FragmentAvatarStatusBinding.bindState(
@@ -359,6 +366,7 @@ class AvatarStatusFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             notifyMeToggleStateFlow.collectLatest { toggleStateNotifyMe ->
                 cbNotifyMe.isChecked = toggleStateNotifyMe
+                analyticsLogger.logEvent(Analytics.Event.AVATAR_STATUS_NOTIFY_ME_TOGGLE)
             }
         }
 
@@ -400,6 +408,7 @@ class AvatarStatusFragment : Fragment() {
                     }
                 }
                 gotoAvatarResult(uiState.value.avatarStatusId!!)
+                analyticsLogger.logEvent(Analytics.Event.AVATAR_STATUS_VIEW_RESULTS_CLICK)
             } else if (modelStatus == ModelStatus.TRAINING_FAILED) {
                 gotoUploads(null)
             } else if (sessionStatus == UploadSessionStatus.FAILED) {
@@ -416,7 +425,10 @@ class AvatarStatusFragment : Fragment() {
             userViewModel.loginUser.collectLatest { loginUser ->
                 if (loginUser?.userId != null) {
                     btnClose.isVisible = true
-                    btnClose.setOnClickListener { activity?.onBackPressedDispatcher?.onBackPressed() }
+                    btnClose.setOnClickListener {
+                        activity?.onBackPressedDispatcher?.onBackPressed()
+                        analyticsLogger.logEvent(Analytics.Event.AVATAR_STATUS_CLOSE_BTN_CLICK)
+                    }
                 } else {
                     // If the user isn't logged in, then this is a blocker page
                     btnClose.isVisible = false

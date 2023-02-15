@@ -7,7 +7,9 @@ import androidx.annotation.Size
 
 interface AnalyticsLogger {
 
-    fun logEvent(@Size(min = 1L,max = 40L) name: String, params: Bundle?)
+    fun logEvent(@Size(min = 1L, max = 40L) name: String, params: Bundle?)
+
+    fun logEvent(@Size(min = 1L, max = 40L) name: String)
 
     fun logDebugEvent(@Size(min = 1L, max = 40L) name: String, params: Bundle?)
 

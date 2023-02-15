@@ -30,6 +30,10 @@ class AnalyticsLoggerImpl @Inject constructor(
         }*/
     }
 
+    override fun logEvent(name: String) {
+        logEvent(name = name, params = null)
+    }
+
     override fun logDebugEvent(name: String, params: Bundle?) {
         if (environment == Env.DEV) {
             // No op.

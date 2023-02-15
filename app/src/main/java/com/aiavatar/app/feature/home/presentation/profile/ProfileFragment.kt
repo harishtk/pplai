@@ -21,6 +21,8 @@ import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.*
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.databinding.FragmentProfileBinding
@@ -40,9 +42,13 @@ import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val viewModel: ProfileViewModel by viewModels()
     private val userViewModel: UserViewModel by activityViewModels()
@@ -75,6 +81,7 @@ class ProfileFragment : Fragment() {
                 Timber.d("Profile lifecycle state: $event")
             }
         })
+        analyticsLogger.logEvent(Analytics.Event.PROFILE_PAGE_PRESENTED)
     }
 
     private fun FragmentProfileBinding.bindState(
@@ -129,6 +136,7 @@ class ProfileFragment : Fragment() {
 
         val callback = object : ModelListAdapter.Callback {
             override fun onItemClick(position: Int, data: ProfileListUiModel.Item) {
+                analyticsLogger.logEvent(Analytics.Event.PROFILE_MODEL_ITEM_CLICK)
                 val statusId = data.modelListWithModel.modelListItem.statusId
                 if (statusId != "0") {
                     gotoAvatarStatus(statusId)
@@ -237,10 +245,12 @@ class ProfileFragment : Fragment() {
 
         btnCreate.setOnClickListener {
             gotoUploadSteps()
+            analyticsLogger.logEvent(Analytics.Event.PROFILE_CREATE_CLICK)
         }
 
         fabCreate.setOnClickListener {
             gotoUploadSteps()
+            analyticsLogger.logEvent(Analytics.Event.PROFILE_CREATE_CLICK)
         }
     }
 
@@ -265,12 +275,15 @@ class ProfileFragment : Fragment() {
             }
         }
 
-        toolbarSettings.setOnClickListener { gotoSettings() }
+        toolbarSettings.setOnClickListener {
+            gotoSettings()
+            analyticsLogger.logEvent(Analytics.Event.PROFILE_MENU_SETTINGS_BTN_CLICK)
+        }
         toolbarNavigationIcon.setOnClickListener {
-            try {
+            safeCall {
                 findNavController().navigateUp()
-            } catch (ignore: Exception) {
             }
+            analyticsLogger.logEvent(Analytics.Event.PROFILE_BACK_ACTION_CLICK)
         }
         viewLifecycleOwner.lifecycleScope.launch {
             getString(

@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.R
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
@@ -26,9 +28,13 @@ import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MoreCatalogFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val viewModel: MoreCatalogViewModel by viewModels()
 
@@ -110,6 +116,7 @@ class MoreCatalogFragment : Fragment() {
     private fun FragmentMoreCatalogBinding.bindClick(uiState: StateFlow<MoreCatalogState>) {
         btnNext.setOnClickListener {
             gotoUploadSteps()
+            analyticsLogger.logEvent(Analytics.Event.MORE_CATALOG_CREATE_CLICK)
         }
 
         retryButton.setOnClickListener {
@@ -126,8 +133,10 @@ class MoreCatalogFragment : Fragment() {
         }
 
         toolbarIncluded.toolbarNavigationIcon.setOnClickListener {
-            try { findNavController().navigateUp() }
-            catch (ignore: Exception) {}
+            safeCall {
+                findNavController().navigateUp()
+            }
+            analyticsLogger.logEvent(Analytics.Event.MORE_CATALOG_BACK_ACTION_CLICK)
         }
     }
 

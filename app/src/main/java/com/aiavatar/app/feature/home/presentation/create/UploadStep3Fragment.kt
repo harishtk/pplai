@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.Constant
 import com.aiavatar.app.R
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.UiText
 import com.aiavatar.app.commons.util.net.isConnected
@@ -34,9 +36,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class UploadStep3Fragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val viewModel: UploadStep3ViewModel by viewModels()
     private val sharedViewModel: SharedViewModel by activityViewModels()
@@ -82,6 +88,7 @@ class UploadStep3Fragment : Fragment() {
         }
         val adapter = GenderAdapter { position ->
             viewModel.toggleSelection(position)
+            analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_3_GENDER_TOGGLE)
         }
 
         genderSelectionList.adapter = adapter
@@ -115,6 +122,7 @@ class UploadStep3Fragment : Fragment() {
                 if (sessionIdCache != null) {
                     btnNext.setOnClickListener(null)
                     viewModel.updateTrainingType(sessionIdCache!!)
+                    analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_3_NEXT_CLICK)
                 } else {
                     context?.showToast(UiText.somethingWentWrong.asString(requireContext()))
                 }
@@ -123,6 +131,7 @@ class UploadStep3Fragment : Fragment() {
 
         navigationIcon.setOnClickListener {
             safeCall { findNavController().popBackStack() }
+            analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_3_NAVIGATION_BACK_CLICK)
         }
     }
 

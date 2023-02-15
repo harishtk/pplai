@@ -18,7 +18,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 
 
 class LegalsBottomSheet(
-    val cont: () -> Unit,
+    val callback: Callback
 ) : BaseBottomSheetDialogFragment(R.color.bottom_sheet_background) {
 
     override fun onCreateView(
@@ -55,11 +55,11 @@ class LegalsBottomSheet(
         tvAcceptPrivacy.text = "I agree with the $privacyPolicyString"
         val privacyClicked = {
             context?.showToast("Privacy policy")
-            Unit
+            callback.onReadLegal("privacy")
         }
         val termsClicked = {
             context?.showToast("Terms")
-            Unit
+            callback.onReadLegal("terms")
         }
 
         tvAcceptTerms.makeLinks(
@@ -82,7 +82,7 @@ class LegalsBottomSheet(
 
         btnNext.setOnClickListener {
             if (cbAcceptTerms.isChecked && cbAcceptPrivacy.isChecked) {
-                cont.invoke()
+                callback.onAcceptClick()
             } else {
                 if (!cbAcceptTerms.isChecked) {
                     termsActionContainer.shakeNow()
@@ -94,6 +94,11 @@ class LegalsBottomSheet(
                 // context?.showToast("Please read and accept.")
             }
         }
+    }
+
+    interface Callback {
+        fun onAcceptClick()
+        fun onReadLegal(type: String /* privacy|terms */)
     }
 
     companion object {

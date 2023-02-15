@@ -22,15 +22,23 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.vectordrawable.graphics.drawable.AnimationUtilsCompat
 import com.aiavatar.app.*
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AnimationUtil
 import com.aiavatar.app.databinding.FragmentLandingPageBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class LandingPageFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private var pendingPopupWindow: PopupWindow? = null
 
@@ -53,6 +61,7 @@ class LandingPageFragment : Fragment() {
         if (!ApplicationDependencies.getPersistentStore().isLandingUserGuideShown) {
             showGuidedSteps(view)
         }
+        analyticsLogger.logEvent(Analytics.Event.LANDING_PAGE_PRESENTED)
     }
 
     private fun FragmentLandingPageBinding.bindState() {
@@ -68,22 +77,26 @@ class LandingPageFragment : Fragment() {
         tvExploreMore.setOnClickListener {
             ApplicationDependencies.getPersistentStore().setUploadStepSkipped(true)
             gotoHome()
+            analyticsLogger.logEvent(Analytics.Event.LANDING_EXPLORE_MORE_CLICK)
         }
 
         btnCreateMasterPiece.setOnClickListener {
             ApplicationDependencies.getPersistentStore().apply {
-                try {
+                safeCall {
                     gotoUpload()
-                } catch (e: Exception) {
-                    if (BuildConfig.DEBUG) {
-                        Timber.e(e)
-                    }
                 }
+                analyticsLogger.logEvent(Analytics.Event.LANDING_CREATE_BTN_CLICK)
             }
         }
 
-        btnAlreadyHaveAccount.setOnClickListener { gotoLogin() }
-        profileContainer.setOnClickListener { gotoLogin() }
+        btnAlreadyHaveAccount.setOnClickListener {
+            gotoLogin()
+            analyticsLogger.logEvent(Analytics.Event.LANDING_ALREADY_HAVE_AN_ACCOUNT_CLICK)
+        }
+        profileContainer.setOnClickListener {
+            gotoLogin()
+            analyticsLogger.logEvent(Analytics.Event.LANDING_MENU_ACCOUNT_CLICK)
+        }
 
     }
 

@@ -6,6 +6,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.Constant
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.InvalidOtpException
 import com.aiavatar.app.commons.util.ResolvableException
 import com.aiavatar.app.commons.util.Result
@@ -34,6 +36,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
+    private val analyticsLogger: AnalyticsLogger,
     private val savedStateHandle: SavedStateHandle,
     private val repository: AccountsRepository,
     @Deprecated("use repo instead")
@@ -96,8 +99,14 @@ class LoginViewModel @Inject constructor(
             }
             is LoginUiAction.NextClick -> {
                 when (uiState.value.loginSequence) {
-                    LoginSequence.TYPING_EMAIL -> { validateLogin() }
-                    LoginSequence.OTP_SENT -> { validateOtp() }
+                    LoginSequence.TYPING_EMAIL -> {
+                        validateLogin()
+                        analyticsLogger.logEvent(Analytics.Event.LOGIN_GET_OTP_CLICK)
+                    }
+                    LoginSequence.OTP_SENT -> {
+                        validateOtp()
+                        analyticsLogger.logEvent(Analytics.Event.LOGIN_VERIFY_OTP_CLICK)
+                    }
                     LoginSequence.OTP_VERIFIED -> { /* Noop */ }
                 }
             }
@@ -302,6 +311,7 @@ class LoginViewModel @Inject constructor(
                                 }
                                 sendEvent(LoginUiEvent.ShowToast(UiText.DynamicString("Login successful!")))
                                 sendEvent(LoginUiEvent.NextScreen)
+                                analyticsLogger.logEvent(Analytics.Event.LOGIN_SUCCESS_EVENT)
                             }
                         }
                     }
@@ -364,6 +374,7 @@ class LoginViewModel @Inject constructor(
                         }
                         sendEvent(LoginUiEvent.ShowToast(UiText.DynamicString("Login successful!")))
                         sendEvent(LoginUiEvent.NextScreen)
+                        analyticsLogger.logEvent(Analytics.Event.LOGIN_SOCIAL_SUCCESS_EVENT)
                     }
                 }
             }

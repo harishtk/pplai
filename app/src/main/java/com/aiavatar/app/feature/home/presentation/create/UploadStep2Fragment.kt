@@ -30,6 +30,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.*
 import com.aiavatar.app.Constant.MIME_TYPE_JPEG
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.HapticUtil
@@ -53,9 +55,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class UploadStep2Fragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val viewModel: UploadStep2ViewModel by viewModels()
     private val sharedViewModel: SharedViewModel by activityViewModels()
@@ -228,10 +234,12 @@ class UploadStep2Fragment : Fragment() {
 
             override fun onPlaceholderClick(position: Int) {
                 launchPhotoPicker()
+                analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_2_MORE_BTN_CLICK)
             }
 
             override fun onDeleteClick(position: Int, model: UploadPreviewUiModel.Item) {
                 viewModel.deletePhoto(model.selectedMediaItem.uri)
+                analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_2_DELETE_SINGLE_PHOTO_BTN_CLICK)
             }
 
         }
@@ -264,22 +272,6 @@ class UploadStep2Fragment : Fragment() {
         }
 
         bindExamplesAdapter()
-
-        btnNext.setOnClickListener {
-            /*if (uiState.value.remainingPhotoCount >= MIN_IMAGES || BuildConfig.DEBUG) {
-                viewModel.startUpload(requireContext())
-            } else {
-                launchPhotoPicker()
-            }*/
-            val picked = uiState.value.previewModelList
-                .filterIsInstance<UploadPreviewUiModel.Item>()
-                .count { it.selected }
-            if (picked >= MIN_IMAGES) {
-                viewModel.startUpload(requireContext())
-            } else {
-                launchPhotoPicker()
-            }
-        }
 
         val remainingPhotosCountFlow = uiState.map { it.remainingPhotoCount }
             .distinctUntilChanged()
@@ -322,12 +314,33 @@ class UploadStep2Fragment : Fragment() {
             }
         }
 
-        bindClick()
+        bindClick(
+            uiState = uiState
+        )
     }
 
-    private fun FragmentUploadStep2Binding.bindClick() {
+    private fun FragmentUploadStep2Binding.bindClick(uiState: StateFlow<UploadStep2State>) {
         navigationIcon.setOnClickListener {
             safeCall { findNavController().popBackStack() }
+            analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_2_NAVIGATION_BACK_CLCK)
+        }
+
+        btnNext.setOnClickListener {
+            /*if (uiState.value.remainingPhotoCount >= MIN_IMAGES || BuildConfig.DEBUG) {
+                viewModel.startUpload(requireContext())
+            } else {
+                launchPhotoPicker()
+            }*/
+            val picked = uiState.value.previewModelList
+                .filterIsInstance<UploadPreviewUiModel.Item>()
+                .count { it.selected }
+            if (picked >= MIN_IMAGES) {
+                viewModel.startUpload(requireContext())
+                analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_2_NEXT_CLICK)
+            } else {
+                launchPhotoPicker()
+                analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_2_UPLOAD_PHOTOS_CLICK)
+            }
         }
     }
 

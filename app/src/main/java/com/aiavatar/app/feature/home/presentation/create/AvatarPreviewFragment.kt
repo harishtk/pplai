@@ -29,6 +29,8 @@ import androidx.viewpager2.widget.CompositePageTransformer
 import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
 import com.aiavatar.app.*
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
@@ -42,10 +44,12 @@ import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.viewmodels.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
+import javax.inject.Inject
 import kotlin.math.abs
 
 /**
@@ -53,6 +57,9 @@ import kotlin.math.abs
  */
 @AndroidEntryPoint
 class AvatarPreviewFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val userViewModel: UserViewModel by viewModels()
     private val viewModel: AvatarPreviewViewModel by viewModels()
@@ -142,6 +149,7 @@ class AvatarPreviewFragment : Fragment() {
         )
 
         handleBackPressed()
+        analyticsLogger.logEvent(Analytics.Event.AVATAR_PREVIEW_PAGE_PRESENTED)
     }
 
     private fun FragmentAvatarPreviewBinding.bindState(
@@ -246,6 +254,7 @@ class AvatarPreviewFragment : Fragment() {
                 HapticUtil.createOneShot(requireContext())
             }
             catalogPreviewPager.setCurrentItem(clickedPosition, true)
+            analyticsLogger.logEvent(Analytics.Event.AVATAR_PREVIEW_SCROLLER_ITEM_CLICK)
         }
         avatarScrollerList.adapter = scrollerAdapter
 
@@ -315,6 +324,7 @@ class AvatarPreviewFragment : Fragment() {
             runBlocking {
                 val loginUser = userViewModel.loginUser.first()
                 if (loginUser?.userId != null) {
+                    analyticsLogger.logEvent(Analytics.Event.AVATAR_PREVIEW_SHARE_BTN_CLICK)
                     if (uiState.value.shareLinkData != null) {
                         handleShareLink(uiState.value.shareLinkData!!.shortLink)
                     } else {
@@ -332,6 +342,7 @@ class AvatarPreviewFragment : Fragment() {
         btnNext.setOnClickListener {
             val avatarStatus = uiState.value.avatarStatusWithFiles?.avatarStatus ?: return@setOnClickListener
             if (avatarStatus.paid) {
+                analyticsLogger.logEvent(Analytics.Event.AVATAR_PREVIEW_DOWNLOAD_BTN_CLICK)
                 // TODO: get folder name
                 if (avatarStatus.modelRenamedByUser) {
                     // TODO: if model is renamed directly save the photos
@@ -394,10 +405,8 @@ class AvatarPreviewFragment : Fragment() {
         }
 
         toolbarIncluded.toolbarNavigationIcon.setOnClickListener {
-            try {
-                findNavController().navigateUp()
-            } catch (ignore: Exception) {
-            }
+            analyticsLogger.logEvent(Analytics.Event.AVATAR_PREVIEW_BACK_BTN_CLICK)
+            safeCall { findNavController().navigateUp() }
         }
     }
 

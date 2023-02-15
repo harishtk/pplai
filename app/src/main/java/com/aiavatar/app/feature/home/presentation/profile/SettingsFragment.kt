@@ -19,6 +19,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentSettingsBinding
 import com.aiavatar.app.di.ApplicationDependencies
@@ -32,9 +34,13 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SettingsFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private val viewModel: SettingsViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels()
@@ -58,8 +64,10 @@ class SettingsFragment : Fragment() {
         toolbarIncluded.apply {
             toolbarNavigationIcon.isVisible = true
             toolbarNavigationIcon.setOnClickListener {
-                try { findNavController().navigateUp() }
-                catch (ignore: Exception) {}
+                safeCall {
+                    findNavController().navigateUp()
+                }
+                analyticsLogger.logEvent(Analytics.Event.SETTIGNS_BACK_ACTION_CLICK)
             }
 
             toolbarTitle.text = getString(R.string.label_settings)
@@ -83,6 +91,9 @@ class SettingsFragment : Fragment() {
                 when (settingsListData[position].id) {
                     5 -> {
                         confirmLogout {
+                            analyticsLogger.logEvent(Analytics.Event.SETTINGS_LOGOUT_CLICK)
+                            analyticsLogger.setUserId(null)
+
                             userViewModel.logout()
                             ApplicationDependencies.getPersistentStore().logout()
                             context?.showToast("Logged out!")

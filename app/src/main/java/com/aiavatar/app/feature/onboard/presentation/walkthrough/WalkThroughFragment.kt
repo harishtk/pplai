@@ -11,6 +11,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.R
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.autoCleared
 import com.aiavatar.app.databinding.FragmentWalkThroughBinding
 import com.aiavatar.app.di.ApplicationDependencies
@@ -18,8 +20,14 @@ import com.aiavatar.app.feature.onboard.presentation.utils.FragmentPagerAdapter
 import com.aiavatar.app.safeCall
 import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class WalkThroughFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private var _binding: FragmentWalkThroughBinding by autoCleared()
     val binding: FragmentWalkThroughBinding
@@ -87,6 +95,10 @@ class WalkThroughFragment : Fragment() {
                     btnNext.text = getString(R.string.label_continue)
                     btnNext.icon = null
                 }
+                analyticsLogger.logEvent(
+                    Analytics.Event.ONBOARD_WELCOME_SWIPE_ACTION,
+                    null
+                )
             }
 
             override fun onPageScrolled(
@@ -105,6 +117,10 @@ class WalkThroughFragment : Fragment() {
         })
 
         btnNext.setOnClickListener {
+            analyticsLogger.logEvent(
+                Analytics.Event.ONBOARD_WELCOME_BTN_CLICK,
+                null
+            )
             if (walkthroughPager.currentItem < adapter.itemCount - 1) {
                 walkthroughPager.setCurrentItem(++walkthroughPager.currentItem, true)
             } else {
@@ -170,10 +186,26 @@ class WalkThroughFragment : Fragment() {
     private fun showLegal(cont: () -> Unit) {
         val f = childFragmentManager.findFragmentByTag(LegalsBottomSheet.FRAGMENT_TAG)
         if (f == null) {
-            LegalsBottomSheet {
-                ApplicationDependencies.getPersistentStore().setLegalAgreed()
-                cont.invoke()
-            }.also {
+            val cb = object : LegalsBottomSheet.Callback {
+                override fun onAcceptClick() {
+                    ApplicationDependencies.getPersistentStore().setLegalAgreed()
+                    analyticsLogger.logEvent(Analytics.Event.ONBOARD_LEGAL_ACCEPT_CLICK, null)
+                    cont.invoke()
+                }
+
+                override fun onReadLegal(type: String) {
+                    when (type) {
+                        "privacy" -> {
+                            analyticsLogger.logEvent(Analytics.Event.ONBOARD_LEGAL_READ_PRIVACY, null)
+                        }
+                        "terms" -> {
+                            analyticsLogger.logEvent(Analytics.Event.ONBOARD_LEGAL_READ_TERMS, null)
+                        }
+                    }
+                }
+            }
+
+            LegalsBottomSheet(cb).also {
                 it.show(childFragmentManager, LegalsBottomSheet.FRAGMENT_TAG)
             }
         }

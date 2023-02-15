@@ -9,6 +9,7 @@ object Analytics {
      * An `object` to hold the custom Firebase Analytics Events
      */
     object Event {
+        /* Onboard */
         const val ONBOARD_GET_OTP_BUTTON_EVENT = "Onboarding_Get_OTPbutton"
         const val ONBOARD_AUTOFILL_PHONE_NUMBER = "Onboarding_autoFillnumber"
         const val ONBOARD_OTP_SUCCESS_EVENT = "Onboarding_OTPsuccess"
@@ -18,16 +19,22 @@ object Analytics {
 
         const val ONBOARD_WELCOME_SWIPE_ACTION = "Onboard_welcome_swipeAction"
         const val ONBOARD_WELCOME_BTN_CLICK = "Onboard_welcomeBtn_click"
+        const val ONBOARD_LEGAL_ACCEPT_CLICK = "Onboard_legal_acceptClick"
+        const val ONBOARD_LEGAL_READ_TERMS = "Onboard_legal_read_terms"
+        const val ONBOARD_LEGAL_READ_PRIVACY = "Onboard_legal_read_privacy"
+        /* END - Onboard */
 
         /* Upload Steps */
         const val UPLOAD_STEP_SKIP_CLICK = "Upload_step_skip_click"
         const val UPLOAD_STEP_1_CONTINUE_BTN_CLICK = "Upload_step1_continueBtn_click"
         const val UPLOAD_STEP_2_UPLOAD_PHOTOS_CLICK = "Upload_step2_uploadBtn_click"
+        const val UPLOAD_STEP_2_NAVIGATION_BACK_CLCK = "Upload_step2_navigationBack_click"
         const val UPLOAD_STEP_2_MORE_BTN_CLICK = "Upload_step2_moreBtn_click"
         const val UPLOAD_STEP_2_DELETE_SINGLE_PHOTO_BTN_CLICK = "Upload_step2_deleteSingleBtn_click"
         const val UPLOAD_STEP_2_NEXT_CLICK = "Upload_step2_next_click"
         const val UPLOAD_STEP_3_GENDER_TOGGLE = "Upload_step3_gender_toggle"
         const val UPLOAD_STEP_3_NEXT_CLICK = "Upload_step3_next_click"
+        const val UPLOAD_STEP_3_NAVIGATION_BACK_CLICK = "Upload_step3_navigationBack_click"
         /* END - Upload Steps */
 
         /* Avatar Status */
@@ -47,7 +54,7 @@ object Analytics {
         /* END - Avatar Results */
 
         /* Avtar Preview */
-        const val AVATAR_PREVIEW_SCROLL_ACTION = "Avatarpreview_scroll_action"
+        const val AVATAR_PREVIEW_PAGE_PRESENTED = "Avatarpreview_page_presented"
         const val AVATAR_PREVIEW_SCROLLER_ITEM_CLICK = "Avatarpreview_scrollerItem_click"
         const val AVATAR_PREVIEW_BACK_BTN_CLICK = "Avatarpreview_backBtn_click"
         const val AVATAR_PREVIEW_SHARE_BTN_CLICK = "Avatarpreview_shareBtn_click"
@@ -55,6 +62,7 @@ object Analytics {
         /* END - Avtar Preview */
 
         /* Login */
+        const val LOGIN_PAGE_PRESENTED = "Login_page_presented"
         const val LOGIN_GET_OTP_CLICK = "Login_getOtp_click"
         const val LOGIN_SOCIAL_GOOGLE_CLICK = "Login_social_google_click"
         const val LOGIN_VERIFY_OTP_CLICK = "Login_verifyOtp_click"
@@ -79,7 +87,6 @@ object Analytics {
         /* END - Subscriptions Page */
 
         /* Settings */
-        const val SETTIGNS_PAGE_PRESENTED = "Settings_page_presented"
         const val SETTIGNS_BACK_ACTION_CLICK = "Settings_backAction_click"
         const val SETTINGS_LOGOUT_CLICK = "Settings_logout_click"
         /* END - Settings */
@@ -104,10 +111,11 @@ object Analytics {
         const val HOME_PAGE_PRESENTED = "Unique_Homepage_presented"
         const val CATALOG_PRESENTED = "Catalog_page_presented"
         const val CATALOG_ITEM_CLICK = "Catalog_item_click"
+        const val CATALOG_CREATE_CLICK = "Catalog_create_click"
+        const val CATALOG_PROFILE_ICON_CLICK = "Catalog_profileIcon_click"
         /* END - Home page */
 
         /* More catalog */
-        const val MORE_CATALOG_PRESENTED = "Morecatalog_page_presented"
         const val MORE_CATALOG_CREATE_CLICK = "Morecatalog_create_click"
         const val MORE_CATALOG_BACK_ACTION_CLICK = "Morecatalog_backAction_click"
         /* END - More catalog */
@@ -140,9 +148,6 @@ object Analytics {
 
         /* Clicks 'Notifications'  */
         const val NOTIFICATIONS_MENU_EVENT = "Notifications_menu"
-
-        /* Clicks 'Profile' */
-        const val MY_PROFILE_EVENT = "Myprofile"
     }
 
     object OtherEvents {
