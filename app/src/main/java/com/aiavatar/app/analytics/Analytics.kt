@@ -132,8 +132,8 @@ object Analytics {
 
         /* Model detail */
         const val MODEL_DETAIL_PRESENTED = "Modeldetail_page_presented"
-        const val MODEL_DETAIL_SCROLL_ACTION = "Modeldetail_scroll_action"
         const val MODEL_DETAIL_SCROLLER_ITEM_CLICK = "Modeldetail_scrollerItem_click"
+        const val MODEL_DETAIL_RECREATE_CLICK = "Modeldetail_recreateBtn_click"
         const val MODEL_DETAIL_BACK_BTN_CLICK = "Modeldetail_backBtn_click"
         const val MODEL_DETAIL_SHARE_BTN_CLICK = "Modeldetail_shareBtn_click"
         const val MODEL_DETAIL_DOWNLOAD_BTN_CLICK = "Modeldetail_downloadBtn_click"

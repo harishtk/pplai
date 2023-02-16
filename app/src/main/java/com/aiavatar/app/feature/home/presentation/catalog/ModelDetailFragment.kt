@@ -30,6 +30,8 @@ import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.aiavatar.app.*
+import com.aiavatar.app.analytics.Analytics
+import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
@@ -49,6 +51,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 import kotlin.math.abs
 
 /**
@@ -56,6 +59,9 @@ import kotlin.math.abs
  */
 @AndroidEntryPoint
 class ModelDetailFragment : Fragment() {
+
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
 
     private var _binding: FragmentModelDetailBinding? = null
     private val binding: FragmentModelDetailBinding
@@ -145,6 +151,7 @@ class ModelDetailFragment : Fragment() {
         )
 
         handleBackPressed()
+        analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_PRESENTED)
     }
 
     private fun FragmentModelDetailBinding.bindState(
@@ -278,6 +285,7 @@ class ModelDetailFragment : Fragment() {
                 HapticUtil.createOneShot(requireContext())
             }
             catalogPreviewPager.setCurrentItem(clickedPosition, true)
+            analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_SCROLLER_ITEM_CLICK)
         }
         avatarScrollerList.adapter = scrollerAdapter
 
@@ -371,9 +379,6 @@ class ModelDetailFragment : Fragment() {
         uiState: StateFlow<ModelDetailState>,
         uiAction: (ModelDetailUiAction) -> Unit
     ) {
-        icShare.setOnClickListener {
-            context?.showToast("Coming soon!")
-        }
 
         icDownload.setOnClickListener {
             val modelData = uiState.value.modelData
@@ -382,6 +387,7 @@ class ModelDetailFragment : Fragment() {
             if (modelData.renamed) {
                 // TODO: if model is renamed directly save the photos
                 viewModel.downloadCurrentAvatar(requireContext())
+                analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_DOWNLOAD_BTN_CLICK)
             } else {
                 context?.showToast("Getting folder name")
                 EditFolderNameDialog { typedName ->
@@ -394,6 +400,7 @@ class ModelDetailFragment : Fragment() {
                     // TODO: move 'save to gallery' to a foreground service
                     viewModel.saveModelName(typedName) {
                         viewModel.downloadCurrentAvatar(requireContext())
+                        analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_FOLDER_NAME_CHANGE)
                     }
                     null
                 }.show(childFragmentManager, "folder-name-dialog")
@@ -404,6 +411,7 @@ class ModelDetailFragment : Fragment() {
         icShare.setOnClickListener {
             if (uiState.value.shareLinkData != null) {
                 handleShareLink(uiState.value.shareLinkData!!.shortLink)
+                analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_SHARE_BTN_CLICK)
             } else {
                 uiAction(ModelDetailUiAction.GetShareLink)
             }
@@ -412,6 +420,7 @@ class ModelDetailFragment : Fragment() {
         btnNext.setOnClickListener {
             uiState.value.modelId?.let { modelId ->
                 gotoPlans(modelId)
+                analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_RECREATE_CLICK)
             }
         }
     }
@@ -442,10 +451,10 @@ class ModelDetailFragment : Fragment() {
         }
 
         toolbarIncluded.toolbarNavigationIcon.setOnClickListener {
-            try {
+            safeCall {
                 findNavController().navigateUp()
-            } catch (ignore: Exception) {
             }
+            analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_BACK_BTN_CLICK)
         }
     }
 

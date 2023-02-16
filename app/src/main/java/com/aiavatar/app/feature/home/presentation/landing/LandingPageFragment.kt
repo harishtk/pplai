@@ -60,8 +60,8 @@ class LandingPageFragment : Fragment() {
 
         if (!ApplicationDependencies.getPersistentStore().isLandingUserGuideShown) {
             showGuidedSteps(view)
+            analyticsLogger.logEvent(Analytics.Event.LANDING_PAGE_PRESENTED)
         }
-        analyticsLogger.logEvent(Analytics.Event.LANDING_PAGE_PRESENTED)
     }
 
     private fun FragmentLandingPageBinding.bindState() {
