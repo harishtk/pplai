@@ -75,6 +75,10 @@ class SubscriptionFragment : Fragment() {
                 result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_MESSAGE)?.let { message ->
                     context?.showToast(message)
                 }
+
+                val purchaseToken = result.data?.getStringExtra(InAppPurchaseActivity.EXTRA_PURCHASE_TOKEN)
+                    .nullAsEmpty()
+                viewModel.sendPurchaseDetailsToServer(purchaseToken)
             }
             ResultCode.USER_CANCELED -> {
                 transactionId?.let { txnId ->

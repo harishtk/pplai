@@ -143,7 +143,18 @@ class UploadStep1Fragment : Fragment() {
                 navigate(R.id.landingPage, null, navOpts)
             }
         }
-        tvSkip.isVisible = !ApplicationDependencies.getPersistentStore().isLogged
+
+        if (ApplicationDependencies.getPersistentStore().isLogged) {
+            tvSkip.isVisible = false
+            navigationIcon.isVisible = true
+        } else {
+            tvSkip.isVisible = true
+            navigationIcon.isVisible = false
+        }
+
+        navigationIcon.setOnClickListener {
+            safeCall { findNavController().navigateUp() }
+        }
     }
 
     private fun setupObservers() {

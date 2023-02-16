@@ -8,14 +8,14 @@ data class SubscriptionPurchaseRequestDto(
     val id: String,
     @SerializedName("modelId")
     val modelId: String,
-    @SerializedName("transactionId")
-    val transactionId: String,
+    @SerializedName("token")
+    val purchaseToken: String,
 )
 
 fun SubscriptionPurchaseRequest.asDto(): SubscriptionPurchaseRequestDto {
     return SubscriptionPurchaseRequestDto(
         id = id,
         modelId = modelId,
-        transactionId = transactionId
+        purchaseToken = purchaseToken
     )
 }

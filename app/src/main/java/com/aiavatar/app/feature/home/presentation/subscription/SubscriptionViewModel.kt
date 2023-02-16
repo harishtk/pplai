@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.home.presentation.subscription
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -150,6 +151,28 @@ class SubscriptionViewModel @Inject constructor(
         _uiState.update { state -> state.copy(billingConnectionState = connected) }
     }
 
+    fun sendPurchaseDetailsToServer(purchaseToken: String) {
+        Log.d("SubscriptionViewModel", "sendPurchaseDetailsToServer() called with: purchaseToken = $purchaseToken")
+        if (validateInternal()) {
+            val modelId = uiState.value.modelId.nullAsEmpty()
+            val selectedPlan = uiState.value.subscriptionPlansUiModels
+                .filterIsInstance<SubscriptionUiModel.Plan>()
+                .find { it.selected }?.subscriptionPlan
+
+            if (selectedPlan != null) {
+                val request = SubscriptionPurchaseRequest(
+                    id = selectedPlan.id.toString(),
+                    modelId = modelId,
+                    purchaseToken = purchaseToken
+                )
+
+                sendPurchaseDetailToServer(request)
+            }
+        } else {
+            // Handled by this#validateInternal()
+        }
+    }
+
     fun setError(
         e: Exception?,
         uiErrorText: UiText?
@@ -261,7 +284,7 @@ class SubscriptionViewModel @Inject constructor(
                     val request = SubscriptionPurchaseRequest(
                         id = selectedPlan.id.toString(),
                         modelId = modelId,
-                        transactionId = ""
+                        purchaseToken = ""
                     )
 
                     sendPurchaseDetailToServer(request)
@@ -359,6 +382,7 @@ class SubscriptionViewModel @Inject constructor(
         subscriptionPurchaseJob?.cancel(CancellationException("New request")) // just in case
         subscriptionPurchaseJob = viewModelScope.launch {
             homeRepository.purchasePlan(request).collectLatest { result ->
+                Timber.d("Result: subscription/purchase $result")
                 when (result) {
                     is Result.Loading -> setLoadingInternal(LoadType.ACTION, LoadState.Loading())
                     is Result.Error -> {
