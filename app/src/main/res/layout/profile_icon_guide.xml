@@ -71,7 +71,7 @@
         <TextView style="@style/TextStyle.VerySmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tap anywhere to continue"
+            android:text="Tap anywhere to dismiss"
             android:textColor="@color/white"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"

@@ -97,12 +97,13 @@ class ProfileFragment : Fragment() {
                     }
                     is ProfileUiEvent.ShowUserGuide -> {
                         if (event.show) {
-                            if (pendingPopupWindow == null) {
+                            val shownCount = ApplicationDependencies.getPersistentStore()
+                                .profileCreateGuideShownCount
+                            if (pendingPopupWindow == null && shownCount < 3) {
                                 showProfileCreateModelGuidedStep(root)
                             }
                         } else {
-                            pendingPopupWindow?.dismiss()
-                            pendingPopupWindow = null
+                            hideUserGuideIfShown()
                         }
                     }
                 }
@@ -246,11 +247,15 @@ class ProfileFragment : Fragment() {
         btnCreate.setOnClickListener {
             gotoUploadSteps()
             analyticsLogger.logEvent(Analytics.Event.PROFILE_CREATE_CLICK)
+
+            hideUserGuideIfShown()
         }
 
         fabCreate.setOnClickListener {
             gotoUploadSteps()
             analyticsLogger.logEvent(Analytics.Event.PROFILE_CREATE_CLICK)
+
+            hideUserGuideIfShown()
         }
     }
 
@@ -278,12 +283,16 @@ class ProfileFragment : Fragment() {
         toolbarSettings.setOnClickListener {
             gotoSettings()
             analyticsLogger.logEvent(Analytics.Event.PROFILE_MENU_SETTINGS_BTN_CLICK)
+
+            hideUserGuideIfShown()
         }
         toolbarNavigationIcon.setOnClickListener {
             safeCall {
                 findNavController().navigateUp()
             }
             analyticsLogger.logEvent(Analytics.Event.PROFILE_BACK_ACTION_CLICK)
+
+            hideUserGuideIfShown()
         }
         viewLifecycleOwner.lifecycleScope.launch {
             getString(
@@ -454,6 +463,11 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private fun hideUserGuideIfShown() {
+        pendingPopupWindow?.dismiss()
+        pendingPopupWindow = null
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     private fun showProfileCreateModelGuidedStep(anchorView: View?) = anchorView?.post {
         val layoutInflater = LayoutInflater.from(context)
@@ -474,7 +488,7 @@ class ProfileFragment : Fragment() {
         popupView1.setOnTouchListener { _, _ ->
             popupWindow.dismiss()
             pendingPopupWindow = null
-            // ApplicationDependencies.getPersistentStore().setHomeUserGuideShown()
+            ApplicationDependencies.getPersistentStore().setProfileCreateGuideShown()
             true
         }
     }

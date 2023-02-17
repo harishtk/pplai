@@ -65,6 +65,9 @@ class PersistentStore private constructor(
     val isHomeUserGuideShown: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.HOME_USER_GUIDE_SHOWN, false)
 
+    val profileCreateGuideShownCount: Int
+        get() = getAppPreferences().getInt(UserPreferenceKeys.PROFILE_CREATE_GUIDE_COUNT, 0)
+
     val isLandingUserGuideShown: Boolean
         get() = getAppPreferences().getBoolean(UserPreferenceKeys.LANDING_USER_GUIDE_SHOWN, false)
 
@@ -153,6 +156,19 @@ class PersistentStore private constructor(
         return this
     }
 
+    /**
+     * @param count - '-1' clears the value.
+     */
+    fun setProfileCreateGuideShown(count: Int = 1) {
+        val newValue = if (count == -1) {
+            0
+        } else {
+            getAppPreferences().getInt(UserPreferenceKeys.PROFILE_CREATE_GUIDE_COUNT, 0)
+                .plus(count)
+        }
+        getAppPreferences().edit { putInt(UserPreferenceKeys.PROFILE_CREATE_GUIDE_COUNT, newValue) }
+    }
+
     fun logout() {
         setUserId(null)
         setDeviceToken("")
@@ -165,6 +181,7 @@ class PersistentStore private constructor(
         setUserPreferredTheme(DEFAULT_USER_PREFERRED_THEME)
 
         ifDebug {
+            setProfileCreateGuideShown(-1)
             setHomeUserGuideShown(false)
             setLandingUserGuideShown(false)
             setOnboardPresented(false)
@@ -257,6 +274,7 @@ class PersistentStore private constructor(
             const val LEGAL_AGREEMENT = "legal_agreement"
             const val LANDING_USER_GUIDE_SHOWN = "landing_user_guide_shown"
             const val HOME_USER_GUIDE_SHOWN = "home_user_guide_shown"
+            const val PROFILE_CREATE_GUIDE_COUNT = "profile_create_guide_count"
         }
 
         object AppEssentialKeys {
