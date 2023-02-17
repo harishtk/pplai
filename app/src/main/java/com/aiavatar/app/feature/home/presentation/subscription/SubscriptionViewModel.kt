@@ -140,6 +140,7 @@ class SubscriptionViewModel @Inject constructor(
     fun setSubscriptionUiModelList(
         newUiModelList: List<SubscriptionUiModel>
     ) {
+        Log.d("SubsViewModel", "setSubscriptionUiModelList() called with: newUiModelList = $newUiModelList")
         _uiState.update { state ->
             state.copy(
                 subscriptionPlansUiModels = newUiModelList

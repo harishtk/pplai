@@ -140,16 +140,20 @@ inline fun <R> safeCall(block: () -> R): R? {
     }
 }
 
-inline fun ifDebug(block: () -> Unit) {
+inline fun ifDebug(block: () -> Unit): Boolean {
     if (BuildConfig.DEBUG || envForConfig(BuildConfig.ENV) == Env.INTERNAL) {
         block()
+        return true
     }
+    return false
 }
 
-inline fun ifEnvDev(block: () -> Unit) {
+inline fun ifEnvDev(block: () -> Unit): Boolean {
     if (envForConfig(BuildConfig.ENV) == Env.DEV) {
         block()
+        return true
     }
+    return false
 }
 
 /**
@@ -170,3 +174,10 @@ fun Boolean.assertBoolean(onTrue: () -> Unit, onFalse: () -> Unit) {
     if (this) onTrue() else onFalse()
 }
 
+inline fun Boolean.onElse(block: () -> Unit): Boolean {
+    if (!this) {
+        block()
+        return true
+    }
+    return false
+}

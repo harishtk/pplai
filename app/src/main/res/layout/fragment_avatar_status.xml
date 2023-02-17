@@ -103,6 +103,21 @@
         tools:text="7/100"
         tools:visibility="gone" />
 
+    <com.aiavatar.app.view.EtaCountDownView
+        android:id="@+id/eta_countdown_view"
+        style="@style/TextStyle.Medium.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/transparent"
+        android:textColor="@color/signal_inverse_primary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progress_indicator"
+        app:layout_constraintBottom_toTopOf="@id/cb_notify_me"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="ETA 00:45:12"
+        tools:visibility="visible" />
+
     <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/cb_notify_me"
         android:layout_width="wrap_content"

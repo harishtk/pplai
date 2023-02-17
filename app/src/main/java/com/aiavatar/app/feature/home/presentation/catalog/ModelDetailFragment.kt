@@ -741,6 +741,11 @@ class AvatarScrollAdapter(
         } ?: false
     }
 
+    override fun onViewRecycled(holder: AvatarScrollAdapter.ItemViewHolder) {
+        super.onViewRecycled(holder)
+        (holder as? Recyclable)?.onViewRecycled()
+    }
+
     class ItemViewHolder private constructor(
         private val binding: ItemScrollerListBinding,
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {

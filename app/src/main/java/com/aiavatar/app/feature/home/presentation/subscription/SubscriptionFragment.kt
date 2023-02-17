@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.os.BuildCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -23,7 +24,9 @@ import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.core.Env
 import com.aiavatar.app.core.data.source.local.entity.*
+import com.aiavatar.app.core.envForConfig
 import com.aiavatar.app.databinding.FragmentSubscriptionBinding
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.payments.PaymentMethod
@@ -346,6 +349,7 @@ class SubscriptionFragment : Fragment() {
                 internalSubscriptionPlansFlow,
                 ::Pair
             ).collectLatest { (connected, internalPlans) ->
+                Timber.d("Plans: connected = $connected internalPlans = $internalPlans")
                 if (connected) {
                     if (internalPlans != null) {
                         viewModel.setLoading(LoadType.REFRESH, LoadState.Loading())
@@ -365,7 +369,16 @@ class SubscriptionFragment : Fragment() {
                             .build()
 
                         val productDetailsResult = withContext(Dispatchers.IO) {
-                            billingClient.queryProductDetails(params)
+                            if (envForConfig(BuildConfig.ENV) == Env.DEV) {
+                                ProductDetailsResult(
+                                    billingResult = BillingResult.newBuilder()
+                                        .setResponseCode(BillingResponseCode.ERROR)
+                                        .build(),
+                                    productDetailsList = null
+                                )
+                            } else {
+                                billingClient.queryProductDetails(params)
+                            }
                         }
 
                         val productDetailsList = productDetailsResult.productDetailsList
@@ -404,6 +417,19 @@ class SubscriptionFragment : Fragment() {
                     }
                 } else {
                     Timber.d("Billing client is not ready.")
+                    /*val t = EmptyInAppProductsException("Cannot get plans from Billing Client code = -1")
+                    Timber.v(t)
+                    viewModel.setLoading(LoadType.REFRESH, LoadState.Error(t))
+                    viewModel.setError(t, UiText.DynamicString("Failed to fetch plans. Code: 1000"))
+                    ifEnvDev {
+                        internalPlans?.map { plan ->
+                            if (plan.bestSeller) {
+                                uiAction(SubscriptionUiAction.ToggleSelectedPlan(plan.id))
+                            }
+                            SubscriptionUiModel.Plan(plan)
+                        }?.let { uiModelList -> viewModel.setSubscriptionUiModelList(uiModelList) }
+                        viewModel.setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
+                    }*/
                 }
             }
         }

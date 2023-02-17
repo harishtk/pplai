@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.home.presentation.profile
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -10,6 +11,7 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ShareCompat
@@ -36,9 +38,11 @@ import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.thoughtcrime.securesms.util.CachedInflater
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -515,6 +519,11 @@ class ModelListFragment : Fragment() {
         }
     }
 
+    override fun onStart() {
+        prepare(requireContext())
+        super.onStart()
+    }
+
     override fun onResume() {
         super.onResume()
         if (isSettingsLaunched) {
@@ -530,6 +539,15 @@ class ModelListFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         Timber.d("onSaveInstanceState")
+    }
+
+    companion object {
+        fun prepare(context: Context) {
+            val parent = FrameLayout(context)
+            parent.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+
+            CachedInflater.from(context).cacheUntilLimit(R.layout.item_square_image, parent, 12)
+        }
     }
 }
 
@@ -548,9 +566,14 @@ class ModelListAdapter2(
         }
     }
 
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        super.onViewRecycled(holder)
+        (holder as? Recyclable)?.onViewRecycled()
+    }
+
     class ItemViewHolder(
         private val binding: ItemSquareImageBinding,
-    ) : RecyclerView.ViewHolder(binding.root) {
+    ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
         fun bind(data: ModelListUiModel2.AvatarItem, callback: Callback) = with(binding) {
             Glide.with(view1)
@@ -562,9 +585,16 @@ class ModelListAdapter2(
             root.setOnClickListener { callback.onItemClick(adapterPosition, data) }
         }
 
+        override fun onViewRecycled() = with(binding) {
+            view1.let {  imageView ->
+                Glide.with(imageView).clear(view1)
+                view1.setImageDrawable(null)
+            }
+        }
+
         companion object {
             fun from(parent: ViewGroup): ItemViewHolder {
-                val itemView = LayoutInflater.from(parent.context).inflate(
+                val itemView = CachedInflater.from(parent.context).inflate<View>(
                     R.layout.item_square_image,
                     parent,
                     false

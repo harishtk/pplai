@@ -102,6 +102,7 @@
     <string name="content_description_create">Create</string>
     <string name="label_next">Next</string>
     <string name="test_terms_paragraph">Don\'t misuse our Services. You may use our Services only as permitted by law, including applicable export and re-export control laws and requlations. We may suspend or stop providing our Services to you if you do not comply with our terms or policies or if we are investigating suspected misconduct</string>
+    <string name="Eta_text">ETA %1$s</string>
 
     <plurals name="hours_ago">
         <item quantity="one">@string/hours_single</item>

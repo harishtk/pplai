@@ -43,18 +43,16 @@ import com.aiavatar.app.viewmodels.UserViewModel
 import com.aiavatar.app.work.UploadWorker
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
+import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * TODO: handle offline status, retry upload.
@@ -68,6 +66,8 @@ class AvatarStatusFragment : Fragment() {
     private val viewModel: AvatarStatusViewModel by viewModels()
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private val userViewModel: UserViewModel by activityViewModels()
+
+    private var countDownJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -194,8 +194,27 @@ class AvatarStatusFragment : Fragment() {
                             textProgressHint.isVisible = true
                             cbNotifyMe.isVisible = true
 
-                            val etaTime = getFormattedTime(avatarStatusWithFiles.avatarStatus.eta)
-                            textProgressHint.text = "ETA $etaTime"
+                            val etaTimeString = getFormattedTime(avatarStatusWithFiles.avatarStatus.eta)
+                            // textProgressHint.text = "ETA $etaTime"
+                            val futureTimeMillis = System.currentTimeMillis() +
+                                    avatarStatusWithFiles.avatarStatus.eta * 1000L
+                            etaCountdownView.isVisible = true
+                            etaCountdownView.startCountDownTo(futureTimeMillis)
+                           /* countDownJob?.cancel(CancellationException("New request"))
+                            countDownJob = countDownFlow(
+                                avatarStatusWithFiles.avatarStatus.eta.seconds
+                            )
+                                .onStart {
+                                    textProgressHint.isVisible = true
+                                }
+                                .onEach { elapsed ->
+                                    textProgressHint.text =
+                                        getFormattedTime(elapsed.toInt())
+                                }
+                                .onCompletion {
+                                    textProgressHint.isVisible = false
+                                }
+                                .launchIn(viewLifecycleOwner.lifecycleScope)*/
 
                             dismissUploadStatusNotification()
                         }
@@ -207,6 +226,7 @@ class AvatarStatusFragment : Fragment() {
 
                             btnCreateAvatar.isVisible = false
                             progressIndicator.isVisible = true
+                            etaCountdownView.isVisible = false
                             progressIndicator.isIndeterminate = false
                             textProgressHint.isVisible = true
                             textProgressHint.text =
@@ -229,6 +249,7 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
+                            etaCountdownView.isVisible = false
 
                             description.text = "Yay! Your avatars are ready!"
                             btnCreateAvatar.isVisible = true
@@ -247,6 +268,7 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
+                            etaCountdownView.isVisible = false
 
                             description.text = "Something went wrong! Please try again."
                             btnCreateAvatar.isVisible = true
@@ -264,6 +286,7 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
+                            etaCountdownView.isVisible = false
                         }
                     }
 
@@ -279,6 +302,7 @@ class AvatarStatusFragment : Fragment() {
                             progressIndicator.isIndeterminate = true
                             textProgressHint.isVisible = false
                             cbNotifyMe.isVisible = false
+                            etaCountdownView.isVisible = false
                         }
                         UploadSessionStatus.UPLOAD_COMPLETE -> {
                             // description.text = "Yay! Your photos are ready for creating avatar!"
@@ -286,6 +310,7 @@ class AvatarStatusFragment : Fragment() {
                             btnCreateAvatar.isVisible = false
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
+                            etaCountdownView.isVisible = false
                             cbNotifyMe.isVisible = false
                         }
                         UploadSessionStatus.FAILED -> {
@@ -299,17 +324,20 @@ class AvatarStatusFragment : Fragment() {
                                 btnCreateAvatar.idleText = "Retry Upload"
                                 progressIndicator.isVisible = false
                                 textProgressHint.isVisible = false
+                                etaCountdownView.isVisible = false
                                 cbNotifyMe.isVisible = false
                             } else {
                                 description.text = "Oops! something went wrong"
                                 btnCreateAvatar.isVisible = false
                                 progressIndicator.isVisible = false
                                 textProgressHint.isVisible = false
+                                etaCountdownView.isVisible = false
                                 cbNotifyMe.isVisible = false
                             }
                         }
                         else -> {
                             // Noop yet
+                            etaCountdownView.isVisible = false
                         }
                     }
                 } else {

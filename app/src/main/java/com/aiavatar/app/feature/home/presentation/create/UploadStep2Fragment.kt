@@ -49,6 +49,7 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.core.util.BlurTransformation
 import com.aiavatar.app.feature.home.presentation.create.util.ImageProcessorPipeline
+import com.aiavatar.app.feature.home.presentation.util.UploadUtil
 import com.google.android.gms.common.moduleinstall.ModuleInstall
 import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import dagger.hilt.android.AndroidEntryPoint
@@ -334,7 +335,7 @@ class UploadStep2Fragment : Fragment() {
             val picked = uiState.value.previewModelList
                 .filterIsInstance<UploadPreviewUiModel.Item>()
                 .count { it.selected }
-            if (picked >= MIN_IMAGES) {
+            if (picked >= UploadUtil.getMinUploadImageCount()) {
                 viewModel.startUpload(requireContext())
                 analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_2_NEXT_CLICK)
             } else {

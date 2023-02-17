@@ -28,6 +28,7 @@ import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.domain.model.UploadImageData
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.feature.home.presentation.util.UploadUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -460,7 +461,7 @@ class AvatarStatusViewModel @Inject constructor(
 
         val totalUploads = appDatabase.uploadFilesDao().getAllUploadFilesSync(sessionId)
             .mapNotNull { it.uploadedFileName }.count()
-        if (totalUploads < getMinUploadImageCount() /* Min upload size */) {
+        if (totalUploads < UploadUtil.getMinUploadImageCount() /* Min upload size */) {
             appDatabase.uploadSessionDao().updateUploadSessionStatus(
                 uploadSessionWithFiles.uploadSessionEntity._id!!,
                 UploadSessionStatus.FAILED.status
@@ -511,14 +512,6 @@ class AvatarStatusViewModel @Inject constructor(
 
     private fun uploadFailed(message: String) {
         // TODO: handle upload failure
-    }
-
-    private fun getMinUploadImageCount(): Int {
-        return if (BuildConfig.DEBUG) {
-            0
-        } else {
-            UploadStep2Fragment.MIN_IMAGES
-        }
     }
 
     private fun observeUploadStatusInternal() {

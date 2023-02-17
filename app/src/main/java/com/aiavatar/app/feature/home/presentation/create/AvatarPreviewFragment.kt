@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -43,6 +44,8 @@ import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.feature.home.presentation.util.AutoCenterLayoutManger
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.databinding.FragmentModelDetailBinding
+import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailUiEvent
 import com.aiavatar.app.viewmodels.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.awaitAll
@@ -166,6 +169,9 @@ class AvatarPreviewFragment : Fragment() {
                     }
                     is AvatarPreviewUiEvent.ShareLink -> {
                         handleShareLink(event.link)
+                    }
+                    is AvatarPreviewUiEvent.DownloadComplete -> {
+                        handleDownloadComplete(event.savedUri)
                     }
                 }
             }
@@ -352,10 +358,10 @@ class AvatarPreviewFragment : Fragment() {
                         if (!checkStoragePermission()) {
                             askStoragePermission()
                         } else {
-                            viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                            // viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
                         }
                     } else {
-                        viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                        // viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
                     }
                 } else {
                     context?.debugToast("Getting folder name")
@@ -430,6 +436,28 @@ class AvatarPreviewFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun FragmentAvatarPreviewBinding.handleDownloadComplete(
+        savedUri: Uri
+    ) {
+        sdkBelowQ {
+            MediaScannerConnection.scanFile(
+                requireContext(),
+                arrayOf(savedUri.toString()),
+                arrayOf(Constant.MIME_TYPE_IMAGE)
+            ) { path, uri ->
+                Timber.v("Gallery refreshed path = $path uri = $uri")
+            }
+        }
+        root.showSnack(
+            "Saved to Gallery",
+            actionTitle = "View",
+            isLong = true,
+            actionCallback = {
+                openGallery(savedUri)
+            }
+        )
     }
 
     private fun handleShareLink(link: String) {
@@ -522,6 +550,22 @@ class AvatarPreviewFragment : Fragment() {
                 }
             }
         )
+    }
+
+    private fun openGallery(uri: Uri) {
+        try {
+            val galleryIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, Constant.MIME_TYPE_IMAGE)
+            }
+            if (galleryIntent.resolveActivity(requireActivity().packageManager) != null) {
+                startActivity(galleryIntent)
+            } else {
+                throw IllegalStateException("Unable to open downloaded file!")
+            }
+        } catch (e: Exception) {
+            context?.showToast("Unable to perform this action!")
+            Timber.e(e)
+        }
     }
 
     override fun onResume() {

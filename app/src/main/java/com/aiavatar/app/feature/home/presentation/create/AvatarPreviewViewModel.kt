@@ -1,11 +1,12 @@
 package com.aiavatar.app.feature.home.presentation.create
 
+import android.content.Context
+import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aiavatar.app.commons.util.ResolvableException
-import com.aiavatar.app.commons.util.Result
-import com.aiavatar.app.commons.util.UiText
+import com.aiavatar.app.*
+import com.aiavatar.app.commons.util.*
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
@@ -20,7 +21,6 @@ import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
-import com.aiavatar.app.nullAsEmpty
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailUiAction
@@ -28,13 +28,14 @@ import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailUiEvent
 import com.aiavatar.app.feature.onboard.domain.model.ShareLinkData
 import com.aiavatar.app.feature.onboard.domain.model.request.GetShareLinkRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
-import com.aiavatar.app.ifDebug
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.File
+import java.lang.StringBuilder
 import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
@@ -207,6 +208,10 @@ class AvatarPreviewViewModel @Inject constructor(
         selectedToggleFlow.update { selectedToggleFlow.value.not() }
     }
 
+    fun downloadCurrentAvatar(context: Context) {
+        downloadCurrentAvatarInternal(context)
+    }
+
     private fun getStatus(request: AvatarStatusRequest) {
         if (avatarStatusJob?.isActive == true) {
             val t = IllegalStateException("A status request job is already active. Ignoring request.")
@@ -309,6 +314,82 @@ class AvatarPreviewViewModel @Inject constructor(
     }
 
     /* Download session related */
+    private fun downloadCurrentAvatarInternal(context: Context) = viewModelScope.launch {
+        val modelAvatar = uiState.value.avatarList
+            .filterIsInstance<com.aiavatar.app.feature.home.presentation.catalog.SelectableAvatarUiModel.Item>()
+            .find { uiModel -> uiModel.selected }
+            ?.modelAvatar
+        if (modelAvatar == null) {
+            sendEvent(AvatarPreviewUiEvent.ShowToast(UiText.DynamicString("Cannot download right now. Try later")))
+            return@launch
+        }
+
+        val modelName = uiState.value.avatarStatusWithFiles?.avatarStatus?.modelName
+            ?: uiState.value.avatarStatusWithFiles?.avatarStatus?.modelId
+
+        val relativeDownloadPath = StringBuilder()
+            .append(context.getString(R.string.app_name))
+            .append(File.separator)
+            .append(modelName)
+            .toString()
+
+        sendEvent(AvatarPreviewUiEvent.ShowToast(UiText.DynamicString("Downloading..")))
+        _uiState.update { state ->
+            state.copy(
+                currentDownloadProgress = 0
+            )
+        }
+
+        val mimeType = getMimeType(context, modelAvatar.remoteFile.toUri())
+            ?: Constant.MIME_TYPE_JPEG
+        val savedUri = StorageUtil.saveFile(
+            context = context,
+            url = modelAvatar.remoteFile,
+            relativePath = relativeDownloadPath,
+            mimeType = mimeType,
+            displayName = Commons.getFileNameFromUrl(modelAvatar.remoteFile),
+        ) { progress, bytesDownloaded ->
+            Timber.d("Download: ${modelAvatar.remoteFile} progress = $progress downloaded = $bytesDownloaded")
+            _uiState.update { state ->
+                state.copy(
+                    currentDownloadProgress = progress
+                )
+            }
+            viewModelScope.launch {
+                appDatabase.modelAvatarDao().apply {
+                    updateDownloadProgress(modelAvatar._id!!, progress)
+                    if (progress == 100) {
+                        updateDownloadStatus(
+                            id = modelAvatar._id!!,
+                            downloaded = true,
+                            downloadedAt = System.currentTimeMillis(),
+                            downloadSize = bytesDownloaded
+                        )
+                    }
+                }
+            }
+        }
+        if (savedUri != null) {
+            sendEvent(AvatarPreviewUiEvent.DownloadComplete(savedUri))
+        } else {
+            appDatabase.modelAvatarDao().apply {
+                updateDownloadStatus(
+                    id = modelAvatar._id!!,
+                    downloaded = false,
+                    downloadedAt = 0,
+                    downloadSize = 0
+                )
+            }
+            sendEvent(AvatarPreviewUiEvent.ShowToast(UiText.DynamicString("Cannot download right now. Try later")))
+        }
+
+        _uiState.update { state ->
+            state.copy(
+                currentDownloadProgress = null
+            )
+        }
+    }
+
     private fun createDownloadSessionInternal(modelName: String, loadType: LoadType = LoadType.ACTION) {
         createDownloadSessionJob = viewModelScope.launch {
             setLoading(loadType, LoadState.Loading())
@@ -448,6 +529,7 @@ data class AvatarPreviewState(
     val statusId: String? = null,
     val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val avatarList: List<SelectableAvatarUiModel> = emptyList(),
+    val currentDownloadProgress: Int? = null,
     val shareLoadState: LoadStates = LoadStates.IDLE,
     val shareLinkData: ShareLinkData? = null,
     val exception: Exception? = null,
@@ -462,6 +544,7 @@ interface AvatarPreviewUiAction {
 interface AvatarPreviewUiEvent {
     data class ShowToast(val message: UiText) : AvatarPreviewUiEvent
     data class StartDownload(val downloadSessionId: Long) : AvatarPreviewUiEvent
+    data class DownloadComplete(val savedUri: Uri) : AvatarPreviewUiEvent
     data class ShareLink(val link: String) : AvatarPreviewUiEvent
 }
 
