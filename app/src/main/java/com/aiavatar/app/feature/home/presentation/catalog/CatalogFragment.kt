@@ -11,6 +11,7 @@ import android.view.animation.AnimationUtils
 import android.widget.PopupWindow
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -23,6 +24,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.aiavatar.app.*
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
+import com.aiavatar.app.commons.presentation.dialog.WebViewPresenterFragment
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.HapticUtil
@@ -241,9 +243,18 @@ class CatalogFragment : Fragment() {
 
         toolbarTitle.setOnClickListener {
             toolbarTitle.touchInteractFeedback()
-            safeCall {
+            /*safeCall {
                 findNavController().apply {
                     navigate(CatalogFragmentDirections.actionCatalogListToUploadStep1())
+                }
+            }*/
+            ifDebug {
+                findNavController().apply {
+                    val args = bundleOf(WebViewPresenterFragment.EXTRA_URL to "https://www.freecodecamp.org")
+                    val navOpts = defaultNavOptsBuilder()
+                        .build()
+
+                    navigate(R.id.web_view, args, navOpts)
                 }
             }
         }

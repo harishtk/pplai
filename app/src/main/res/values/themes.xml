@@ -28,6 +28,27 @@
 
     </style>
 
+    <style name="Theme.WebView" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/white</item>
+        <item name="colorPrimaryVariant">@color/blue_grey_700</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorSurface">@color/blue_grey_700</item>
+        <item name="colorSurfaceVariant">@color/white_grey</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorOnSurfaceInverse">@color/black</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/yellow_200</item>
+        <item name="colorSecondaryVariant">@color/yellow_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="isLightTheme">true</item>
+        <item name="android:isLightTheme" tools:targetApi="q">true</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
     <style name="AppTheme.Payments" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/white</item>

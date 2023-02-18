@@ -35,14 +35,17 @@
         style="@style/TextStyle.Small.Bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="@string/app_name"
         android:includeFontPadding="false"
+        android:singleLine="true"
+        android:maxLines="1"
+        android:ellipsize="end"
         app:layout_constraintStart_toEndOf="@id/left_barrier"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@id/right_barrier"
         app:layout_constrainedWidth="true"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:text="@tools:sample/lorem/random"/>
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/right_barrier"
@@ -50,16 +53,19 @@
         android:layout_height="wrap_content"
         app:barrierMargin="@dimen/inset_small"
         app:barrierDirection="left"
-        app:constraint_referenced_ids="action_container" />
+        app:barrierAllowsGoneWidgets="true"
+        app:constraint_referenced_ids="action_container"
+        app:layout_constraintEnd_toStartOf="@id/action_container"/>
 
     <LinearLayout android:orientation="horizontal"
         android:id="@+id/action_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="@dimen/touchable_padding_large"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/right_barrier">
+        android:visibility="gone">
 
         <ImageView android:id="@+id/iv_options"
             android:layout_width="@dimen/default_icon_size"

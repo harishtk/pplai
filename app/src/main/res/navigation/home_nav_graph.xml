@@ -206,4 +206,9 @@
         android:name="com.aiavatar.app.feature.home.presentation.forceupdate.ForceUpdateFragment"
         android:label="Fore Update"
         tools:layout="@layout/fragment_force_update" />
+
+    <fragment android:id="@+id/web_view"
+        android:name="com.aiavatar.app.commons.presentation.dialog.WebViewPresenterFragment"
+        android:label="WebView"
+        tools:layout="@layout/fragment_web_view_presenter" />
 </navigation>
