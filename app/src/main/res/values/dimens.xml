@@ -72,6 +72,7 @@
     <dimen name="image_size_large">54dp</dimen>
 
     <dimen name="default_stroke_width">1dp</dimen>
+    <dimen name="stroke_width_medium">2dp</dimen>
     <dimen name="icon_overlay_progress_size">54dp</dimen>
     <dimen name="otp_view_item_spacing">10dp</dimen>
     <dimen name="otp_view_border_size">2dp</dimen>

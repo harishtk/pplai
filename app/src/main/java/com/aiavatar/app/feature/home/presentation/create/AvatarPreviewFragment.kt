@@ -359,9 +359,11 @@ class AvatarPreviewFragment : Fragment() {
                             askStoragePermission()
                         } else {
                             // viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                            viewModel.downloadCurrentAvatar(requireContext())
                         }
                     } else {
                         // viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                        viewModel.downloadCurrentAvatar(requireContext())
                     }
                 } else {
                     context?.debugToast("Getting folder name")
@@ -649,10 +651,11 @@ class AvatarScrollAdapter(
             }
 
         fun toggleSelection(selected: Boolean) = with(binding) {
+            previewImage.isSelected = selected
             previewImage.alpha = if (selected) {
                 1.0F
             } else {
-                0.5F
+                0.8F
             }
         }
 
@@ -777,10 +780,11 @@ class AvatarPreviewPagerAdapter(
         }
 
         fun toggleSelection(selected: Boolean) = with(binding) {
+            previewImage.isSelected = selected
             previewImage.alpha = if (selected) {
                 1.0F
             } else {
-                0.0F
+                0.8F
             }
         }
 

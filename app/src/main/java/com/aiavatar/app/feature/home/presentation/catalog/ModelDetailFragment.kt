@@ -16,6 +16,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -765,10 +766,13 @@ class AvatarScrollAdapter(
             }
 
         fun toggleSelection(selected: Boolean) = with(binding) {
-            previewImage.alpha = if (selected) {
-                1.0F
-            } else {
-                0.5F
+            previewImage.isSelected = selected
+            previewImage.apply {
+                if (selected) {
+                    alpha = 1.0F
+                } else {
+                    alpha = 0.8F
+                }
             }
         }
 

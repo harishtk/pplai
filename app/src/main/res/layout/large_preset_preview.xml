@@ -30,6 +30,8 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:scaleType="centerCrop"
+            android:padding="@dimen/stroke_width_medium"
+            android:foreground="@drawable/selectable_outline_primary"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/title"
             app:layout_constraintEnd_toEndOf="parent"
