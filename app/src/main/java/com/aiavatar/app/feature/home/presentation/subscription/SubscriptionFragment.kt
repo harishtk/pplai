@@ -275,7 +275,9 @@ class SubscriptionFragment : Fragment() {
                 } else {
                     if (loadState.refresh is LoadState.Error) {
                         if (retryButton.isVisible) {
-                            HapticUtil.createError(requireContext())
+                            if (loadState.refresh.error !is NoInternetException) {
+                                HapticUtil.createError(requireContext())
+                            }
                             retryButton.shakeNow()
                         }
                     }

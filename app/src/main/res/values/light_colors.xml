@@ -5,6 +5,7 @@
     <color name="signal_divider_minor">@color/core_grey_15</color>
     <color name="signal_divider_major">@color/core_grey_25</color>
 
+    <color name="signal_primary">@color/core_white</color>
     <color name="signal_inverse_primary">@color/core_black</color>
 
     <color name="signal_inverse_transparent">@color/transparent_black</color>

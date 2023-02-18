@@ -35,6 +35,7 @@ import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.net.NoInternetException
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
@@ -169,7 +170,9 @@ class ProfileFragment : Fragment() {
                     // emptyListContainer.isVisible = adapter.itemCount <= 0
                     if (loadState.refresh is LoadState.Error) {
                         errorContainer.isVisible = true
-                        HapticUtil.createError(requireContext())
+                        if (loadState.refresh.error !is NoInternetException) {
+                            HapticUtil.createError(requireContext())
+                        }
                         if (retryButton.isVisible) {
                             retryButton.shakeNow()
                         }

@@ -25,6 +25,7 @@ import com.aiavatar.app.feature.home.domain.model.CatalogList
 import com.aiavatar.app.safeCall
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.net.NoInternetException
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -98,7 +99,9 @@ class MoreCatalogFragment : Fragment() {
                 retryButton.isVisible = loadState.refresh is LoadState.Error &&
                         emptyList
                 if (loadState.refresh is LoadState.Error) {
-                    HapticUtil.createError(requireContext())
+                    if (loadState.refresh.error !is NoInternetException) {
+                        HapticUtil.createError(requireContext())
+                    }
                     retryButton.shakeNow()
                 }
             }

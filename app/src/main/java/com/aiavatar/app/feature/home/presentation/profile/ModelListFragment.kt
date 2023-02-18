@@ -38,6 +38,7 @@ import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
@@ -222,7 +223,9 @@ class ModelListFragment : Fragment() {
                 retryButton.isVisible = loadState.refresh is LoadState.Error &&
                         adapter.itemCount <= 0
                 if (loadState.refresh is LoadState.Error) {
-                    HapticUtil.createError(requireContext())
+                    if (loadState.refresh.error !is NoInternetException) {
+                        HapticUtil.createError(requireContext())
+                    }
                     retryButton.shakeNow()
                 }
                 /*if (loadState.action is LoadState.Loading) {

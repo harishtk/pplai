@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.aiavatar.app.*
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
+import com.aiavatar.app.commons.presentation.dialog.NoInternetDialog
 import com.aiavatar.app.commons.presentation.dialog.WebViewPresenterFragment
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
@@ -36,6 +37,7 @@ import com.aiavatar.app.feature.home.presentation.util.AvatarsAdapter
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.LegalsBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
@@ -195,7 +197,9 @@ class CatalogFragment : Fragment() {
                 if (loadState.refresh is LoadState.Error) {
                     if (loadState.refresh.error !is BuenoCacheException) {
                         retryButton.isVisible = avatarsAdapter.itemCount <= 0
-                        HapticUtil.createError(requireContext())
+                        if (loadState.refresh.error !is NoInternetException) {
+                            HapticUtil.createError(requireContext())
+                        }
                         retryButton.shakeNow()
                     }
                 }
