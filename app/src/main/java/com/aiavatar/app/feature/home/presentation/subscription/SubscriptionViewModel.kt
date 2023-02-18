@@ -25,6 +25,7 @@ import com.aiavatar.app.core.data.source.local.entity.PaymentsEntity
 import com.aiavatar.app.core.domain.model.LoginUser
 import com.aiavatar.app.feature.home.domain.model.request.SubscriptionLogRequest
 import com.aiavatar.app.nullAsEmpty
+import com.android.billingclient.api.PurchasesResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -63,6 +64,9 @@ class SubscriptionViewModel @Inject constructor(
 
     private var selectedPlanId: Int = -1
     private val selectedToggleFlow = MutableStateFlow(false)
+
+    private val _pendingPurchaseSignal = MutableStateFlow(false)
+    val pendingPurchaseSignal = _pendingPurchaseSignal.asStateFlow()
 
     private var subscriptionPlanFetchJob: Job? = null
     private var subscriptionPurchaseJob: Job? = null
@@ -211,6 +215,21 @@ class SubscriptionViewModel @Inject constructor(
         return uiState.value.subscriptionPlansUiModels
             .filterIsInstance<SubscriptionUiModel.Plan>()
             .find { it.selected }?.subscriptionPlan
+    }
+
+    fun getPlanDetailForProductId(productId: String): SubscriptionPlan? {
+        Log.d("SubscriptionViewModel", "getPlanDetailForProductId() called with: productId = $productId plans = ${uiState.value.subscriptionPlansUiModels.size}")
+        return uiState.value.subscriptionPlansUiModels
+            .filterIsInstance<SubscriptionUiModel.Plan>()
+            .find { it.subscriptionPlan.productId == productId }
+            ?.subscriptionPlan
+    }
+
+    /**
+     * Signals that a pending purchase fetch should be performed
+     */
+    fun setPendingPurchaseSignal() {
+        _pendingPurchaseSignal.update { state -> state.not() }
     }
 
     suspend fun initPayment(selectedPlan: SubscriptionPlan): String {
@@ -451,6 +470,7 @@ data class SubscriptionState(
     val subscriptionPlansUiModels: List<SubscriptionUiModel> = emptyList(),
     val subscriptionPlansCache: List<SubscriptionPlan>? = null,
     val billingConnectionState: Boolean = false,
+    val purchaseQueryResult: PurchasesResult? = null,
     val loginUser: LoginUser? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null

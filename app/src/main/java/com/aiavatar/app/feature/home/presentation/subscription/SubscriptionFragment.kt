@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.home.presentation.subscription
 
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.os.BuildCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -18,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.*
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.loadstate.LoadState
@@ -36,23 +37,22 @@ import com.aiavatar.app.feature.home.presentation.util.EmptyInAppProductsExcepti
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.pay.billing.InAppPurchaseActivity
+import com.aiavatar.app.pay.billing.InAppUtil
 import com.aiavatar.app.pay.billing.ResultCode
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.BillingResponseCode
 import com.android.billingclient.api.BillingClient.ProductType
-import com.google.firebase.crashlytics.internal.model.ImmutableList
+import com.android.billingclient.api.Purchase.PurchaseState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.internal.immutableListOf
 import timber.log.Timber
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
-import kotlin.math.log
+import java.util.concurrent.CancellationException
 
 @AndroidEntryPoint
 class SubscriptionFragment : Fragment() {
@@ -125,7 +125,7 @@ class SubscriptionFragment : Fragment() {
     }
 
     private val purchaseUpdatedListener = PurchasesUpdatedListener { billingResult, purchases ->
-        // TODO("Not yet implemented")
+        // TODO: partially implemented
         Timber.d("purchaseUpdatedListener: ${billingResult.responseCode} msg = ${billingResult.debugMessage}")
     }
 
@@ -136,10 +136,15 @@ class SubscriptionFragment : Fragment() {
             .build()
     }
 
+    private var pendingDialogWeakRef: Dialog? = null
+
     // Helper flags
     private var isBillingClientConnected: Boolean = false
+    private var shouldRetryPendingPurchases: Boolean = false
     private var paymentProcessing = false
     private var transactionId: String? = null
+
+    private var pendingPurchaseFetchJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -369,6 +374,7 @@ class SubscriptionFragment : Fragment() {
                             .build()
 
                         val productDetailsResult = withContext(Dispatchers.IO) {
+                            Timber.d("Environment: ${envForConfig(BuildConfig.ENV)} config = ${BuildConfig.ENV}")
                             if (envForConfig(BuildConfig.ENV) == Env.DEV) {
                                 ProductDetailsResult(
                                     billingResult = BillingResult.newBuilder()
@@ -430,6 +436,22 @@ class SubscriptionFragment : Fragment() {
                         }?.let { uiModelList -> viewModel.setSubscriptionUiModelList(uiModelList) }
                         viewModel.setLoading(LoadType.REFRESH, LoadState.NotLoading.Complete)
                     }*/
+                }
+            }
+        }
+
+        val uiModelListNotEmptyFlow = uiState.map { it.subscriptionPlansUiModels }
+            .map { it.isNotEmpty() }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            combine(
+                billingConnectionStateFlow,
+                viewModel.pendingPurchaseSignal,
+                uiModelListNotEmptyFlow,
+                ::Triple
+            ).collectLatest { (connected, signal, notEmpty) ->
+                if (connected && notEmpty) {
+                    checkPendingPurchases()
                 }
             }
         }
@@ -537,7 +559,6 @@ class SubscriptionFragment : Fragment() {
                override fun onBillingSetupFinished(p0: BillingResult) {
                    isBillingClientConnected = true
                    viewModel.setBillingConnectionState(isBillingClientConnected)
-                   checkPendingPurchases()
                    val msg = "Billing client setup finished"
                    Timber.v(msg)
                    Timber.d("code = ${p0.responseCode} ${p0.debugMessage} ")
@@ -554,36 +575,49 @@ class SubscriptionFragment : Fragment() {
        }
     }
 
-    private suspend fun queryPurchases(): List<Purchase>
-            = suspendCoroutine { continuation ->
-        val params = QueryPurchasesParams.newBuilder()
-            .setProductType(BillingClient.ProductType.INAPP)
-            .build()
-        billingClient.queryPurchasesAsync(params
-        ) { billingResult, purchases ->
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                continuation.resume(purchases)
-            } else {
-                val cause = IllegalStateException("${billingResult.responseCode} ${billingResult.debugMessage}")
-                continuation.resumeWithException(cause)
-            }
-        }
-    }
-
     private fun checkPendingPurchases() {
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            kotlin.runCatching { queryPurchases() }
+        if (pendingPurchaseFetchJob?.isActive == true) {
+            val t = IllegalStateException("A pending purchase fetch job is already active. Ignoring request.")
+            ifDebug { Timber.e(t) }
+            return
+        }
+        pendingPurchaseFetchJob?.cancel(CancellationException("New request")) // just in case
+        pendingPurchaseFetchJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            kotlin.runCatching { InAppUtil.queryPurchases(billingClient) }
                 .onSuccess { purchases ->
                     val _p = purchases.map {
                         immutableListOf(it.products.joinToString(), it.purchaseState, it.signature)
                     }
                         .joinToString()
                     Timber.d("Purchases: $_p")
+
+                    // TODO: handle pending purchase
+                    purchases.filter { it.purchaseState == PurchaseState.PURCHASED }
+                        .onEach { purchase ->
+                        viewModel.getPlanDetailForProductId(purchase.products.first())?.let { planDetail ->
+                            Timber.d("Purchases: planDetail = $planDetail")
+                            billingClient.queryProductDetails(
+                                QueryProductDetailsParams.newBuilder()
+                                    .setProductList(
+                                        purchase.products.map { productId ->
+                                            QueryProductDetailsParams.Product.newBuilder()
+                                                .setProductId(productId)
+                                                .setProductType(ProductType.INAPP)
+                                                .build()
+                                        }
+                                    )
+                                    .build()
+                            ).productDetailsList?.first()?.let { productDetails ->
+                                Timber.d("Purchases: details $productDetails")
+                                showPendingPurchaseDialog(productDetails, planDetail)
+                            }
+                        }
+                    }
                 }
                 .onFailure { t ->
                     Timber.e(t)
                 }
-            checkPurchaseHistory()
+            // checkPurchaseHistory()
         }
     }
 
@@ -609,11 +643,33 @@ class SubscriptionFragment : Fragment() {
     }
     /* END - Play Billing */
 
+    private fun showPendingPurchaseDialog(productDetails: ProductDetails, subscriptionPlan: SubscriptionPlan) {
+        SimpleDialog(
+            context = requireContext(),
+            titleText = "Purchase",
+            message = "You have already purchased a product '${productDetails.name}'. Would you like to proceed? " +
+                    "If you cancel any amount deducted will be refunded to your account.",
+            positiveButtonText = "Proceed",
+            positiveButtonAction = {
+                // TODO: consume the product
+            },
+            negativeButtonText = "Cancel",
+            negativeButtonAction = {
+                // TODO: handle canceled pending purchase
+            },
+            cancellable = false,
+            showCancelButton = false
+        ).also {
+            it.show()
+            pendingDialogWeakRef = it
+        }
+    }
+
     override fun onResume() {
         super.onResume()
 
         if (isBillingClientConnected) {
-            checkPendingPurchases()
+            viewModel.setPendingPurchaseSignal()
         }
     }
 }

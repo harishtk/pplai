@@ -21,12 +21,11 @@ import com.android.billingclient.api.BillingClient.BillingResponseCode
 import com.android.billingclient.api.BillingClient.ProductType
 import com.android.billingclient.api.Purchase.PurchaseState
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import okhttp3.internal.immutableListOf
 import timber.log.Timber
+import java.util.concurrent.CancellationException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -172,6 +171,8 @@ class InAppPurchaseActivity : AppCompatActivity() {
     // Helper flags
     private var isBillingClientConnected: Boolean = false
     private var billingConnectionRetries: Int = 0
+
+    private var pendingPurchaseFetchJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -412,14 +413,6 @@ class InAppPurchaseActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun consume(purchaseToken: String): ConsumeResult {
-        val params = ConsumeParams.newBuilder()
-            .setPurchaseToken(purchaseToken)
-            .build()
-
-        return billingClient.consumePurchase(params)
-    }
-
     private suspend fun handlePurchase(purchase: Purchase) {
         viewModel.setPaymentSequence(PaymentSequence.CONSUMING_PRODUCT)
 
@@ -428,7 +421,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
             val retries = 3
             val retryFactor = 2
 
-            consume(purchase.purchaseToken).let { consumeResult ->
+            InAppUtil.consume(billingClient, purchase.purchaseToken).let { consumeResult ->
                 val billingResult = consumeResult.billingResult
                 val purchaseToken = consumeResult.purchaseToken
 
@@ -463,31 +456,28 @@ class InAppPurchaseActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun queryPurchases(): List<Purchase>
-        = suspendCoroutine { continuation ->
-        val params = QueryPurchasesParams.newBuilder()
-            .setProductType(ProductType.INAPP)
-            .build()
-        billingClient.queryPurchasesAsync(params
-        ) { billingResult, purchases ->
-            if (billingResult.responseCode == BillingResponseCode.OK) {
-                continuation.resume(purchases)
-            } else {
-                val cause = IllegalStateException("${billingResult.responseCode} ${billingResult.debugMessage}")
-                continuation.resumeWithException(cause)
-            }
-        }
-    }
-
     private fun checkPendingPurchases() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            kotlin.runCatching { queryPurchases() }
+        if (pendingPurchaseFetchJob?.isActive == true) {
+            val t = IllegalStateException("A pending purchase fetch job is already active. Ignoring request.")
+            ifDebug { Timber.e(t) }
+            return
+        }
+        pendingPurchaseFetchJob?.cancel(CancellationException("New request")) // just in case
+        pendingPurchaseFetchJob = lifecycleScope.launch(Dispatchers.IO) {
+            kotlin.runCatching { InAppUtil.queryPurchases(billingClient) }
                 .onSuccess { purchases ->
-                    Timber.d("Purchases: $purchases")
+                    val _p = purchases.map {
+                        immutableListOf(it.products.joinToString(), it.purchaseState, it.signature)
+                    }
+                        .joinToString()
+                    Timber.d("Purchases: $_p")
+
+                    // TODO: handle pending purchase
                 }
                 .onFailure { t ->
                     Timber.e(t)
                 }
+            // checkPurchaseHistory()
         }
     }
     /* END - Play Billing */
