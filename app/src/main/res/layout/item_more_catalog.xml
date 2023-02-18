@@ -14,7 +14,7 @@
     android:padding="@dimen/default_card_inset"
     app:cardPreventCornerOverlap="true"
     app:cardCornerRadius="@dimen/default_corner_size"
-    app:cardBackgroundColor="@android:color/transparent">
+    app:cardBackgroundColor="@color/image_placeholder_background">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

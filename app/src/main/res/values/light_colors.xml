@@ -20,4 +20,6 @@
 
     <color name="transparent_30">@color/transparent_white_30</color>
     <color name="transparent_inverse_30">@color/transparent_black_30</color>
+
+    <color name="image_placeholder_background">#EFEFEF</color>
 </resources>
