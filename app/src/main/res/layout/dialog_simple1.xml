@@ -83,7 +83,7 @@
         app:constraint_referenced_ids="button_positive,button_negative"/>
 
     <com.google.android.material.button.MaterialButton android:id="@+id/button_negative"
-        style="@style/Widget.App.Button.Alt"
+        style="@style/Widget.App.FancyButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/inset_large_medium"
