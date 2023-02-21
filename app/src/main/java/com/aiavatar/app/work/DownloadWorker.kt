@@ -33,9 +33,11 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.*
 import timber.log.Timber
 import java.io.File
-import java.lang.StringBuilder
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 
+@OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
 @HiltWorker
 class DownloadWorker @AssistedInject constructor(
     @Assisted private val context: Context,
@@ -45,12 +47,18 @@ class DownloadWorker @AssistedInject constructor(
     private val appDatabase: AppDatabase,
 ) : CoroutineWorker(context, workerParameters) {
 
+    private val NUM_THREADS: Int = Runtime.getRuntime().availableProcessors()
+
     private val coroutineExceptionHandler =
         CoroutineExceptionHandler { _, t ->
             Timber.e(t)
         }
+
+    private val backgroundDispatcher
+        = newFixedThreadPoolContext(NUM_THREADS, "Download photos pool")
+
     private val workerContext =
-        Dispatchers.IO + SupervisorJob() + coroutineExceptionHandler
+        backgroundDispatcher.limitedParallelism(8) + SupervisorJob() + coroutineExceptionHandler
 
     private val workerScope = CoroutineScope(context = workerContext)
 
@@ -63,6 +71,7 @@ class DownloadWorker @AssistedInject constructor(
     private var totalDownloads: Int = 0
 
     override suspend fun doWork(): Result {
+        Timber.d("NUM_CORES: $NUM_THREADS")
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             if (!checkStoragePermission(context)) {
                 // Nothing to do much.
@@ -82,7 +91,7 @@ class DownloadWorker @AssistedInject constructor(
             updateDownloadWorkerId(sessionWithFilesEntity.downloadSessionEntity._id!!, workerId = id.toString())
         }
 
-        setForegroundAsync(createForegroundInfo(0))
+        setForeground(createForegroundInfo(0))
 
         val relativeDownloadPath = StringBuilder()
             .append(context.getString(R.string.app_name))
@@ -103,6 +112,10 @@ class DownloadWorker @AssistedInject constructor(
         appDatabase.downloadSessionDao().updateDownloadSessionStatus(
             sessionWithFilesEntity.downloadSessionEntity._id!!, DownloadSessionStatus.PARTIALLY_DONE.status)
 
+        val downloadCount =
+            sessionWithFilesEntity.downloadFilesEntity.count { entity -> entity.downloaded == 0 }
+        val downloadCountLatch = CountDownLatch(downloadCount)
+
         var failedCount = 0
         val jobs = sessionWithFilesEntity.downloadFilesEntity
             .filter { entity -> entity.downloaded == 0 }
@@ -111,6 +124,9 @@ class DownloadWorker @AssistedInject constructor(
                     val mimeType = getMimeType(context, downloadFilesEntity.fileUriString.toUri())
                         ?: Constant.MIME_TYPE_JPEG
                     kotlin.runCatching {
+                        Timber.tag("DownloadSeq.Msg").d("Initiating download ${downloadFilesEntity.fileUriString}")
+                        var lastProgress = -1
+                        var statusUpdated = false
                         val savedUri = StorageUtil.saveFile(
                             context = context,
                             url = downloadFilesEntity.fileUriString,
@@ -118,24 +134,36 @@ class DownloadWorker @AssistedInject constructor(
                             mimeType = mimeType,
                             displayName = Commons.getFileNameFromUrl(downloadFilesEntity.fileUriString),
                         ) { progress, bytesDownloaded ->
-                            workerScope.launch {
+                            /* To avoid raining updates to the database. */
+                            val shouldUpdateProgress = lastProgress == -1 || abs(progress - lastProgress) > UPDATE_PROGRESS_DELTA
+                                    || progress == 100
+                            runBlocking(Dispatchers.IO) {
                                 appDatabase.downloadFilesDao().apply {
-                                    updateFileDownloadProgress(
-                                        id = downloadFilesEntity._id!!,
-                                        progress
-                                    )
-                                    updateFileStatus(
-                                        id = downloadFilesEntity._id!!,
-                                        DownloadFileStatus.DOWNLOADING.status
-                                    )
-                                }
-                                if (progress == 100) {
-                                    appDatabase.downloadFilesDao().updateDownloadStatus(
-                                        id = downloadFilesEntity._id!!,
-                                        downloaded = true,
-                                        downloadedAt = System.currentTimeMillis(),
-                                        downloadSize = bytesDownloaded
-                                    )
+                                    if (!statusUpdated) {
+                                        updateFileStatus(
+                                            id = downloadFilesEntity._id!!,
+                                            DownloadFileStatus.DOWNLOADING.status
+                                        )
+                                        statusUpdated = true
+                                    }
+
+                                    if (shouldUpdateProgress) {
+                                        lastProgress = progress
+                                        Timber.d("Update progress: progress = $progress bytes = $bytesDownloaded")
+                                        updateFileDownloadProgress(
+                                            id = downloadFilesEntity._id!!,
+                                            progress
+                                        )
+
+                                        if (progress == 100) {
+                                            updateDownloadStatus(
+                                                id = downloadFilesEntity._id!!,
+                                                downloaded = true,
+                                                downloadedAt = System.currentTimeMillis(),
+                                                downloadSize = bytesDownloaded
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -147,6 +175,7 @@ class DownloadWorker @AssistedInject constructor(
                                     id = downloadFilesEntity._id!!,
                                     DownloadFileStatus.COMPLETE.status
                                 )
+                                downloadCountLatch.countDown()
                             } else {
                                 failedCount++
                                 updateDownloadStatus(
@@ -159,12 +188,18 @@ class DownloadWorker @AssistedInject constructor(
                                     id = downloadFilesEntity._id!!,
                                     DownloadFileStatus.FAILED.status
                                 )
+                                downloadCountLatch.countDown()
                             }
                         }
                     }.onFailure { t ->
                         if (BuildConfig.DEBUG) {
                             Timber.e(t)
                         }
+                        appDatabase.downloadFilesDao().updateFileStatus(
+                            id = downloadFilesEntity._id!!,
+                            DownloadFileStatus.FAILED.status
+                        )
+                        downloadCountLatch.countDown()
                     }
                 }
             }
@@ -172,7 +207,12 @@ class DownloadWorker @AssistedInject constructor(
         totalDownloads = jobs.count()
         Timber.d("Downloading $totalDownloads images")
 
+        /*withContext(Dispatchers.IO) {
+            Timber.d("Waiting for $totalDownloads to complete")
+            downloadCountLatch.await(15, TimeUnit.MINUTES)
+        }*/
         jobs.map {
+            Timber.tag("Thread.Msg").d("parent: $it children = ${it.children.count()}")
             it.join()
             updateDownloadCounter()
         }
@@ -183,7 +223,7 @@ class DownloadWorker @AssistedInject constructor(
             sessionWithFilesEntity.downloadSessionEntity._id!!, null
         )
 
-        Timber.d("Download failed for $failedCount files")
+        Timber.d("Download: complete. $failedCount failed")
 
         notifyDownloadComplete(context)
         return Result.success()
@@ -197,7 +237,7 @@ class DownloadWorker @AssistedInject constructor(
         } else {
             100
         }
-        createForegroundInfo(progress)
+        setForegroundAsync(createForegroundInfo(progress))
     }
 
     private fun abortWork(message: String): Result {
@@ -262,6 +302,7 @@ class DownloadWorker @AssistedInject constructor(
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationManager.IMPORTANCE_DEFAULT)
             .setCategory(Notification.CATEGORY_PROGRESS)
+            .setSilent(true)
             .setContentTitle("Downloading photos")
             .setProgress(100, progress, false)
             .setOngoing(true)
@@ -318,6 +359,8 @@ class DownloadWorker @AssistedInject constructor(
         private const val SESSION_ID = "session_id"
 
         const val WORKER_NAME = "download_worker"
+
+        private val UPDATE_PROGRESS_DELTA: Int = 15
 
         const val STATUS_NOTIFICATION_ID = 102
         private const val ONGOING_NOTIFICATION_ID = 103

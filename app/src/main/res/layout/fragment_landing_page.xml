@@ -121,7 +121,6 @@
                             android:layout_height="@dimen/xxlarge_icon_size"
                             android:layout_margin="@dimen/touchable_padding_large"
                             android:src="@drawable/ic_account_outline"
-                            app:tint="?attr/colorOnPrimary"
                             android:background="@drawable/ripple_rounded"
                             android:contentDescription="@string/content_description_profile"
                             android:visibility="visible"

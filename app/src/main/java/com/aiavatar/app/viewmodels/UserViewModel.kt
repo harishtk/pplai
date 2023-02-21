@@ -25,7 +25,7 @@ class UserViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     private val appRepository: AppRepository,
     private val homeRepository: HomeRepository,
-    @Deprecated("user repo")
+    @Deprecated("use repo")
     private val appDatabase: AppDatabase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -33,7 +33,9 @@ class UserViewModel @Inject constructor(
     val loginUser = appDatabase.loginUserDao().getLoginUser()
         .map { it?.toLoginUser() }
 
-    @Deprecated("not working as expected")
+    /**
+     * Holds the current authentication state of the user.
+     */
     val authenticationState = appDatabase.loginUserDao()
         .getLoginUser()
         .map {

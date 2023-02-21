@@ -39,7 +39,7 @@ class ImageProcessorPipeline(
         FaceDetection.getClient(faceDetectorOpts)
     }
 
-    fun start(scope: CoroutineScope = this.scope): List<Deferred<Result>> {
+    fun startIn(scope: CoroutineScope = this.scope): List<Deferred<Result>> {
         Timber.d("Pipeline: start() detectNsfw = $detectNsfw detectFaces = $detectFaces")
         return imageUris.map { uri ->
             scope.async(Dispatchers.Default) {

@@ -5,6 +5,7 @@ import com.aiavatar.app.BuildConfig
 import com.aiavatar.app.commons.util.io.ProgressResponseBody
 import com.aiavatar.app.commons.util.net.UserAgentInterceptor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okio.buffer

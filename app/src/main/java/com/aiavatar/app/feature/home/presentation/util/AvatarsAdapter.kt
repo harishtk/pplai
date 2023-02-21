@@ -43,7 +43,6 @@ class AvatarsAdapter(
         } else {
             String.format("%d:%d", 3, 4)
         }
-        Timber.d("Height: position = $position ratio = $ratio")
         return ratio
     }
 

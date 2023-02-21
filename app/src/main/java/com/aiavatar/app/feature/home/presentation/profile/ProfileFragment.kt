@@ -348,6 +348,12 @@ class ProfileFragment : Fragment() {
                 }
             }
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            userViewModel.authenticationState.collectLatest { state ->
+                Timber.d("Login: (profile) authentication state = $state")
+            }
+        }
     }
 
     private fun handleBackPressed() {

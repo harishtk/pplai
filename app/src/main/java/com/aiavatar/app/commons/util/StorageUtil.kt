@@ -137,7 +137,9 @@ object StorageUtil {
     ): Uri? {
         val outFile = getTempDownloadFile(context) ?: return null
         ImageDownloader(url, outFile, downloadProgress).download()
+        Timber.tag("DownloadSeq.Msg").d("Download complete ${outFile.name}")
         val tempUri = FileProvider.getUriForFile(context, "${BuildConfig.APPLICATION_ID}.provider", outFile, displayName)
+        Timber.tag("DownloadSeq.Msg").d("Saving to Gallery")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val cr = context.contentResolver
 
@@ -172,6 +174,7 @@ object StorageUtil {
                     values.put(MediaStore.MediaColumns.IS_PENDING, false)
                     cr.update(savedUri, values, null)
                 }
+                Timber.tag("DownloadSeq.Msg").d("Image saved $savedUri")
                 return savedUri
             } catch (e: IOException) {
                 savedUri?.let { orphan -> cr.delete(orphan, null, null) }
@@ -188,6 +191,7 @@ object StorageUtil {
             }
             val targetFile = File(targetDir, Commons.getFileNameFromUrl(url))
             FileUtils.copyFile(outFile, targetFile)
+            Timber.tag("DownloadSeq.Msg").d("Image saved ${targetFile.name}")
             return getImageContentUri(context, targetFile)
         }
     }

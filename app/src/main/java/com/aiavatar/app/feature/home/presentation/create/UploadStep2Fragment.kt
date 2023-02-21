@@ -419,7 +419,7 @@ class UploadStep2Fragment : Fragment() {
                     .detectFaces()
                     .build().apply {
                         val startTime = SystemClock.uptimeMillis()
-                        val previewModelList = this.start(scope = viewLifecycleOwner.lifecycleScope).awaitAll().map { pipeResult ->
+                        val previewModelList = this.startIn(scope = viewLifecycleOwner.lifecycleScope).awaitAll().map { pipeResult ->
                             Timber.d("Pipeline: result = $pipeResult")
                             val (faces, nsfwScore) = pipeResult.faces to pipeResult.nsfwScoreBean
                             if (nsfwScore != null && nsfwScore.nsfwScore > 0.5) {
