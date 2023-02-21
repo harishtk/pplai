@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.PendingIntentCompat
 import androidx.core.content.ContextCompat
@@ -47,7 +48,7 @@ class DownloadWorker @AssistedInject constructor(
     private val appDatabase: AppDatabase,
 ) : CoroutineWorker(context, workerParameters) {
 
-    private val NUM_THREADS: Int = Runtime.getRuntime().availableProcessors()
+    private val NUM_THREADS: Int = Runtime.getRuntime().availableProcessors() * 2
 
     private val coroutineExceptionHandler =
         CoroutineExceptionHandler { _, t ->
@@ -87,11 +88,12 @@ class DownloadWorker @AssistedInject constructor(
             .getDownloadSessionSync(sessionId)
             ?: return abortWork("No download session data found for session id $sessionId")
 
-        appDatabase.downloadSessionDao().apply {
-            updateDownloadWorkerId(sessionWithFilesEntity.downloadSessionEntity._id!!, workerId = id.toString())
+        withContext(Dispatchers.IO) {
+            appDatabase.downloadSessionDao().apply {
+                updateDownloadWorkerId(sessionWithFilesEntity.downloadSessionEntity._id!!, workerId = id.toString())
+            }
+            setForeground(createForegroundInfo(0))
         }
-
-        setForeground(createForegroundInfo(0))
 
         val relativeDownloadPath = StringBuilder()
             .append(context.getString(R.string.app_name))
@@ -111,10 +113,6 @@ class DownloadWorker @AssistedInject constructor(
 
         appDatabase.downloadSessionDao().updateDownloadSessionStatus(
             sessionWithFilesEntity.downloadSessionEntity._id!!, DownloadSessionStatus.PARTIALLY_DONE.status)
-
-        val downloadCount =
-            sessionWithFilesEntity.downloadFilesEntity.count { entity -> entity.downloaded == 0 }
-        val downloadCountLatch = CountDownLatch(downloadCount)
 
         var failedCount = 0
         val jobs = sessionWithFilesEntity.downloadFilesEntity
@@ -168,27 +166,31 @@ class DownloadWorker @AssistedInject constructor(
                             }
                         }
 
-                        appDatabase.downloadFilesDao().apply {
-                            if (savedUri != null) {
-                                updateDownloadedFileName(downloadFilesEntity._id!!, savedUri.toString())
-                                updateFileStatus(
-                                    id = downloadFilesEntity._id!!,
-                                    DownloadFileStatus.COMPLETE.status
-                                )
-                                downloadCountLatch.countDown()
-                            } else {
-                                failedCount++
-                                updateDownloadStatus(
-                                    id = downloadFilesEntity._id!!,
-                                    downloaded = false,
-                                    downloadedAt = 0L,
-                                    downloadSize = 0L
-                                )
-                                updateFileStatus(
-                                    id = downloadFilesEntity._id!!,
-                                    DownloadFileStatus.FAILED.status
-                                )
-                                downloadCountLatch.countDown()
+                        Timber.tag("DownloadSeq.Msg").d("Updating database ${downloadFilesEntity.fileUriString}")
+                        withContext(Dispatchers.IO) {
+                            appDatabase.downloadFilesDao().apply {
+                                if (savedUri != null) {
+                                    updateDownloadedFileName(downloadFilesEntity._id!!, savedUri.toString())
+                                    updateFileStatus(
+                                        id = downloadFilesEntity._id!!,
+                                        DownloadFileStatus.COMPLETE.status
+                                    )
+                                    updateDownloadCounter()
+                                } else {
+                                    failedCount++
+                                    updateDownloadStatus(
+                                        id = downloadFilesEntity._id!!,
+                                        downloaded = false,
+                                        downloadedAt = 0L,
+                                        downloadSize = 0L
+                                    )
+                                    updateFileStatus(
+                                        id = downloadFilesEntity._id!!,
+                                        DownloadFileStatus.FAILED.status
+                                    )
+                                    updateDownloadCounter()
+                                }
+                                Timber.tag("DownloadSeq.Msg").d("Download Finished. Waiting to join.. ${downloadFilesEntity.fileUriString}")
                             }
                         }
                     }.onFailure { t ->
@@ -199,7 +201,7 @@ class DownloadWorker @AssistedInject constructor(
                             id = downloadFilesEntity._id!!,
                             DownloadFileStatus.FAILED.status
                         )
-                        downloadCountLatch.countDown()
+                        updateDownloadCounter()
                     }
                 }
             }
@@ -211,10 +213,12 @@ class DownloadWorker @AssistedInject constructor(
             Timber.d("Waiting for $totalDownloads to complete")
             downloadCountLatch.await(15, TimeUnit.MINUTES)
         }*/
+        Timber.d("Waiting for $totalDownloads to complete")
+
+        /* CAUTION: [Job#join] completes only when all of the children are complete. */
         jobs.map {
             Timber.tag("Thread.Msg").d("parent: $it children = ${it.children.count()}")
             it.join()
-            updateDownloadCounter()
         }
 
         appDatabase.downloadSessionDao().updateDownloadSessionStatus(
@@ -231,13 +235,13 @@ class DownloadWorker @AssistedInject constructor(
 
     private fun updateDownloadCounter() {
         val current = downloadCounter.increment()
-        Timber.d("Download counter: $current")
+        Log.d("Counter", "Download counter: $current")
         val progress = if (totalDownloads != 0) {
             (current * 100) / totalDownloads
         } else {
             100
         }
-        setForegroundAsync(createForegroundInfo(progress))
+        setForegroundAsync(createForegroundInfo(progress, current, totalDownloads))
     }
 
     private fun abortWork(message: String): Result {
@@ -289,7 +293,7 @@ class DownloadWorker @AssistedInject constructor(
             .notify(STATUS_NOTIFICATION_ID, notification)
     }
 
-    private fun createForegroundInfo(progress: Int): ForegroundInfo {
+    private fun createForegroundInfo(progress: Int, current: Int = -1, total: Int = -1): ForegroundInfo {
         Timber.d("createForegroundInfo: $progress")
         createDownloadNotificationChannel(context)
 
@@ -297,17 +301,26 @@ class DownloadWorker @AssistedInject constructor(
         val context = applicationContext
         val channelId = context.getString(R.string.download_notification_channel_id)
 
+        val contentMessage = if (current == -1 || totalDownloads == -1) {
+            "Preparing to download"
+        } else {
+            "Downloading photos $current of $total"
+        }
+
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
-        val notification = notificationBuilder
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationManager.IMPORTANCE_DEFAULT)
             .setCategory(Notification.CATEGORY_PROGRESS)
             .setSilent(true)
-            .setContentTitle("Downloading photos")
-            .setProgress(100, progress, false)
+            .setContentTitle(contentMessage)
             .setOngoing(true)
-            .build()
-        return ForegroundInfo(ONGOING_NOTIFICATION_ID, notification)
+
+        if (progress > 0) {
+            notificationBuilder.setProgress(100, progress, false)
+        } else {
+            notificationBuilder.setProgress(100, 0, true)
+        }
+        return ForegroundInfo(ONGOING_NOTIFICATION_ID, notificationBuilder.build())
     }
 
     private fun createDownloadNotificationChannel(context: Context) {

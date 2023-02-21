@@ -30,10 +30,8 @@ import com.aiavatar.app.feature.onboard.domain.model.ShareLinkData
 import com.aiavatar.app.feature.onboard.domain.model.request.GetShareLinkRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 import java.lang.StringBuilder
@@ -345,33 +343,36 @@ class AvatarPreviewViewModel @Inject constructor(
 
         val mimeType = getMimeType(context, modelAvatar.remoteFile.toUri())
             ?: Constant.MIME_TYPE_JPEG
-        val savedUri = StorageUtil.saveFile(
-            context = context,
-            url = modelAvatar.remoteFile,
-            relativePath = relativeDownloadPath,
-            mimeType = mimeType,
-            displayName = Commons.getFileNameFromUrl(modelAvatar.remoteFile),
-        ) { progress, bytesDownloaded ->
-            Timber.d("Download: ${modelAvatar.remoteFile} progress = $progress downloaded = $bytesDownloaded")
-            _uiState.update { state ->
-                state.copy(
-                    currentDownloadProgress = progress
-                )
-            }
-            viewModelScope.launch {
-                appDatabase.modelAvatarDao().apply {
-                    updateDownloadProgress(modelAvatar._id!!, progress)
-                    if (progress == 100) {
-                        updateDownloadStatus(
-                            id = modelAvatar._id!!,
-                            downloaded = true,
-                            downloadedAt = System.currentTimeMillis(),
-                            downloadSize = bytesDownloaded
-                        )
+        val savedUri = withContext(Dispatchers.IO) {
+            StorageUtil.saveFile(
+                context = context,
+                url = modelAvatar.remoteFile,
+                relativePath = relativeDownloadPath,
+                mimeType = mimeType,
+                displayName = Commons.getFileNameFromUrl(modelAvatar.remoteFile),
+            ) { progress, bytesDownloaded ->
+                Timber.d("Download: ${modelAvatar.remoteFile} progress = $progress downloaded = $bytesDownloaded")
+                _uiState.update { state ->
+                    state.copy(
+                        currentDownloadProgress = progress
+                    )
+                }
+                viewModelScope.launch {
+                    appDatabase.modelAvatarDao().apply {
+                        updateDownloadProgress(modelAvatar._id!!, progress)
+                        if (progress == 100) {
+                            updateDownloadStatus(
+                                id = modelAvatar._id!!,
+                                downloaded = true,
+                                downloadedAt = System.currentTimeMillis(),
+                                downloadSize = bytesDownloaded
+                            )
+                        }
                     }
                 }
             }
         }
+
         if (savedUri != null) {
             sendEvent(AvatarPreviewUiEvent.DownloadComplete(savedUri))
         } else {

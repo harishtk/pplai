@@ -2,6 +2,7 @@ package com.aiavatar.app.feature.home.presentation.profile
 
 import android.Manifest
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -38,8 +39,10 @@ import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -272,15 +275,14 @@ class ModelListFragment : Fragment() {
                 if (modelData.renamed) {
                     analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_DOWNLOAD_CLICK)
                     // TODO: if model is renamed directly save the photos
-                    // TODO: [severity-10] check storage permissions if required
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         if (!checkStoragePermission()) {
                             askStoragePermission()
                         } else {
-                            viewModel.createDownloadSession(modelData.name ?: modelData.id)
+                            confirmDownload { viewModel.createDownloadSession(modelData.name ?: modelData.id) }
                         }
                     } else {
-                        viewModel.createDownloadSession(modelData.name ?: modelData.id)
+                        confirmDownload { viewModel.createDownloadSession(modelData.name ?: modelData.id) }
                     }
                 } else {
                     context?.debugToast("Getting folder name")
@@ -292,7 +294,9 @@ class ModelListFragment : Fragment() {
                             return@EditFolderNameDialog "Name too short"
                         }
                         // TODO: move 'save to gallery' to a foreground service
-                        viewModel.saveModelName(typedName)
+                        viewModel.saveModelName(typedName) {
+                            confirmDownload { viewModel.createDownloadSession(modelData.name) }
+                        }
                         analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_FOLDER_NAME_CHANGE)
                         null
                     }.show(childFragmentManager, "folder-name-dialog")
@@ -520,6 +524,25 @@ class ModelListFragment : Fragment() {
             ContextCompat.checkSelfPermission(requireContext(), it) ==
                     PackageManager.PERMISSION_GRANTED
         }
+    }
+
+    private fun confirmDownload(
+        successContinuation: () -> Unit
+    ) {
+        val clickListener: DialogInterface.OnClickListener =
+            DialogInterface.OnClickListener { dialog, which ->
+                when (which) {
+                    DialogInterface.BUTTON_POSITIVE -> {
+                        successContinuation.invoke()
+                    }
+                }
+                dialog.dismiss()
+            }
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialDialog)
+            .setMessage("Download all avatars to gallery?")
+            .setPositiveButton("YES", clickListener)
+            .setNegativeButton("CANCEL", clickListener)
+            .show()
     }
 
     override fun onStart() {

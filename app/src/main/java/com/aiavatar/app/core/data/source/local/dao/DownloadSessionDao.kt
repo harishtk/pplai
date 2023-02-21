@@ -41,7 +41,8 @@ interface DownloadSessionDao {
     suspend fun getDownloadSessionSync(id: Long): DownloadSessionWithFilesEntity?
 
     @Transaction
-    @Query("SELECT * FROM ${DownloadSessionTable.name} WHERE ${DownloadSessionTable.Columns.MODEL_ID} = :modelId")
+    @Query("SELECT * FROM ${DownloadSessionTable.name} WHERE ${DownloadSessionTable.Columns.MODEL_ID} = :modelId " +
+            "ORDER BY ${DownloadSessionTable.Columns.CREATED_AT} DESC LIMIT 1")
     suspend fun getDownloadSessionSyncForModelIdSync(modelId: String): DownloadSessionWithFilesEntity?
 
     @Query("UPDATE ${DownloadSessionTable.name} " +
@@ -62,5 +63,9 @@ interface DownloadSessionDao {
 
     @Query("DELETE FROM ${DownloadSessionTable.name}")
     suspend fun deleteAllDownloadSessions()
+
+    @Query("DELETE FROM ${DownloadSessionTable.name} " +
+            "WHERE ${DownloadSessionTable.Columns.ID} = :id")
+    suspend fun deleteDownloadSession(id: Long)
 
 }

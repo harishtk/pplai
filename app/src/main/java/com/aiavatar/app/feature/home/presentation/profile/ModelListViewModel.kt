@@ -34,11 +34,14 @@ import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import com.aiavatar.app.ifDebug
 import com.aiavatar.app.nullAsEmpty
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.concurrent.CancellationException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -89,7 +92,10 @@ class ModelListViewModel @Inject constructor(
         refreshInternal()
     }
 
-    fun saveModelName(modelName: String) = viewModelScope.launch {
+    fun saveModelName(
+        modelName: String,
+        continuation: () -> Unit
+    ) = viewModelScope.launch {
         val modelId = getModelId()
         if (modelId != null) {
             val request = RenameModelRequest(
@@ -125,7 +131,7 @@ class ModelListViewModel @Inject constructor(
                         appDatabase.modelDao().updateModelNameForModelId(modelId, modelName, true)
                         Timber.d("Update model name: affected $affectedRows rows")
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
-                        createDownloadSessionInternal(modelName, LoadType.ACTION)
+                        continuation.invoke()
                     }
                 }
             }
@@ -268,8 +274,16 @@ class ModelListViewModel @Inject constructor(
                 val runningDownloadSession = appDatabase.downloadSessionDao().getDownloadSessionSyncForModelIdSync(
                     modelId
                 )
+
+                Timber.d("Current download session: ${runningDownloadSession?.downloadSessionEntity}")
                 if (runningDownloadSession?.downloadSessionEntity?.status ==
                     DownloadSessionStatus.PARTIALLY_DONE.status) {
+                    val createdAt = runningDownloadSession.downloadSessionEntity.createdAt
+                    val delta = (System.currentTimeMillis() - createdAt).coerceAtLeast(0)
+                    if (delta > TimeUnit.HOURS.toMillis(1)) {
+                        Timber.e("Current download session: running more than an hour!")
+                    }
+
                     val t = IllegalStateException("A download for this model is already in progress")
                     setLoading(loadType, LoadState.Error(t))
                     _uiState.update { state ->

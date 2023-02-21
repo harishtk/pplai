@@ -244,7 +244,6 @@ class AvatarResultFragment : Fragment() {
                 // TODO: get folder name
                 if (avatarStatus.modelRenamedByUser) {
                     // TODO: if model is renamed directly save the photos
-                    // TODO: [severity-10] check storage permissions if required
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         if (!checkStoragePermission()) {
                             askStoragePermission()

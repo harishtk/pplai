@@ -54,7 +54,7 @@ class ImageDownloader(
 
     @WorkerThread
     @Throws(IOException::class)
-    suspend fun download() = withContext(Dispatchers.IO) {
+    suspend fun download() = runBlocking(Dispatchers.IO) {
         val request = Request.Builder()
             .url(url = url)
             .cacheControl(CacheControl.FORCE_NETWORK)
@@ -73,7 +73,6 @@ class ImageDownloader(
                     sink.buffer().writeAll(it)
                 }
             } ?: throw IOException("Cannot get input source")
-
         }
     }
 }
