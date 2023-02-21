@@ -33,6 +33,8 @@ import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.eventbus.UnAuthorizedEvent
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.viewmodels.UserViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
@@ -56,6 +58,15 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
 
     private val sharedViewModel: SharedViewModel by viewModels()
     private val userViewModel: UserViewModel by viewModels()
+
+    private val googleSignInClient by lazy {
+        // Configure sign-in to request the user's ID, email address, and basic
+        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(this, gso)
+    }
 
     private val appUpdateManager by lazy {
         AppUpdateManagerFactory.create(this)
@@ -432,6 +443,8 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         // TODO: gracefully logout the user.
         userViewModel.logout()
         ApplicationDependencies.getPersistentStore().logout()
+        googleSignInClient.signOut()
+
         showToast("Session expired! Please log in again.")
         gotoUploadStep1()
     }

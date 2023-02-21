@@ -13,6 +13,7 @@ import com.aiavatar.app.commons.util.loadstate.LoadStates
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.commons.util.net.UnAuthorizedException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.DownloadFileStatus
 import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
@@ -99,6 +100,7 @@ class ModelListViewModel @Inject constructor(
                     is Result.Loading -> { setLoading(LoadType.ACTION, LoadState.Loading()) }
                     is Result.Error -> {
                         when (result.exception) {
+                            is UnAuthorizedException -> { /* Noop */ }
                             is ApiException -> {
                                 _uiState.update { state ->
                                     state.copy(
@@ -204,6 +206,7 @@ class ModelListViewModel @Inject constructor(
                     is Result.Loading -> setLoading(LoadType.REFRESH, LoadState.Loading())
                     is Result.Error -> {
                         when (result.exception) {
+                            is UnAuthorizedException -> { /* Noop */ }
                             is ApiException -> {
                                 _uiState.update { state ->
                                     state.copy(

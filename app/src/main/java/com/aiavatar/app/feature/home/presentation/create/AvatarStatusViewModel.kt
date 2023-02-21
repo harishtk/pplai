@@ -28,6 +28,7 @@ import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.domain.model.UploadImageData
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.commons.util.net.UnAuthorizedException
 import com.aiavatar.app.feature.home.presentation.util.UploadUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -194,11 +195,16 @@ class AvatarStatusViewModel @Inject constructor(
                     is Result.Error -> {
                         when (result.exception) {
                             is ApiException -> {
-                                _uiState.update { state ->
-                                    state.copy(
-                                        exception = result.exception,
-                                        uiErrorText = UiText.somethingWentWrong
-                                    )
+                                when (result.exception.cause) {
+                                    is UnAuthorizedException -> { /* Noop */ }
+                                    else -> {
+                                        _uiState.update { state ->
+                                            state.copy(
+                                                exception = result.exception,
+                                                uiErrorText = UiText.somethingWentWrong
+                                            )
+                                        }
+                                    }
                                 }
                             }
                             is NoInternetException -> {
@@ -281,6 +287,7 @@ class AvatarStatusViewModel @Inject constructor(
                     is Result.Loading -> setLoading(LoadType.ACTION, LoadState.Loading())
                     is Result.Error -> {
                         when (result.exception) {
+                            is UnAuthorizedException -> { /* Noop */ }
                             is ApiException -> {
                                 _uiState.update { state ->
                                     state.copy(
@@ -368,7 +375,7 @@ class AvatarStatusViewModel @Inject constructor(
             uploadSessionWithFiles.uploadFilesEntity
                 .filter { it.uploadedFileName == null }
                 .map { uploadFilesEntity ->
-                    val task = viewModelScope.async {
+                    val task = viewModelScope.async(Dispatchers.IO) {
                         Timber.d("Preparing upload ${uploadFilesEntity.fileUriString}")
                         val file = Uri.parse(uploadFilesEntity.fileUriString).toFile()
                         val progressRequestBody = ProgressRequestBody(

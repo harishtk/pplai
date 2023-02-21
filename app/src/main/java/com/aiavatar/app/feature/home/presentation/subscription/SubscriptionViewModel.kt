@@ -20,6 +20,7 @@ import com.aiavatar.app.feature.home.domain.model.request.SubscriptionPurchaseRe
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.commons.util.net.UnAuthorizedException
 import com.aiavatar.app.core.data.source.local.entity.PAYMENT_STATUS_INITIALIZING
 import com.aiavatar.app.core.data.source.local.entity.PaymentsEntity
 import com.aiavatar.app.core.domain.model.LoginUser
@@ -407,6 +408,7 @@ class SubscriptionViewModel @Inject constructor(
                     is Result.Loading -> setLoadingInternal(LoadType.ACTION, LoadState.Loading())
                     is Result.Error -> {
                         when (result.exception) {
+                            is UnAuthorizedException -> { /* Noop */ }
                             is ApiException -> {
                                 _uiState.update { state ->
                                     state.copy(

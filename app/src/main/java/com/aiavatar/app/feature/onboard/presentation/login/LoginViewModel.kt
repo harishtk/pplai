@@ -26,6 +26,7 @@ import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import com.aiavatar.app.nullAsEmpty
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.commons.util.net.UnAuthorizedException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -281,6 +282,7 @@ class LoginViewModel @Inject constructor(
                                     )
                                 }
                             }
+                            is UnAuthorizedException -> { /* Noop */ }
                             else -> {
                                 _uiState.update { state ->
                                     state.copy(
@@ -305,7 +307,7 @@ class LoginViewModel @Inject constructor(
                             }
                             CALL_FOR_VERIFY_OTP -> {
                                 result.data.let { loginData ->
-                                    setLoginData(loginData)
+                                    setLoginData(loginData).join()
                                     ApplicationDependencies.getPersistentStore()
                                         .setEmail(loginRequest.email)
                                 }
@@ -367,7 +369,7 @@ class LoginViewModel @Inject constructor(
                     is Result.Success -> {
                         setLoading(LoadState.NotLoading.Complete, LoadType.ACTION)
                         result.data.let { loginData ->
-                            setLoginData(loginData)
+                            setLoginData(loginData).join()
                             ApplicationDependencies.getPersistentStore()
                                 .setEmail(socialLoginRequest.email)
                                 .setSocialImage(photoUrl)
@@ -387,13 +389,11 @@ class LoginViewModel @Inject constructor(
             .setDeviceToken(loginData.deviceToken.nullAsEmpty())
             .setUsername(loginData.loginUser?.username.nullAsEmpty())
 
-        viewModelScope.launch {
-            appDatabase.loginUserDao().apply {
-                deleteAll()
-                LoginUserEntity(username = loginData.loginUser?.username.nullAsEmpty()).apply {
-                    userId = loginData.loginUser?.userId
-                    insert(this)
-                }
+        appDatabase.loginUserDao().apply {
+            deleteAll()
+            LoginUserEntity(username = loginData.loginUser?.username.nullAsEmpty()).apply {
+                userId = loginData.loginUser?.userId
+                insert(this)
             }
         }
     }

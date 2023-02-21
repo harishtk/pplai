@@ -8,6 +8,8 @@ import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.BadResponseException
 import com.aiavatar.app.commons.util.net.EmptyResponseException
 import com.aiavatar.app.commons.util.net.HttpResponse
+import com.aiavatar.app.core.di.ApplicationCoroutineScope
+import com.aiavatar.app.di.IoDispatcher
 import com.aiavatar.app.feature.onboard.data.source.remote.AccountsRemoteDataSource
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.asDto
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.toAutoLoginData
@@ -21,13 +23,21 @@ import com.aiavatar.app.feature.onboard.domain.model.request.*
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import com.aiavatar.app.feature.onboard.presentation.utils.InvalidMobileNumberException
 import com.aiavatar.app.feature.onboard.presentation.utils.RecaptchaException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
+import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
-class AccountsRepositoryImpl constructor(
+class AccountsRepositoryImpl @Inject constructor(
+    @ApplicationCoroutineScope
+    private val applicationScope: CoroutineScope,
+    @IoDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
     private val remoteDataSource: AccountsRemoteDataSource
 ) : AccountsRepository, NetworkResultParser {
 
@@ -62,19 +72,23 @@ class AccountsRepositoryImpl constructor(
     }
 
     override fun logout(logoutRequest: LogoutRequest): Flow<Result<String>> {
-        return remoteDataSource.logout(logoutRequest.asDto()).map { networkResult ->
-            when (networkResult) {
-                is NetworkResult.Loading -> Result.Loading
-                is NetworkResult.Success -> {
-                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                        val data = networkResult.data.message ?: "Logout Successful. No message"
-                        Result.Success(data)
-                    } else {
-                        val cause = BadResponseException("Unexpected response code ${networkResult.code}")
-                        Result.Error(ApiException(cause))
+        return remoteDataSource.logout(logoutRequest.asDto())
+            /* Executes the call in the application scope,
+                so that it won't get canceled when the calling scope is dead. *//*
+            .flowOn(applicationScope.coroutineContext)*/
+            .map { networkResult ->
+                when (networkResult) {
+                    is NetworkResult.Loading -> Result.Loading
+                    is NetworkResult.Success -> {
+                        if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                            val data = networkResult.data.message ?: "Logout Successful. No message"
+                            Result.Success(data)
+                        } else {
+                            val cause = BadResponseException("Unexpected response code ${networkResult.code}")
+                            Result.Error(ApiException(cause))
+                        }
                     }
-                }
-                else -> parseErrorNetworkResult(networkResult)
+                    else -> parseErrorNetworkResult(networkResult)
             }
         }
     }

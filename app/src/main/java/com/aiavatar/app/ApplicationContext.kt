@@ -1,7 +1,6 @@
 package com.aiavatar.app
 
 import android.app.Application
-import android.content.Context
 import android.os.StrictMode
 import android.util.Log
 import androidx.core.os.bundleOf
@@ -13,6 +12,7 @@ import com.aiavatar.app.commons.util.AppStartup
 import com.aiavatar.app.commons.util.Util
 import com.aiavatar.app.commons.util.logging.timber.NoopTree
 import com.aiavatar.app.core.Env
+import com.aiavatar.app.core.di.ApplicationCoroutineScope
 import com.aiavatar.app.core.envForConfig
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.di.ApplicationDependencyProvider
@@ -21,11 +21,10 @@ import com.aiavatar.app.service.websocket.WebSocketConnectionState
 import dagger.hilt.android.HiltAndroidApp
 import io.github.devzwy.nsfw.NSFWHelper
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -35,7 +34,9 @@ class ApplicationContext : Application(), AppForegroundObserver.Listener, Config
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
-    private val applicationScope = Util.getCustomCoroutineScope()
+    @Inject
+    @ApplicationCoroutineScope
+    lateinit var applicationScope: CoroutineScope
 
     private var userEngageStartTime: Long = System.currentTimeMillis()
 

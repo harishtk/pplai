@@ -42,7 +42,7 @@ class ImageProcessorPipeline(
     fun start(scope: CoroutineScope = this.scope): List<Deferred<Result>> {
         Timber.d("Pipeline: start() detectNsfw = $detectNsfw detectFaces = $detectFaces")
         return imageUris.map { uri ->
-            scope.async(Dispatchers.IO) {
+            scope.async(Dispatchers.Default) {
                 Result(uri).apply {
                     detectNsfw(uri, this)
                     detectFaces(uri, this)

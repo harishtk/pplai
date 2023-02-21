@@ -18,6 +18,7 @@ import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.presentation.util.GenderModel
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.commons.util.net.UnAuthorizedException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -174,6 +175,7 @@ class UploadStep3ViewModel @Inject constructor(
                     is Result.Loading -> setLoading(LoadType.ACTION, LoadState.Loading())
                     is Result.Error -> {
                         when (result.exception) {
+                            is UnAuthorizedException -> { /* Noop */ }
                             is ApiException -> {
                                 _uiState.update { state ->
                                     state.copy(

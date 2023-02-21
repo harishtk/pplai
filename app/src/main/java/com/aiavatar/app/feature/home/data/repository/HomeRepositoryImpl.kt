@@ -1,6 +1,5 @@
 package com.aiavatar.app.feature.home.data.repository
 
-import android.net.Network
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.commons.util.NetworkResultParser
 import com.aiavatar.app.commons.util.Result
@@ -9,7 +8,9 @@ import com.aiavatar.app.commons.util.net.EmptyResponseException
 import com.aiavatar.app.core.data.source.local.CacheLocalDataSource
 import com.aiavatar.app.core.data.source.local.entity.CacheKeyProvider
 import com.aiavatar.app.core.data.source.local.entity.modify
+import com.aiavatar.app.core.di.ApplicationCoroutineScope
 import com.aiavatar.app.core.domain.util.BuenoCacheException
+import com.aiavatar.app.di.IoDispatcher
 import com.aiavatar.app.feature.home.data.model.ModelListWithModelEntity
 import com.aiavatar.app.feature.home.data.model.toModelListWithModel
 import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
@@ -18,15 +19,15 @@ import com.aiavatar.app.feature.home.data.source.remote.HomeRemoteDataSource
 import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPlanDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.asDto
 import com.aiavatar.app.feature.home.data.source.remote.dto.toSubscriptionPlan
-import com.aiavatar.app.feature.home.data.source.remote.model.GetAvatarsResponse
+import com.aiavatar.app.feature.home.data.source.remote.model.*
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.*
-import com.aiavatar.app.feature.home.data.source.remote.model.toCatalogList
-import com.aiavatar.app.feature.home.data.source.remote.model.toCategory
-import com.aiavatar.app.feature.home.data.source.remote.model.toListAvatar
 import com.aiavatar.app.feature.home.domain.model.*
 import com.aiavatar.app.feature.home.domain.model.request.*
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -36,6 +37,10 @@ val DEFAULT_CACHE_TIME_TO_LIVE: Long = TimeUnit.DAYS.toMillis(1)
 val SHORT_CACHE_TIME_TO_LIVE: Long = TimeUnit.HOURS.toMillis(3)
 
 class HomeRepositoryImpl @Inject constructor(
+    @ApplicationCoroutineScope
+    private val applicationScope: CoroutineScope,
+    @IoDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
     private val remoteDataSource: HomeRemoteDataSource,
     private val localDataSource: HomeLocalDataSource,
     private val cacheLocalDataSource: CacheLocalDataSource,
@@ -480,6 +485,9 @@ class HomeRepositoryImpl @Inject constructor(
 
     override fun purchasePlan(subscriptionPurchaseRequest: SubscriptionPurchaseRequest): Flow<Result<PurchasePlanData>> {
         return remoteDataSource.purchasePlan(subscriptionPurchaseRequest.asDto())
+            /* Executes the call in the application scope,
+                so that it won't get canceled when the calling scope is dead. *//*
+            .flowOn(applicationScope.coroutineContext)*/
             .map { networkResult ->
                 when (networkResult) {
                     is NetworkResult.Loading -> Result.Loading
@@ -499,7 +507,28 @@ class HomeRepositoryImpl @Inject constructor(
                     else -> parseErrorNetworkResult(networkResult)
                 }
             }
+            .catch { t ->
+                emit(Result.Error(t as Exception))
+            }
     }
+
+    fun purchasePlan2(subscriptionPurchaseRequest: SubscriptionPurchaseRequest): Flow<Result<PurchasePlanData>> = flow {
+        emit(Result.Loading)
+
+        /* Executes the call in the application scope,
+        so that it won't get canceled when the calling scope is dead. */
+        val networkResult = withContext(applicationScope.coroutineContext) {
+            remoteDataSource.purchasePlanSync(
+                subscriptionPurchaseRequest.asDto()
+            )
+        }
+
+        emit(parsePurchasePlanResponse(networkResult))
+    }
+        .catch { t ->
+            emit(Result.Error(t as Exception))
+        }
+        .flowOn(ioDispatcher)
 
     override fun generateAvatar(generateAvatarRequest: GenerateAvatarRequest): Flow<Result<Long>> {
         return remoteDataSource.generateAvatar(generateAvatarRequest.asDto()).map { networkResult ->
@@ -618,6 +647,26 @@ class HomeRepositoryImpl @Inject constructor(
                 }
                 else -> parseErrorNetworkResult(networkResult)
             }
+        }
+    }
+
+    private fun parsePurchasePlanResponse(networkResult: NetworkResult<PurchasePlanResponse>): com.aiavatar.app.commons.util.Result<PurchasePlanData> {
+        return when (networkResult) {
+            is NetworkResult.Loading -> Result.Loading
+            is NetworkResult.Success -> {
+                if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                    val data = networkResult.data.purchasePlanDataDto?.toPurchasePlanData()
+                    if (data != null) {
+                        Result.Success(data)
+                    } else {
+                        val cause = EmptyResponseException("No status id")
+                        Result.Error(ApiException(cause))
+                    }
+                } else {
+                    badResponse(networkResult)
+                }
+            }
+            else -> parseErrorNetworkResult(networkResult)
         }
     }
 

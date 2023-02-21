@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.home.di
 
 import com.aiavatar.app.core.data.source.local.CacheLocalDataSource
+import com.aiavatar.app.core.di.ApplicationCoroutineScope
 import com.aiavatar.app.di.WebService
 import com.aiavatar.app.feature.home.data.repository.HomeRepositoryImpl
 import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
@@ -11,24 +12,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import retrofit2.Retrofit
 
 @Module
 @InstallIn(SingletonComponent::class)
 object HomeModule {
-
-    @Provides
-    fun provideHomeRepository(
-        homeRemoteDataSource: HomeRemoteDataSource,
-        homeLocalDataSource: HomeLocalDataSource,
-        cacheLocalDataSource: CacheLocalDataSource,
-    ): HomeRepository {
-        return HomeRepositoryImpl(
-            remoteDataSource = homeRemoteDataSource,
-            localDataSource = homeLocalDataSource,
-            cacheLocalDataSource = cacheLocalDataSource
-        )
-    }
 
     @Provides
     fun provideHomeApi(@WebService retrofit: Retrofit): HomeApi =

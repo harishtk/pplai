@@ -22,6 +22,7 @@ import com.aiavatar.app.feature.home.domain.model.request.GetAvatarsRequest
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.commons.util.net.UnAuthorizedException
 import com.aiavatar.app.feature.home.presentation.profile.ModelListUiAction
 import com.aiavatar.app.feature.home.presentation.profile.ModelListUiEvent
 import com.aiavatar.app.feature.onboard.domain.model.ShareLinkData
@@ -237,6 +238,7 @@ class ModelDetailViewModel @Inject constructor(
                     is Result.Loading -> setLoading(LoadType.REFRESH, LoadState.Loading())
                     is Result.Error -> {
                         when (result.exception) {
+                            is UnAuthorizedException -> { /* Noop */ }
                             is ApiException -> {
                                 _uiState.update { state ->
                                     state.copy(

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.aiavatar.app.commons.util.Util
 import com.aiavatar.app.core.data.repository.AppRepositoryImpl
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.remote.AppApi
@@ -18,6 +19,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import retrofit2.Retrofit
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -62,8 +65,23 @@ object AppModule {
 
     /* END - Analytics */
 
+    /* Coroutine scope */
+    @ApplicationCoroutineScope
+    @Singleton
+    @Provides
+    fun provideApplicationScope(): CoroutineScope =
+        Util.buildCoroutineScope(
+            dispatcher = Dispatchers.IO,
+            coroutineName = Util.APPLICATION_COROUTINE_NAME
+        )
+    /* END - Coroutine scope */
+
 }
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class GsonParser
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ApplicationCoroutineScope

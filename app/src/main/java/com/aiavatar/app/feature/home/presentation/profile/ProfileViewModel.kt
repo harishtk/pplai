@@ -12,6 +12,7 @@ import com.aiavatar.app.feature.home.domain.model.ModelListWithModel
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.commons.util.net.UnAuthorizedException
 import com.aiavatar.app.delayed
 import com.aiavatar.app.ifEmpty
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -82,11 +83,16 @@ class ProfileViewModel @Inject constructor(
                     is Result.Error -> {
                         when (result.exception) {
                             is ApiException -> {
-                                _uiState.update { state ->
-                                    state.copy(
-                                        exception = result.exception,
-                                        uiErrorText = UiText.somethingWentWrong
-                                    )
+                                when (result.exception.cause) {
+                                    is UnAuthorizedException -> { /* Noop */ }
+                                    else -> {
+                                        _uiState.update { state ->
+                                            state.copy(
+                                                exception = result.exception,
+                                                uiErrorText = UiText.somethingWentWrong
+                                            )
+                                        }
+                                    }
                                 }
                             }
                             is NoInternetException -> {

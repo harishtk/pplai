@@ -114,7 +114,7 @@ class UploadStep2ViewModel @Inject constructor(
     fun removeDuplicates(
         pickedUris: List<Uri>,
         completion: (removed: Int, normalizedList: List<Uri>) -> Unit,
-    ) = viewModelScope.launch {
+    ) = viewModelScope.launch(Dispatchers.Default) {
         val originalList = uiState.value.previewModelList.filterIsInstance<UploadPreviewUiModel.Item>()
             .map { it.selectedMediaItem.uri }
         val combinedUris = originalList.toMutableList().apply {

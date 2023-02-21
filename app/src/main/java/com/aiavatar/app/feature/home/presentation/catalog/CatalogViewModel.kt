@@ -13,6 +13,7 @@ import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
+import com.aiavatar.app.commons.util.net.UnAuthorizedException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -97,11 +98,16 @@ class CatalogViewModel @Inject constructor(
                                 }
                             }
                             is ApiException -> {
-                                _uiState.update { state ->
-                                    state.copy(
-                                        exception = result.exception,
-                                        uiErrorText = UiText.somethingWentWrong
-                                    )
+                                when (result.exception.cause) {
+                                    is UnAuthorizedException -> { /* Noop */ }
+                                    else -> {
+                                        _uiState.update { state ->
+                                            state.copy(
+                                                exception = result.exception,
+                                                uiErrorText = UiText.somethingWentWrong
+                                            )
+                                        }
+                                    }
                                 }
                             }
                             is NoInternetException -> {

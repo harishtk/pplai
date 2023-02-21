@@ -64,7 +64,7 @@ class ModelDetailFragment : Fragment() {
     @Inject
     lateinit var analyticsLogger: AnalyticsLogger
 
-    private var _binding: FragmentModelDetailBinding? = null
+    private var _binding: FragmentModelDetailBinding by autoCleared()
     private val binding: FragmentModelDetailBinding
         get() = _binding!!
 

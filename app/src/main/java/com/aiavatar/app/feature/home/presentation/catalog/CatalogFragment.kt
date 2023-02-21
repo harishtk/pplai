@@ -63,10 +63,6 @@ class CatalogFragment : Fragment() {
     private val userViewModel: UserViewModel by activityViewModels()
     private val viewModel: CatalogViewModel by viewModels()
 
-    private var _binding: FragmentCatalogBinding? = null
-    private val binding: FragmentCatalogBinding
-        get() = _binding!!
-
     private var pendingPopupWindow: PopupWindow? = null
 
     override fun onCreateView(
@@ -79,7 +75,7 @@ class CatalogFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentCatalogBinding.bind(view)
+        val binding = FragmentCatalogBinding.bind(view)
 
         binding.bindState(
             uiState = viewModel.uiState,

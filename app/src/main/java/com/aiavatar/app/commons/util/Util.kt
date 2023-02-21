@@ -11,6 +11,13 @@ import kotlin.time.DurationUnit
 
 @Suppress("unused")
 object Util {
+    const val APPLICATION_COROUTINE_NAME = "AiAvatar::ApplicationCoroutine"
+
+    private const val DEFAULT_COROUTINE_NAME = "AiAvatar::DefaultCoroutine"
+
+    private val defaultCoroutineExceptionHandler = CoroutineExceptionHandler { _, t ->
+        Timber.e(t)
+    }
 
     fun countDownFlow(
         start: kotlin.time.Duration,
@@ -30,14 +37,13 @@ object Util {
         }
     }
 
-    fun getCustomCoroutineScope(): CoroutineScope {
-        val coroutineExceptionHandler =
-            CoroutineExceptionHandler { _, t ->
-                Timber.e(t)
-            }
-        val context =
-            Dispatchers.IO + SupervisorJob() + coroutineExceptionHandler
-
+    fun buildCoroutineScope(
+        dispatcher: CoroutineDispatcher = Dispatchers.Default,
+        job: Job = SupervisorJob(),
+        exceptionHandler: CoroutineExceptionHandler = defaultCoroutineExceptionHandler,
+        coroutineName: String = DEFAULT_COROUTINE_NAME
+    ): CoroutineScope {
+        val context = dispatcher + job + exceptionHandler
         return CoroutineScope(context = context)
     }
 

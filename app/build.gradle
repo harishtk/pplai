@@ -12,7 +12,7 @@ plugins {
 ext {
     versionMajor = 0 // Major
     versionMinor = 0 // Minor
-    versionPatch = 4 // Patches, updates
+    versionPatch = 5 // Patches, updates
     versionClassifier = null
     versionRevision = "-revision-1"
     isSnapshot = false
@@ -318,6 +318,9 @@ dependencies {
     testImplementation ('org.threeten:threetenbp:1.6.0'){
         exclude group:'com.jakewharton.threetenabp', module:'threetenabp'
     }
+
+    /* LeakCanary to detect memory leaks */
+    // debugImplementation("com.squareup.leakcanary:leakcanary-android:2.10")
 }
 
 @SuppressWarnings("GrMethodMayBeStatic")

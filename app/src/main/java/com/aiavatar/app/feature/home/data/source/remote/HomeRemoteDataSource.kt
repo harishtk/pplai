@@ -8,6 +8,7 @@ import com.aiavatar.app.di.IoDispatcher
 import com.aiavatar.app.feature.home.data.source.remote.dto.*
 import com.aiavatar.app.feature.home.data.source.remote.model.*
 import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
+import com.android.billingclient.api.Purchase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -49,6 +50,10 @@ class HomeRemoteDataSource @Inject constructor(
             emit(NetworkResult.Loading())
             emit(safeApiCall { apiService.purchasePlan(subscriptionPurchaseRequestDto) })
         }.flowOn(dispatcher)
+
+    suspend fun purchasePlanSync(subscriptionPurchaseRequestDto: SubscriptionPurchaseRequestDto): NetworkResult<PurchasePlanResponse> {
+        return safeApiCall { apiService.purchasePlan(subscriptionPurchaseRequestDto) }
+    }
 
     fun generateAvatar(generateAvatarRequestDto: GenerateAvatarRequestDto): Flow<NetworkResult<GenerateAvatarResponse>> =
         flow {

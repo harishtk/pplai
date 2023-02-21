@@ -16,6 +16,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.aiavatar.app.BuildConfig
+import com.aiavatar.app.MainActivity
 import com.aiavatar.app.R
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
@@ -153,12 +154,37 @@ class UploadStep1Fragment : Fragment() {
         }
 
         navigationIcon.setOnClickListener {
-            safeCall { findNavController().navigateUp() }
+            safeCall {
+                findNavController().apply {
+                    if (!navigateUp()) {
+                        if (!popBackStack()) {
+                            activity?.finishAffinity()
+                        }
+                    }
+                }
+            }
         }
     }
 
     private fun setupObservers() {
 
+    }
+
+    private fun gotoUploadStep1() {
+        try {
+            findNavController().apply {
+                val navOpts = NavOptions.Builder()
+                    .setExitAnim(R.anim.slide_bottom)
+                    .setEnterAnim(R.anim.slide_up)
+                    .setLaunchSingleTop(true)
+                    .setPopUpTo(R.id.main_nav_graph, inclusive = true, saveState = false)
+                    .build()
+                navigate(R.id.upload_step_1, null, navOpts)
+            }
+        } catch (e: Exception) {
+            Timber.e(e)
+            (activity as? MainActivity)?.restart()
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.TIRAMISU)
