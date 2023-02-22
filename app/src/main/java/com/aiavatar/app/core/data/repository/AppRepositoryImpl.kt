@@ -47,8 +47,7 @@ class AppRepositoryImpl @Inject constructor(
                         val message = networkResult.message ?: "Success."
                         Result.Success(message)
                     } else {
-                        val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -116,12 +115,10 @@ class AppRepositoryImpl @Inject constructor(
                             }
                             Result.Success(avatarStatusWithFiles)
                         } else {
-                            val cause = EmptyResponseException("No data")
-                            Result.Error(ApiException(cause))
+                            emptyResponse(networkResult)
                         }
                     } else {
-                        val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -167,12 +164,10 @@ class AppRepositoryImpl @Inject constructor(
                         }
                         Result.Success(avatarStatusWithFiles)
                     } else {
-                        val cause = EmptyResponseException("No data")
-                        Result.Error(ApiException(cause))
+                        emptyResponse(networkResult)
                     }
                 } else {
-                    val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                    Result.Error(ApiException(cause))
+                    badResponse(networkResult)
                 }
             }
             else -> parseErrorNetworkResult(networkResult)
@@ -188,12 +183,10 @@ class AppRepositoryImpl @Inject constructor(
                     if (data != null) {
                         Result.Success(data.toCreateModelData())
                     } else {
-                        val cause = EmptyResponseException("No data")
-                        Result.Error(ApiException(cause))
+                        emptyResponse(networkResult)
                     }
                 } else {
-                    val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                    Result.Error(ApiException(cause))
+                    badResponse(networkResult)
                 }
             }
             else -> parseErrorNetworkResult(networkResult)
@@ -206,12 +199,10 @@ class AppRepositoryImpl @Inject constructor(
             if (data != null) {
                 Result.Success(data)
             } else {
-                val cause = EmptyResponseException("No data")
-                Result.Error(ApiException(cause))
+                emptyResponse(networkResult)
             }
         } else {
-            val cause = BadResponseException("Unexpected response code ${networkResult.code}")
-            Result.Error(ApiException(cause))
+            badResponse(networkResult)
         }
     }
 }

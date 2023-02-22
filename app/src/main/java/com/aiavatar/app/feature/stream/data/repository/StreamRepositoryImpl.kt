@@ -42,12 +42,10 @@ class StreamRepositoryImpl @Inject constructor(
                             val streams = data.streams ?: emptyList()
                             Result.Success(streams)
                         } else {
-                            val cause = BadResponseException("No data")
-                            Result.Error(ApiException(cause))
+                            emptyResponse(networkResult)
                         }
                     } else {
-                        val cause = BadResponseException("No data")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -66,11 +64,10 @@ class StreamRepositoryImpl @Inject constructor(
                             Result.Success(streamKey)
                         } else {
                             val cause = BadResponseException("No stream key")
-                            Result.Error(ApiException(cause))
+                            Result.Error.NonRecoverableError(ApiException(cause))
                         }
                     } else {
-                        val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -89,11 +86,10 @@ class StreamRepositoryImpl @Inject constructor(
                             Result.Success(streamData)
                         } else {
                             val cause = BadResponseException("No stream data")
-                            Result.Error(ApiException(cause))
+                            Result.Error.NonRecoverableError(ApiException(cause))
                         }
                     } else {
-                        val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -145,12 +141,10 @@ class StreamRepositoryImpl @Inject constructor(
                     if (data != null) {
                         Result.Success(data)
                     } else {
-                        val cause = BadResponseException("No data")
-                        Result.Error(ApiException(cause))
+                        emptyResponse(networkResult)
                     }
                 } else {
-                    val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                    Result.Error(ApiException(cause))
+                    badResponse(networkResult)
                 }
             }
             else -> parseErrorNetworkResult(networkResult)
@@ -167,11 +161,10 @@ class StreamRepositoryImpl @Inject constructor(
                         Result.Success(data.toStreamState())
                     } else {
                         val cause = BadResponseException("No stream state")
-                        Result.Error(ApiException(cause))
+                        Result.Error.NonRecoverableError(ApiException(cause))
                     }
                 } else {
-                    val cause = BadResponseException("No data")
-                    Result.Error(ApiException(cause))
+                    badResponse(networkResult)
                 }
             }
             else -> parseErrorNetworkResult(networkResult)
@@ -208,7 +201,7 @@ class StreamRepositoryImpl @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            Result.Error(ParseException(e))
+            Result.Error.NonRecoverableError(ParseException(e))
         }
     }
 }

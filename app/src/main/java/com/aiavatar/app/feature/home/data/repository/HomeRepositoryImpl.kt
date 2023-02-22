@@ -246,7 +246,7 @@ class HomeRepositoryImpl @Inject constructor(
             observeAllModel().map { Result.Success(it) }
         )
     }.catch { t ->
-        emit(Result.Error(t as Exception))
+        emit(Result.Error.NonRecoverableError(t as Exception))
     }
 
     override fun getModel(modelId: String): Flow<Result<ModelData>> {
@@ -325,7 +325,7 @@ class HomeRepositoryImpl @Inject constructor(
                     val message = "Can't refresh. Last updated $lastUpdate minutes ago"
                     val t = BuenoCacheException(lastUpdate, message)
                     // Timber.d(t, "Cache keys: $message")
-                    emit(Result.Error(t))
+                    emit(Result.Error.NonRecoverableError(t))
                 }
             } else {
                 shouldFetch = true
@@ -351,7 +351,7 @@ class HomeRepositoryImpl @Inject constructor(
             observeAllCategoryInternal().map { Result.Success(it) }
         )
     }.catch { t ->
-        emit(Result.Error(t as Exception))
+        emit(Result.Error.NonRecoverableError(t as Exception))
     }
 
     // TODO: check cache invalidation
@@ -378,7 +378,7 @@ class HomeRepositoryImpl @Inject constructor(
                     val message = "Can't refresh. Last updated $lastUpdate minutes ago"
                     val t = BuenoCacheException(lastUpdate, message)
                     // Timber.d(t, "Cache keys: $message")
-                    emit(Result.Error(t))
+                    emit(Result.Error.NonRecoverableError(t))
                 }
             } else {
                 shouldFetch = true
@@ -391,7 +391,7 @@ class HomeRepositoryImpl @Inject constructor(
         if (shouldFetch) {
             /* Get data from remote */
             when (val result = refreshCatalogListInternal(request)) {
-                is Result.Error -> {
+                is Result.Error.NonRecoverableError -> {
                     throw result.exception
                 }
                 else -> {
@@ -411,7 +411,7 @@ class HomeRepositoryImpl @Inject constructor(
                 }
         )
     }.catch { t ->
-        emit(Result.Error(t as Exception))
+        emit(Result.Error.NonRecoverableError(t as Exception))
     }
 
     override fun getCatalog(): Flow<Result<List<Category>>> {
@@ -498,7 +498,7 @@ class HomeRepositoryImpl @Inject constructor(
                                 Result.Success(data)
                             } else {
                                 val cause = EmptyResponseException("No status id")
-                                Result.Error(ApiException(cause))
+                                Result.Error.NonRecoverableError(ApiException(cause))
                             }
                         } else {
                             badResponse(networkResult)
@@ -508,7 +508,7 @@ class HomeRepositoryImpl @Inject constructor(
                 }
             }
             .catch { t ->
-                emit(Result.Error(t as Exception))
+                emit(Result.Error.NonRecoverableError(t as Exception))
             }
     }
 
@@ -526,7 +526,7 @@ class HomeRepositoryImpl @Inject constructor(
         emit(parsePurchasePlanResponse(networkResult))
     }
         .catch { t ->
-            emit(Result.Error(t as Exception))
+            emit(Result.Error.NonRecoverableError(t as Exception))
         }
         .flowOn(ioDispatcher)
 
@@ -660,7 +660,7 @@ class HomeRepositoryImpl @Inject constructor(
                         Result.Success(data)
                     } else {
                         val cause = EmptyResponseException("No status id")
-                        Result.Error(ApiException(cause))
+                        Result.Error.NonRecoverableError(ApiException(cause))
                     }
                 } else {
                     badResponse(networkResult)

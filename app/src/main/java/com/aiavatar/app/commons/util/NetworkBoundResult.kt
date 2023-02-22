@@ -20,7 +20,7 @@ inline fun <ResultType, RequestType> networkBoundResource(
             query().map { Result.Success(it) }
         } catch (throwable: Throwable) {
             onFetchFailed(throwable)
-            query().map { Result.Error(throwable as Exception) }
+            query().map { Result.Error.NonRecoverableError(throwable as Exception) }
         }
     } else {
         query().map { Result.Success(it) }

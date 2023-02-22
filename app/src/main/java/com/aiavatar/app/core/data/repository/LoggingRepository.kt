@@ -34,9 +34,9 @@ class LoggingRepository @Inject constructor(
                 onSuccess = { emit(Result.Success(it)) },
                 onFailure = { t ->
                     when (t) {
-                        is HttpException -> emit(Result.Error(t))
-                        is IOException -> emit(Result.Error(t))
-                        else -> emit(Result.Error(t as Exception))
+                        is HttpException -> emit(Result.Error.NonRecoverableError(t))
+                        is IOException -> emit(Result.Error.NonRecoverableError(t))
+                        else -> emit(Result.Error.NonRecoverableError(t as Exception))
                     }
                 }
             )

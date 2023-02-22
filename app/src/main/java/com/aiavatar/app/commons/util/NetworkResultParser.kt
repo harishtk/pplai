@@ -18,19 +18,19 @@ interface NetworkResultParser {
             is NetworkResult.Success -> {
                 Timber.w("Not an error result")
                 val cause = IllegalStateException("Parsing non error result!")
-                Result.Error(ApiException(cause))
+                Result.Error.NonRecoverableError(ApiException(cause))
             }
             is NetworkResult.Error -> {
                 val cause = IllegalStateException(networkResult.message ?: "Something went wrong")
-                Result.Error(ApiException(networkResult.message, cause))
+                Result.Error.NonRecoverableError(ApiException(networkResult.message, cause))
             }
             is NetworkResult.NoInternet -> {
                 val cause = NoInternetException("Please check internet connection")
-                Result.Error(cause)
+                Result.Error.NonRecoverableError(cause)
             }
             is NetworkResult.UnAuthorized -> {
                 val cause = UnAuthorizedException("Session expired!")
-                Result.Error(ApiException(networkResult.message, cause))
+                Result.Error.NonRecoverableError(ApiException(networkResult.message, cause))
             }
         }
     }
@@ -40,7 +40,7 @@ interface NetworkResultParser {
      */
     fun badResponse(networkResult: NetworkResult<*>): Result.Error {
         val cause = BadResponseException("Unexpected response code ${networkResult.code}")
-        return Result.Error(ApiException(cause))
+        return Result.Error.NonRecoverableError(ApiException(cause))
     }
 
     /**
@@ -48,6 +48,6 @@ interface NetworkResultParser {
      */
     fun emptyResponse(networkResult: NetworkResult<*>): Result.Error {
         val cause = EmptyResponseException("No data")
-        return Result.Error(ApiException(cause))
+        return Result.Error.NonRecoverableError(ApiException(cause))
     }
 }

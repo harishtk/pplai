@@ -242,7 +242,7 @@ class UploadWorker @AssistedInject constructor(
             createModel(request)
         } else {
             val cause = IllegalStateException("session data not found")
-            com.aiavatar.app.commons.util.Result.Error(cause)
+            com.aiavatar.app.commons.util.Result.Error.NonRecoverableError(cause)
         }
     }
 

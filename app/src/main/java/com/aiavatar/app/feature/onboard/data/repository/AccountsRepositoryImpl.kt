@@ -62,8 +62,7 @@ class AccountsRepositoryImpl @Inject constructor(
                             emptyResponse(networkResult)
                         }
                     } else {
-                        val cause = BadResponseException("Unexpected response code ${networkResult.code}")
-                        Result.Error(ApiException(cause))
+                        badResponse(networkResult)
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
@@ -84,8 +83,7 @@ class AccountsRepositoryImpl @Inject constructor(
                             val data = networkResult.data.message ?: "Logout Successful. No message"
                             Result.Success(data)
                         } else {
-                            val cause = BadResponseException("Unexpected response code ${networkResult.code}")
-                            Result.Error(ApiException(cause))
+                            badResponse(networkResult)
                         }
                     }
                     else -> parseErrorNetworkResult(networkResult)
@@ -114,7 +112,7 @@ class AccountsRepositoryImpl @Inject constructor(
         }
             .catch { t ->
                 val cause = ApiException(t)
-                emit(Result.Error(cause))
+                emit(Result.Error.NonRecoverableError(cause))
             }
     }
 
@@ -127,12 +125,10 @@ class AccountsRepositoryImpl @Inject constructor(
                     if (data != null) {
                         Result.Success(data.toLoginData())
                     } else {
-                        val cause = EmptyResponseException("No data")
-                        Result.Error(ApiException(cause))
+                        emptyResponse(networkResult)
                     }
                 } else {
-                    val cause = BadResponseException("Unexpected response code: ${networkResult.code}")
-                    Result.Error(ApiException(cause))
+                    badResponse(networkResult)
                 }
             }
             else -> {
@@ -140,16 +136,16 @@ class AccountsRepositoryImpl @Inject constructor(
                 when (networkResult.code) {
                     HttpsURLConnection.HTTP_NOT_ACCEPTABLE -> {
                         val cause = InvalidOtpException(networkResult.message ?: "Invalid OTP!")
-                        Result.Error(ApiException(cause))
+                        Result.Error.NonRecoverableError(ApiException(cause))
                     }
                     HttpsURLConnection.HTTP_BAD_REQUEST -> {
                         val cause = RecaptchaException()
-                        Result.Error(ApiException(cause))
+                        Result.Error.NonRecoverableError(ApiException(cause))
                     }
                     HttpsURLConnection.HTTP_PRECON_FAILED,
                     HttpResponse.HTTP_TOO_MANY_REQUESTS -> {
                         val cause = InvalidMobileNumberException()
-                        Result.Error(ApiException(cause))
+                        Result.Error.NonRecoverableError(ApiException(cause))
                     }
                     else -> {
                         parseErrorNetworkResult(networkResult)

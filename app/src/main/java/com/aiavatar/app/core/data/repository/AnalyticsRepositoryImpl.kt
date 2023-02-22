@@ -20,20 +20,20 @@ class AnalyticsRepositoryImpl constructor(
             when (networkResult) {
                 is NetworkResult.Loading -> { Result.Loading }
                 is NetworkResult.Error -> {
-                    Result.Error(IllegalStateException("Something went wrong"))
+                    Result.Error.NonRecoverableError(IllegalStateException("Something went wrong"))
                 }
                 is NetworkResult.NoInternet -> {
-                    Result.Error(NoInternetException())
+                    Result.Error.NonRecoverableError(NoInternetException())
                 }
                 is NetworkResult.Success -> {
                     if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
                         Result.Success(networkResult.data?.message ?: "Success")
                     } else {
-                        Result.Error(BadResponseException("Unexpected response"))
+                        Result.Error.NonRecoverableError(BadResponseException("Unexpected response"))
                     }
                 }
                 else -> {
-                    Result.Error(IllegalStateException("Unauthorized"))
+                    Result.Error.NonRecoverableError(IllegalStateException("Unauthorized"))
                 }
             }
         }
