@@ -9,12 +9,15 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.PopupMenu
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -31,17 +34,17 @@ import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.core.data.source.local.entity.DownloadSessionStatus
 import com.aiavatar.app.databinding.FragmentModelListBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.work.WorkUtil
-import com.bumptech.glide.Glide
-import com.aiavatar.app.commons.util.loadstate.LoadState
-import com.aiavatar.app.commons.util.loadstate.LoadType
-import com.aiavatar.app.commons.util.net.NoInternetException
-import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
@@ -271,10 +274,10 @@ class ModelListFragment : Fragment() {
         icDownload.setOnClickListener {
             val modelData = uiState.value.modelData ?: return@setOnClickListener
             if (modelData.paid) {
-                // TODO: get folder name
+                // TODO: -done- get folder name
                 if (modelData.renamed) {
                     analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_DOWNLOAD_CLICK)
-                    // TODO: if model is renamed directly save the photos
+                    // TODO: -done- if model is renamed directly save the photos
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         if (!checkStoragePermission()) {
                             askStoragePermission()
@@ -286,20 +289,10 @@ class ModelListFragment : Fragment() {
                     }
                 } else {
                     context?.debugToast("Getting folder name")
-                    EditFolderNameDialog { typedName ->
-                        if (typedName.isBlank()) {
-                            return@EditFolderNameDialog "Name cannot be empty!"
-                        }
-                        if (typedName.length < 4) {
-                            return@EditFolderNameDialog "Name too short"
-                        }
-                        // TODO: move 'save to gallery' to a foreground service
-                        viewModel.saveModelName(typedName) {
-                            confirmDownload { viewModel.createDownloadSession(modelData.name) }
-                        }
+                    showEditModelNameDialog(modelData.name) {
+                        confirmDownload { viewModel.createDownloadSession(modelData.name) }
                         analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_FOLDER_NAME_CHANGE)
-                        null
-                    }.show(childFragmentManager, "folder-name-dialog")
+                    }
                 }
             } else {
                 // TODO: goto payment
@@ -332,6 +325,10 @@ class ModelListFragment : Fragment() {
         }
 
         retryButton.setOnClickListener { viewModel.refresh() }
+
+        toolbarIncluded.toolbarTitle.setOnClickListener {
+            showModelOptions(it)
+        }
     }
 
     private fun FragmentModelListBinding.bindDownloadProgress(
@@ -394,7 +391,7 @@ class ModelListFragment : Fragment() {
                     if (modelData != null) {
                         toolbarTitle.apply {
                             isVisible = true
-                            text = modelData.name.ifEmpty { getString(R.string.label_result) }
+                            text = modelData.name.ifBlank { getString(R.string.label_result) }
                         }
                     } else {
                         toolbarTitle.apply {
@@ -510,6 +507,43 @@ class ModelListFragment : Fragment() {
         ).show()
     }
 
+    private fun showModelOptions(anchor: View?) {
+        val wrapper = ContextThemeWrapper(requireContext(), R.style.Widget_App_PopupMenu)
+        PopupMenu(wrapper, anchor, Gravity.BOTTOM).apply {
+            inflate(R.menu.model_options_menu)
+            setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.menu_option_rename_model -> {
+                        val modelData = viewModel.uiState.value.modelData
+                            ?: return@setOnMenuItemClickListener false
+                        showEditModelNameDialog(modelData.name) {
+                            analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_FOLDER_NAME_CHANGE)
+                        }
+                    }
+                }
+                false
+            }
+        }.also {
+            it.show()
+        }
+    }
+
+    private fun showEditModelNameDialog(
+        modelName: String,
+        successContinuation: () -> Unit
+    ) {
+        EditFolderNameDialog(previousModelName = modelName) { typedName ->
+            if (typedName.isBlank()) {
+                return@EditFolderNameDialog "Name cannot be empty!"
+            }
+            if (typedName.length < 4) {
+                return@EditFolderNameDialog "Name too short"
+            }
+            viewModel.saveModelName(typedName, successContinuation)
+            null
+        }.show(childFragmentManager, "folder-name-dialog")
+    }
+
     private fun openSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -602,20 +636,19 @@ class ModelListAdapter2(
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
         fun bind(data: ModelListUiModel2.AvatarItem, callback: Callback) = with(binding) {
-            Glide.with(view1)
-                .load(data.avatar.remoteFile)
-                // .load(R.drawable.image_placeholder_animation)
-                .placeholder(R.drawable.loading_animation)
-                .into(view1)
+            view1.apply {
+                newGlideBuilder()
+                    .originalImage(data.avatar.remoteFile)
+                    .placeholder(R.drawable.loading_animation)
+                    .error(R.color.grey_900)
+                    .start()
+            }
 
             root.setOnClickListener { callback.onItemClick(adapterPosition, data) }
         }
 
         override fun onViewRecycled() = with(binding) {
-            view1.let {  imageView ->
-                Glide.with(imageView).clear(view1)
-                view1.setImageDrawable(null)
-            }
+            view1.disposeGlideLoad()
         }
 
         companion object {
@@ -654,7 +687,5 @@ class ModelListAdapter2(
                 return true
             }
         }
-
-
     }
 }

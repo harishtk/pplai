@@ -127,7 +127,7 @@ class ModelListViewModel @Inject constructor(
                         setLoading(LoadType.ACTION, LoadState.Error(result.exception))
                     }
                     is Result.Success -> {
-                        val affectedRows = appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
+                        val affectedRows = appDatabase.modelDao().updateModelNameForModelId(modelId, modelName, true)
                         appDatabase.modelDao().updateModelNameForModelId(modelId, modelName, true)
                         Timber.d("Update model name: affected $affectedRows rows")
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)

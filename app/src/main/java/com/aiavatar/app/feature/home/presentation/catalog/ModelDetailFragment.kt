@@ -8,12 +8,15 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -35,6 +38,7 @@ import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
@@ -391,21 +395,10 @@ class ModelDetailFragment : Fragment() {
                 analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_DOWNLOAD_BTN_CLICK)
             } else {
                 context?.showToast("Getting folder name")
-                EditFolderNameDialog { typedName ->
-                    if (typedName.isBlank()) {
-                        return@EditFolderNameDialog "Name cannot be empty!"
-                    }
-                    if (typedName.length < 4) {
-                        return@EditFolderNameDialog "Name too short"
-                    }
-                    // TODO: move 'save to gallery' to a foreground service
-                    viewModel.saveModelName(typedName) {
-                        viewModel.downloadCurrentAvatar(requireContext())
-                        analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_FOLDER_NAME_CHANGE)
-                    }
-                    null
-                }.show(childFragmentManager, "folder-name-dialog")
-                // checkPermissionAndScheduleWorker(uiState.value.modelId!!)
+                showEditModelNameDialog(modelData.name) {
+                    viewModel.downloadCurrentAvatar(requireContext())
+                    analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_FOLDER_NAME_CHANGE)
+                }
             }
         }
 
@@ -424,6 +417,10 @@ class ModelDetailFragment : Fragment() {
                 analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_RECREATE_CLICK)
             }
         }
+
+        toolbarIncluded.toolbarTitle.setOnClickListener {
+            showModelOptions(it)
+        }
     }
 
     private fun FragmentModelDetailBinding.bindToolbar(uiState: StateFlow<ModelDetailState>) {
@@ -437,6 +434,7 @@ class ModelDetailFragment : Fragment() {
         val modelDataFlow = uiState.map { it.modelData }
         viewLifecycleOwner.lifecycleScope.launch {
             modelDataFlow.collectLatest { modelData ->
+                Timber.d("Model data: $modelData")
                 if (modelData != null) {
                     toolbarIncluded.toolbarTitle.apply {
                         isVisible = true
@@ -444,7 +442,7 @@ class ModelDetailFragment : Fragment() {
                     }
                 } else {
                     toolbarIncluded.toolbarTitle.apply {
-                        isVisible = true
+                        isVisible = false
                         text = null
                     }
                 }
@@ -521,6 +519,43 @@ class ModelDetailFragment : Fragment() {
                 openGallery(savedUri)
             }
         )
+    }
+
+    private fun showModelOptions(anchor: View?) {
+        val wrapper = ContextThemeWrapper(requireContext(), R.style.Widget_App_PopupMenu)
+        PopupMenu(wrapper, anchor, Gravity.BOTTOM).apply {
+            inflate(R.menu.model_options_menu)
+            setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.menu_option_rename_model -> {
+                        val modelData = viewModel.uiState.value.modelData
+                            ?: return@setOnMenuItemClickListener false
+                        showEditModelNameDialog(modelData.name) {
+                            analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_FOLDER_NAME_CHANGE)
+                        }
+                    }
+                }
+                false
+            }
+        }.also {
+            it.show()
+        }
+    }
+
+    private fun showEditModelNameDialog(
+        modelName: String,
+        successContinuation: () -> Unit
+    ) {
+        EditFolderNameDialog(previousModelName = modelName) { typedName ->
+            if (typedName.isBlank()) {
+                return@EditFolderNameDialog "Name cannot be empty!"
+            }
+            if (typedName.length < 4) {
+                return@EditFolderNameDialog "Name too short"
+            }
+            viewModel.saveModelName(typedName, successContinuation)
+            null
+        }.show(childFragmentManager, "folder-name-dialog")
     }
 
     private fun handleShareLink(link: String) {
@@ -777,10 +812,7 @@ class AvatarScrollAdapter(
         }
 
         override fun onViewRecycled() {
-            binding.previewImage.let { imageView ->
-                Glide.with(imageView).clear(null)
-                imageView.setImageDrawable(null)
-            }
+            binding.previewImage.disposeGlideLoad()
         }
 
         companion object {

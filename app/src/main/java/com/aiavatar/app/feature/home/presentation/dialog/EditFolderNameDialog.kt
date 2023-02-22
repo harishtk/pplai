@@ -10,17 +10,14 @@ import androidx.fragment.app.DialogFragment
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.core.fragment.BaseBottomSheetDialogFragment
 import com.aiavatar.app.databinding.DialogEditFoldernameBinding
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class EditFolderNameDialog(
+    private val previousModelName: String? = null,
     private val onSave: (typedName: String) -> String?
-) : DialogFragment() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        setStyle(STYLE_NO_FRAME, R.style.AppTheme_Dialog)
-    }
+) : BaseBottomSheetDialogFragment(R.color.bottom_sheet_background) {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,6 +38,7 @@ class EditFolderNameDialog(
 
         btnClose.setOnClickListener { dismissAllowingStateLoss() }
 
+        edFolderName.setText(previousModelName)
         edFolderName.doAfterTextChanged { editable ->
             val typed = editable.toString()
             inputErrorMessage.isVisible = false

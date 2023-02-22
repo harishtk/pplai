@@ -2,6 +2,7 @@ package com.aiavatar.app.feature.home.data.source.remote.model.dto
 
 import android.graphics.ColorSpace.Model
 import com.aiavatar.app.feature.home.domain.model.ModelData
+import com.aiavatar.app.nullAsEmpty
 import com.google.gson.annotations.SerializedName
 
 data class ModelDataDto(
@@ -10,7 +11,7 @@ data class ModelDataDto(
     @SerializedName("name")
     val name: String,
     @SerializedName("latestImage")
-    val latestImage: String,
+    val latestImage: String?,
     @SerializedName("totalCnt")
     val totalCount: Int,
     @SerializedName("paid")
@@ -25,7 +26,7 @@ fun ModelDataDto.toModelData(statusId: String): ModelData {
     return ModelData(
         id = id,
         name = name,
-        latestImage = latestImage,
+        latestImage = latestImage.nullAsEmpty(),
         totalCount = totalCount,
         paid = paid,
         renamed = renamed,

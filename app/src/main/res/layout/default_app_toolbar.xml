@@ -45,7 +45,7 @@
         app:layout_constrainedWidth="true"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintBottom_toBottomOf="parent"
-        tools:text="@tools:sample/lorem/random"/>
+        tools:text="My " />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/right_barrier"

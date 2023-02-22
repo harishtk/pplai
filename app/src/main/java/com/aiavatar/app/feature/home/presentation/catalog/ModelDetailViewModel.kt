@@ -23,8 +23,6 @@ import com.aiavatar.app.feature.home.domain.repository.HomeRepository
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
 import com.aiavatar.app.commons.util.net.UnAuthorizedException
-import com.aiavatar.app.feature.home.presentation.profile.ModelListUiAction
-import com.aiavatar.app.feature.home.presentation.profile.ModelListUiEvent
 import com.aiavatar.app.feature.onboard.domain.model.ShareLinkData
 import com.aiavatar.app.feature.onboard.domain.model.request.GetShareLinkRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
@@ -136,11 +134,11 @@ class ModelDetailViewModel @Inject constructor(
         downloadCurrentAvatarInternal(context)
     }
 
-    fun saveModelName(modelName: String, cont: Continuation = {}) = viewModelScope.launch {
+    fun saveModelName(newModelName: String, cont: Continuation = {}) = viewModelScope.launch {
         val modelId = getModelId()
         if (modelId != null) {
             val request = RenameModelRequest(
-                modelId = modelId, modelName = modelName
+                modelId = modelId, modelName = newModelName
             )
             appRepository.renameModel(request).collectLatest { result ->
                 when (result) {
@@ -167,7 +165,7 @@ class ModelDetailViewModel @Inject constructor(
                         setLoading(LoadType.ACTION, LoadState.Error(result.exception))
                     }
                     is Result.Success -> {
-                        val affectedRows = appDatabase.avatarStatusDao().updateModelNameForModelId(modelId, modelName, true)
+                        val affectedRows = appDatabase.modelDao().updateModelNameForModelId(modelId, newModelName, true)
                         Timber.d("Update model name: affected $affectedRows rows")
                         setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
                         cont()

@@ -35,6 +35,7 @@ import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.FragmentAvatarPreviewBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
@@ -659,10 +660,7 @@ class AvatarScrollAdapter(
         }
 
         override fun onViewRecycled() {
-            binding.previewImage.let { imageView ->
-                Glide.with(imageView).clear(null)
-                imageView.setImageDrawable(null)
-            }
+            binding.previewImage.disposeGlideLoad()
         }
 
         companion object {
@@ -788,10 +786,7 @@ class AvatarPreviewPagerAdapter(
         }
 
         override fun onViewRecycled() {
-            binding.previewImage.let { imageView ->
-                Glide.with(imageView).clear(null)
-                imageView.setImageDrawable(null)
-            }
+            binding.previewImage.disposeGlideLoad()
         }
 
         companion object {

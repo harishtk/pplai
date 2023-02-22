@@ -17,6 +17,7 @@ import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.FragmentMoreCatalogBinding
@@ -223,10 +224,7 @@ class MoreCatalogScrollAdapter(
         }
 
         override fun onViewRecycled() {
-            binding.imageView.let { imageView ->
-                Glide.with(imageView).clear(null)
-                imageView.setImageDrawable(null)
-            }
+            binding.imageView.disposeGlideLoad()
         }
 
         companion object {

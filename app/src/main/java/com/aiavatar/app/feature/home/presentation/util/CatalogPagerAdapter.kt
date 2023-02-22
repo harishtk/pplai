@@ -8,11 +8,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.LargePresetPreviewBinding
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.presentation.catalog.SelectableAvatarUiModel
 import com.bumptech.glide.Glide
+import jp.wasabeef.glide.transformations.RoundedCornersTransformation
 
 class CatalogPagerAdapter(
     private val context: Context,
@@ -63,11 +65,14 @@ class CatalogPagerAdapter(
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
         fun bind(listAvatar: ModelAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
+            val radius = binding.root.resources.getDimensionPixelSize(R.dimen.default_corner_size)
             title.text = listAvatar.remoteFile
+
             Glide.with(previewImage)
                 .load(listAvatar.remoteFile)
                 .placeholder(R.color.transparent_black)
                 .error(R.color.white)
+                // .transform(RoundedCornersTransformation(radius, 0, RoundedCornersTransformation.CornerType.ALL))
                 .into(previewImage)
 
             // toggleSelection(selected)
@@ -84,10 +89,7 @@ class CatalogPagerAdapter(
         }
 
         override fun onViewRecycled() {
-            binding.previewImage.let { imageView ->
-                Glide.with(imageView).clear(null)
-                imageView.setImageDrawable(null)
-            }
+            binding.previewImage.disposeGlideLoad()
         }
 
         companion object {
