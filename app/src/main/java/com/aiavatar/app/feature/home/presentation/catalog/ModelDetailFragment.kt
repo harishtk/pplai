@@ -546,7 +546,7 @@ class ModelDetailFragment : Fragment() {
         modelName: String,
         successContinuation: () -> Unit
     ) {
-        EditFolderNameDialog(previousModelName = modelName) { typedName ->
+        EditFolderNameDialog(previousModelName = modelName) { /* onSave */ typedName ->
             if (typedName.isBlank()) {
                 return@EditFolderNameDialog "Name cannot be empty!"
             }

@@ -255,6 +255,9 @@ dependencies {
 
     /* Glide Transformations */
     implementation("jp.wasabeef:glide-transformations:4.3.0")
+    implementation("com.github.bumptech.glide:okhttp3-integration:4.0.0") {
+        exclude group: 'glide-parent'
+    }
 
     /* Socket Connection */
     implementation("io.socket:socket.io-client:2.0.0") {

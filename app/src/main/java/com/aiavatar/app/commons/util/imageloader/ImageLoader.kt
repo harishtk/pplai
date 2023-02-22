@@ -1,6 +1,7 @@
 package com.aiavatar.app.commons.util.imageloader
 
 import android.graphics.drawable.Drawable
+import android.transition.TransitionManager
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
 import androidx.annotation.MainThread
@@ -8,6 +9,7 @@ import com.aiavatar.app.R
 import com.aiavatar.app.core.util.BlurTransformation
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
@@ -71,7 +73,8 @@ data class ErrorResult(
  * TODO - Extract request builder boiler-plate
  */
 class GlideImageLoader private constructor(
-    private val target: ImageView
+    private val target: ImageView,
+    private val glide: RequestManager
 ) : ImageLoader {
 
     private var listener: ImageLoader.Listener? = null
@@ -89,7 +92,7 @@ class GlideImageLoader private constructor(
 
     private fun loadThumbnail(onNext: () -> Unit) {
         thumbnail?.let { thumb ->
-            Glide.with(target)
+            glide
                 .load(thumb)
                 .listener(object : RequestListener<Drawable> {
                     override fun onLoadFailed(
@@ -124,7 +127,7 @@ class GlideImageLoader private constructor(
         return if (thumbUrl.isNullOrBlank()) {
             null
         } else {
-            Glide.with(target)
+            glide
                 .load(thumbUrl)
                 .placeholder(placeholder)
                 .error(errorImage)
@@ -158,7 +161,7 @@ class GlideImageLoader private constructor(
 
     private fun loadOriginalImage() {
         originalImage?.let { orig ->
-            Glide.with(target)
+            glide
                 .load(orig)
                 .thumbnail(
                     getThumbnailRequest(thumbnail)
@@ -217,14 +220,14 @@ class GlideImageLoader private constructor(
     }
 
     private fun loadBlurredImage(model: String) {
-        Glide.with(target)
+        glide
             .load(BlurGlideUrl(model))
             //.placeholder(R.drawable.loading_animation)
             .diskCacheStrategy(DiskCacheStrategy.NONE)
             .apply(RequestOptions().override(400, 400))
             .transform(BlurTransformation(target.context, 0.50F, 20F))
             .error(
-                Glide.with(target)
+                glide
                     .load(originalImage)
                     .placeholder(placeholder)
                     .error(errorImage)
@@ -302,10 +305,11 @@ class GlideImageLoader private constructor(
     }
 
     class Builder<T : ImageView>(
-        private val imageView: T
+        private val imageView: T,
+        private val glide: RequestManager = Glide.with(imageView),
     ) {
         private val glideImageLoader: GlideImageLoader =
-            GlideImageLoader(imageView)
+            GlideImageLoader(imageView, glide)
 
         inline fun listener(
             crossinline onStart: (loader: ImageLoader) -> Unit = {},
@@ -356,8 +360,12 @@ class GlideImageLoader private constructor(
     }
 
     companion object {
-        fun <T : ImageView> T.newGlideBuilder(): Builder<T> =
-            Builder(this)
+        fun <T : ImageView> T.newGlideBuilder(requestManager: RequestManager? = null): Builder<T> =
+            if (requestManager != null) {
+                Builder(this, requestManager)
+            } else {
+                Builder(this)
+            }
 
         fun <T : ImageView> T.disposeGlideLoad() {
             Glide.with(this).clear(this)

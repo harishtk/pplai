@@ -8,7 +8,9 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.storage.StorageManager
 import android.provider.Settings
+import android.text.format.Formatter
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -35,6 +37,7 @@ import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.ByteUnit
 import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
 import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
 import com.aiavatar.app.commons.util.loadstate.LoadState
@@ -46,14 +49,19 @@ import com.aiavatar.app.databinding.ItemSquareImageBinding
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailFragment
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.work.WorkUtil
+import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
+import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.internal.format
 import org.thoughtcrime.securesms.util.CachedInflater
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 
 /**
@@ -193,7 +201,10 @@ class ModelListFragment : Fragment() {
             }
         }
 
-        val adapter = ModelListAdapter2(callback)
+        val adapter = ModelListAdapter2(
+            glide = initGlide(),
+            callback = callback
+        )
 
         val avatarResultListFlow = uiState.map { it.modelResultList }
             .distinctUntilChanged()
@@ -403,7 +414,6 @@ class ModelListFragment : Fragment() {
                         }
                     }
                 }
-
             }
         }
 
@@ -535,7 +545,7 @@ class ModelListFragment : Fragment() {
         modelName: String,
         successContinuation: () -> Unit
     ) {
-        EditFolderNameDialog(previousModelName = modelName) { typedName ->
+        EditFolderNameDialog(previousModelName = modelName) { /* onSave */ typedName ->
             if (typedName.isBlank()) {
                 return@EditFolderNameDialog "Name cannot be empty!"
             }
@@ -577,16 +587,41 @@ class ModelListFragment : Fragment() {
                         }
                         dialog.dismiss()
                     }
+
                 val downloadSizeBytes = viewModel.getEstimatedDownloadSize()
+
+                withContext(Dispatchers.IO) {
+                    ServiceUtil.getStorageManager(requireContext()).let { storageManager ->
+                        runCatching {
+                            // TODO: try with [StorageManager#allocateBytes(java.io.FileDescriptor, long)]
+                            storageManager.allocateBytes(StorageManager.UUID_DEFAULT, downloadSizeBytes)
+                        }
+                            .onSuccess {
+                                val _sizeMb = ByteUnit.BYTES.toMegabytes(downloadSizeBytes)
+                                Timber.d("Storage space is available for ${_sizeMb}MB.")
+                            }
+                            .onFailure { t ->
+                                val _sizeMb = ByteUnit.BYTES.toMegabytes(downloadSizeBytes)
+                                Timber.d(t, "Storage space is not available for ${_sizeMb}MB.")
+                            }
+                    }
+                }
+                val formattedFileSize = Formatter.formatShortFileSize(requireContext(), downloadSizeBytes)
                 withContext(Dispatchers.Main) {
                     MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialDialog)
-                        .setMessage("Download all avatars to gallery? About ${ByteUnit.BYTES.toMegabytes(downloadSizeBytes)}MB.")
+                        .setMessage("Download all avatars to gallery? About ${formattedFileSize}.")
                         .setPositiveButton("YES", clickListener)
                         .setNegativeButton("CANCEL", clickListener)
                         .show()
                 }
             }
         }
+    }
+
+    private fun initGlide(): RequestManager {
+        val options: RequestOptions = RequestOptions()
+        return Glide.with(this@ModelListFragment)
+            .setDefaultRequestOptions(options)
     }
 
     override fun onStart() {
@@ -622,6 +657,7 @@ class ModelListFragment : Fragment() {
 }
 
 class ModelListAdapter2(
+    private val glide: RequestManager,
     private val callback: Callback,
 ) : ListAdapter<ModelListUiModel2, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -632,7 +668,7 @@ class ModelListAdapter2(
         val model = getItem(position)
         if (holder is ItemViewHolder) {
             model as ModelListUiModel2.AvatarItem
-            holder.bind(model, callback)
+            holder.bind(model, glide, callback)
         }
     }
 
@@ -645,9 +681,9 @@ class ModelListAdapter2(
         private val binding: ItemSquareImageBinding,
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(data: ModelListUiModel2.AvatarItem, callback: Callback) = with(binding) {
+        fun bind(data: ModelListUiModel2.AvatarItem, glide: RequestManager, callback: Callback) = with(binding) {
             view1.apply {
-                newGlideBuilder()
+                newGlideBuilder(glide)
                     .originalImage(data.avatar.remoteFile)
                     .placeholder(R.drawable.loading_animation)
                     .error(R.color.grey_900)
