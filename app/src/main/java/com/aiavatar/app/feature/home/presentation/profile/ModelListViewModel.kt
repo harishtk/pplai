@@ -162,6 +162,13 @@ class ModelListViewModel @Inject constructor(
         createDownloadSessionInternal(modelName)
     }
 
+    suspend fun getEstimatedDownloadSize(): Long = withContext(Dispatchers.Default) {
+        uiState.value.modelResultList
+            .filterIsInstance<ModelListUiModel2.AvatarItem>()
+            .mapNotNull { it.avatar.fileSize }
+            .sum().toLong()
+    }
+
     private fun refreshInternal() {
         // TODO: get data from server
         Timber.d("refreshInternal")

@@ -11,4 +11,5 @@ data class ModelAvatar(
     var _id: Long? = null
     var downloadedAt: Long? = null
     var downloadedSize: Int? = null
+    var fileSize: Int? = null
 }

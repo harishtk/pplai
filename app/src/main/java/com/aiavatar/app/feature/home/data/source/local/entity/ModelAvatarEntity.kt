@@ -29,6 +29,9 @@ data class ModelAvatarEntity(
 
     @ColumnInfo("downloaded_size")
     var downloadedSize: Int? = null
+
+    @ColumnInfo("file_size")
+    var fileSize: Int? = null
 }
 
 fun ModelAvatarEntity.toModelAvatar(): ModelAvatar {
@@ -42,6 +45,7 @@ fun ModelAvatarEntity.toModelAvatar(): ModelAvatar {
         it._id = _id
         it.downloadedSize = downloadedSize
         it.downloadedAt = downloadedAt
+        it.fileSize = fileSize
     }
 }
 
@@ -56,6 +60,7 @@ fun ModelAvatar.toEntity(): ModelAvatarEntity {
         it._id = _id
         it.downloadedSize = downloadedSize
         it.downloadedAt = downloadedAt
+        it.fileSize = fileSize
     }
 }
 
@@ -71,5 +76,6 @@ object ModelAvatarTable {
         const val PROGRESS          = "progress"
         const val DOWNLOADED_AT     = "downloaded_at"
         const val DOWNLOADED_SIZE   = "downloaded_size"
+        const val FILE_SIZE         = "file_size"
     }
 }

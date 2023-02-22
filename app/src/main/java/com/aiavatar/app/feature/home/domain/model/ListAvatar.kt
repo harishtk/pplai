@@ -6,6 +6,7 @@ data class ListAvatar(
     val id: Long,
     val categoryName: String?,
     val imageName: String,
+    val fileSize: Int = 0
 )
 
 fun ListAvatar.toAvatarFile(modelId: String): AvatarFile {

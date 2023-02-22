@@ -604,9 +604,10 @@ class HomeRepositoryImpl @Inject constructor(
                             remoteFile = listAvatar.imageName,
                             downloaded = 0,
                             localUri = "",
-                            progress = 0
+                            progress = 0,
                         ).also {
                             it._id = listAvatar.id
+                            it.fileSize = listAvatar.fileSize
                         }
                     }
                     localDataSource.apply {

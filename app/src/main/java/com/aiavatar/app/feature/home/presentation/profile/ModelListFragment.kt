@@ -33,6 +33,7 @@ import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
+import com.aiavatar.app.commons.util.ByteUnit
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
 import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
@@ -47,8 +48,10 @@ import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.work.WorkUtil
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.thoughtcrime.securesms.util.CachedInflater
 import timber.log.Timber
 import javax.inject.Inject
@@ -563,20 +566,27 @@ class ModelListFragment : Fragment() {
     private fun confirmDownload(
         successContinuation: () -> Unit
     ) {
-        val clickListener: DialogInterface.OnClickListener =
-            DialogInterface.OnClickListener { dialog, which ->
-                when (which) {
-                    DialogInterface.BUTTON_POSITIVE -> {
-                        successContinuation.invoke()
+        viewLifecycleOwner.lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                val clickListener: DialogInterface.OnClickListener =
+                    DialogInterface.OnClickListener { dialog, which ->
+                        when (which) {
+                            DialogInterface.BUTTON_POSITIVE -> {
+                                successContinuation.invoke()
+                            }
+                        }
+                        dialog.dismiss()
                     }
+                val downloadSizeBytes = viewModel.getEstimatedDownloadSize()
+                withContext(Dispatchers.Main) {
+                    MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialDialog)
+                        .setMessage("Download all avatars to gallery? About ${ByteUnit.BYTES.toMegabytes(downloadSizeBytes)}MB.")
+                        .setPositiveButton("YES", clickListener)
+                        .setNegativeButton("CANCEL", clickListener)
+                        .show()
                 }
-                dialog.dismiss()
             }
-        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialDialog)
-            .setMessage("Download all avatars to gallery?")
-            .setPositiveButton("YES", clickListener)
-            .setNegativeButton("CANCEL", clickListener)
-            .show()
+        }
     }
 
     override fun onStart() {
