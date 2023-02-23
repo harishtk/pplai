@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.home.presentation.create
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -29,26 +30,27 @@ import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.cancelSpinning
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.commons.util.shakeNow
 import com.aiavatar.app.databinding.FragmentAvatarResultBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.viewmodels.SharedViewModel
+import com.aiavatar.app.viewmodels.UserViewModel
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
-import com.aiavatar.app.commons.util.loadstate.LoadState
-import com.aiavatar.app.feature.home.presentation.profile.ModelListUiAction
-import com.aiavatar.app.feature.home.presentation.profile.ModelListUiEvent
-import com.aiavatar.app.viewmodels.AuthenticationState
-import com.aiavatar.app.viewmodels.UserViewModel
+import com.bumptech.glide.RequestManager
+import com.bumptech.glide.request.RequestOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.math.log
+import kotlin.properties.Delegates
+import kotlin.reflect.KProperty
 
 /**
  * TODO: 1. If storage permission is not granted, show a blocking notification to get the same.
@@ -182,18 +184,36 @@ class AvatarResultFragment : Fragment() {
 
         val callback = object : AvatarResultAdapter.Callback {
             override fun onItemClick(position: Int, data: AvatarResultUiModel.AvatarItem) {
-                gotoAvatarPreview(position, data)
-                analyticsLogger.logEvent(Analytics.Event.AVATAR_RESULTS_MODEL_ITEM_CLICK)
+                uiState.value.avatarStatus?.let { avatarStatus ->
+                    if (avatarStatus.paid) {
+                        gotoAvatarPreview(position, data)
+                    } else {
+                        gotoPlans(modelId = avatarStatus.modelId)
+                    }
+                    analyticsLogger.logEvent(Analytics.Event.AVATAR_RESULTS_MODEL_ITEM_CLICK)
+                }
             }
         }
 
-        val adapter = AvatarResultAdapter(callback)
+        val adapter = AvatarResultAdapter(
+            glide = initGlide(),
+            callback = callback
+        )
 
         val avatarResultListFlow = uiState.map { it.avatarResultList }
             .distinctUntilChanged()
         viewLifecycleOwner.lifecycleScope.launch {
             avatarResultListFlow.collectLatest { avatarResultList ->
                 adapter.submitList(avatarResultList)
+            }
+        }
+
+        val modelPaidStatusFlow = uiState.map { it.avatarStatus }
+            .map { it?.paid == true }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            modelPaidStatusFlow.collectLatest { modelPaidStatus ->
+                adapter.enableWaterMark = !modelPaidStatus
             }
         }
 
@@ -248,10 +268,14 @@ class AvatarResultFragment : Fragment() {
                         if (!checkStoragePermission()) {
                             askStoragePermission()
                         } else {
-                            viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                            viewModel.createDownloadSession(
+                                avatarStatus.modelName ?: avatarStatus.modelId
+                            )
                         }
                     } else {
-                        viewModel.createDownloadSession(avatarStatus.modelName ?: avatarStatus.modelId)
+                        viewModel.createDownloadSession(
+                            avatarStatus.modelName ?: avatarStatus.modelId
+                        )
                     }
                 } else {
                     context?.debugToast("Getting folder name")
@@ -299,7 +323,7 @@ class AvatarResultFragment : Fragment() {
 
     private fun FragmentAvatarResultBinding.bindShareProgress(
         uiState: StateFlow<AvatarResultState>,
-        uiAction: (AvatarResultUiAction) -> Unit
+        uiAction: (AvatarResultUiAction) -> Unit,
     ) {
         val loadStateFlow = uiState.map { it.shareLoadState }
             .distinctUntilChangedBy { it.refresh }
@@ -447,6 +471,12 @@ class AvatarResultFragment : Fragment() {
         storagePermissionLauncher.launch(storagePermissions)
     }
 
+    private fun initGlide(): RequestManager {
+        val options: RequestOptions = RequestOptions()
+        return Glide.with(this@AvatarResultFragment)
+            .setDefaultRequestOptions(options)
+    }
+
     override fun onResume() {
         super.onResume()
         if (isSettingsLaunched) {
@@ -457,9 +487,19 @@ class AvatarResultFragment : Fragment() {
 
 }
 
+@SuppressLint("NotifyDataSetChanged")
 class AvatarResultAdapter(
+    private val glide: RequestManager,
     private val callback: Callback,
 ) : ListAdapter<AvatarResultUiModel, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+
+    var enableWaterMark: Boolean by Delegates.observable(true)
+    { property: KProperty<*>, oldValue: Boolean, newValue: Boolean ->
+        if (oldValue != newValue) {
+            notifyDataSetChanged()
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return ItemViewHolder.from(parent)
     }
@@ -468,7 +508,7 @@ class AvatarResultAdapter(
         val model = getItem(position)
         if (holder is ItemViewHolder) {
             model as AvatarResultUiModel.AvatarItem
-            holder.bind(model, callback)
+            holder.bind(model, glide, callback, enableWaterMark)
         }
     }
 
@@ -476,14 +516,19 @@ class AvatarResultAdapter(
         private val binding: ItemSquareImageBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(data: AvatarResultUiModel.AvatarItem, callback: Callback) = with(binding) {
-            Glide.with(view1)
-                .load(data.avatar.remoteFile)
-                .placeholder(R.drawable.loading_animation)
-                .into(view1)
+        fun bind(data: AvatarResultUiModel.AvatarItem, glide: RequestManager, callback: Callback, showWaterMark: Boolean) =
+            with(binding) {
+                view1.apply {
+                    newGlideBuilder(glide)
+                        .originalImage(data.avatar.remoteFile)
+                        .placeholder(R.drawable.loading_animation)
+                        .error(R.color.grey_900)
+                        .start()
+                }
 
-            root.setOnClickListener { callback.onItemClick(adapterPosition, data) }
-        }
+                tvWatermarkBrand.isVisible = showWaterMark
+                root.setOnClickListener { callback.onItemClick(adapterPosition, data) }
+            }
 
         companion object {
             fun from(parent: ViewGroup): ItemViewHolder {

@@ -14,11 +14,12 @@ import com.aiavatar.app.databinding.LargePresetPreviewBinding
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.presentation.catalog.SelectableAvatarUiModel
 import com.bumptech.glide.Glide
-import jp.wasabeef.glide.transformations.RoundedCornersTransformation
+import com.bumptech.glide.RequestManager
 
 class CatalogPagerAdapter(
     private val context: Context,
-    private val onCardClick: (position: Int) -> Unit = { }
+    private val glide: RequestManager,
+    private val onCardClick: (position: Int) -> Unit = { },
 ): ListAdapter<SelectableAvatarUiModel, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return ItemViewHolder.from(parent)
@@ -28,7 +29,7 @@ class CatalogPagerAdapter(
         val model = getItem(position)
         if (holder is ItemViewHolder) {
             model as SelectableAvatarUiModel.Item
-            holder.bind(model.modelAvatar, model.selected, onCardClick)
+            holder.bind(model.modelAvatar, model.selected, glide, onCardClick)
         }
     }
 
@@ -64,12 +65,11 @@ class CatalogPagerAdapter(
         private val binding: LargePresetPreviewBinding
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(listAvatar: ModelAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
+        fun bind(listAvatar: ModelAvatar, selected: Boolean, glide: RequestManager, onCardClick: (position: Int) -> Unit) = with(binding) {
             val radius = binding.root.resources.getDimensionPixelSize(R.dimen.default_corner_size)
             title.text = listAvatar.remoteFile
 
-            Glide.with(previewImage)
-                .load(listAvatar.remoteFile)
+            glide.load(listAvatar.remoteFile)
                 .placeholder(R.color.transparent_black)
                 .error(R.color.white)
                 // .transform(RoundedCornersTransformation(radius, 0, RoundedCornersTransformation.CornerType.ALL))

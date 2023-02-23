@@ -7,7 +7,9 @@
     app:cardBackgroundColor="@color/image_placeholder_background"
     app:cardUseCompatPadding="true"
     app:shapeAppearanceOverlay="@style/ShapeAppearance.App.SmallComponent.Rounded"
-    app:cardPreventCornerOverlap="true">
+    app:cardPreventCornerOverlap="true"
+    tools:layout_width="100dp"
+    tools:layout_height="130dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -26,5 +28,25 @@
             app:layout_constraintDimensionRatio="H,3:4"
             tools:src="@tools:sample/backgrounds/scenic" />
 
+        <TextView android:id="@+id/tv_watermark_brand"
+            style="@style/Base.TextAppearance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/inset_very_small"
+            android:layout_margin="@dimen/inset_very_small"
+            android:text="@string/app_name"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_size_minute"
+            android:background="@drawable/bg_filled_curved_primary"
+            android:backgroundTint="@color/transparent_30"
+            android:includeFontPadding="false"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintVertical_bias="1.0"
+            app:layout_constraintHorizontal_bias="1.0"
+            tools:visibility="visible" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

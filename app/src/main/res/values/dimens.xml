@@ -26,6 +26,7 @@
 
     <dimen name="inset_small">8dp</dimen>
     <dimen name="inset_very_small">4dp</dimen>
+    <dimen name="inset_tiny">2dp</dimen>
     <dimen name="inset_medium">12dp</dimen>
     <dimen name="inset_large">16dp</dimen>
     <dimen name="inset_large_medium">14dp</dimen>
@@ -33,7 +34,7 @@
     <dimen name="button_corner_size">48dp</dimen>
     <dimen name="default_fab_inset">25dp</dimen>
 
-    <dimen name="corner_size_small">5dp</dimen>
+    <dimen name="corner_size_small">4dp</dimen>
     <dimen name="default_corner_size">8dp</dimen>
     <dimen name="corner_size_large">16dp</dimen>
     <dimen name="corner_size_xlarge">20dp</dimen>

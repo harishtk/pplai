@@ -19,7 +19,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -49,7 +48,8 @@ import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
-import com.aiavatar.app.feature.home.presentation.profile.ModelListUiAction
+import com.bumptech.glide.RequestManager
+import com.bumptech.glide.request.RequestOptions
 import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
 import dagger.hilt.android.AndroidEntryPoint
@@ -115,7 +115,6 @@ class ModelDetailFragment : Fragment() {
                             showStoragePermissionRationale(true)
                         }
                     }
-
                     else -> {
                         mStoragePermissionContinuation?.invoke()
                         mStoragePermissionContinuation = null
@@ -186,7 +185,10 @@ class ModelDetailFragment : Fragment() {
             }
         }
 
-        val catalogPresetAdapter = CatalogPagerAdapter(requireContext())
+        val catalogPresetAdapter = CatalogPagerAdapter(
+            context = requireContext(),
+            glide = initGlide()
+        )
 
         val pageTransformer = CompositePageTransformer().apply {
             addTransformer(MarginPageTransformer(80))
@@ -285,7 +287,9 @@ class ModelDetailFragment : Fragment() {
             }
         }
 
-        val scrollerAdapter = AvatarScrollAdapter { clickedPosition ->
+        val scrollerAdapter = AvatarScrollAdapter(
+            glide = initGlide()
+        ) { clickedPosition ->
             if (previousPosition != clickedPosition) {
                 HapticUtil.createOneShot(requireContext())
             }
@@ -698,6 +702,12 @@ class ModelDetailFragment : Fragment() {
         }
     }
 
+    private fun initGlide(): RequestManager {
+        val options: RequestOptions = RequestOptions()
+        return Glide.with(this@ModelDetailFragment)
+            .setDefaultRequestOptions(options)
+    }
+
     override fun onResume() {
         super.onResume()
         if (isSettingsLaunched) {
@@ -733,6 +743,7 @@ class ModelDetailFragment : Fragment() {
 }
 
 class AvatarScrollAdapter(
+    private val glide: RequestManager,
     private val onCardClick: (position: Int) -> Unit = { },
 ) : ListAdapter<SelectableAvatarUiModel, AvatarScrollAdapter.ItemViewHolder>(DIFF_CALLBACK) {
 
@@ -743,7 +754,7 @@ class AvatarScrollAdapter(
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val model = getItem(position)
         model as SelectableAvatarUiModel.Item
-        holder.bind(model.modelAvatar, model.selected, onCardClick)
+        holder.bind(model.modelAvatar, model.selected, glide, onCardClick)
     }
 
     override fun onBindViewHolder(
@@ -786,11 +797,10 @@ class AvatarScrollAdapter(
         private val binding: ItemScrollerListBinding,
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(listAvatar: ModelAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) =
+        fun bind(listAvatar: ModelAvatar, selected: Boolean, glide: RequestManager, onCardClick: (position: Int) -> Unit) =
             with(binding) {
                 title.text = listAvatar.remoteFile
-                Glide.with(previewImage)
-                    .load(listAvatar.remoteFile)
+                glide.load(listAvatar.remoteFile)
                     .placeholder(R.drawable.loading_animation)
                     .error(R.color.white)
                     .into(previewImage)

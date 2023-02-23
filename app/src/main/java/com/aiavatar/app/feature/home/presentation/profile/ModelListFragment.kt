@@ -63,6 +63,8 @@ import org.thoughtcrime.securesms.util.CachedInflater
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
+import kotlin.properties.Delegates
+import kotlin.reflect.KProperty
 
 /**
  * TODO: -done- show download progress
@@ -196,8 +198,15 @@ class ModelListFragment : Fragment() {
 
         val callback = object : ModelListAdapter2.Callback {
             override fun onItemClick(position: Int, data: ModelListUiModel2.AvatarItem) {
-                gotoModelDetail(position, data)
-                analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_ITEM_CLICK)
+                uiState.value.modelData?.let { modelData ->
+                    if (modelData.paid) {
+                        gotoModelDetail(position, data)
+                    } else {
+                        gotoPlans(modelData.id)
+                    }
+                    analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_ITEM_CLICK)
+                }
+
             }
         }
 
@@ -211,6 +220,15 @@ class ModelListFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             avatarResultListFlow.collectLatest { avatarResultList ->
                 adapter.submitList(avatarResultList)
+            }
+        }
+
+        val modelPaidStatusFlow = uiState.map { it.modelData }
+            .map { it?.paid == true }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            modelPaidStatusFlow.collectLatest { modelPaidStatus ->
+                adapter.enableWaterMark = !modelPaidStatus
             }
         }
 
@@ -660,6 +678,14 @@ class ModelListAdapter2(
     private val glide: RequestManager,
     private val callback: Callback,
 ) : ListAdapter<ModelListUiModel2, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+
+    var enableWaterMark: Boolean by Delegates.observable(true)
+    { property: KProperty<*>, oldValue: Boolean, newValue: Boolean ->
+        if (oldValue != newValue) {
+            notifyDataSetChanged()
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return ItemViewHolder.from(parent)
     }
@@ -668,7 +694,7 @@ class ModelListAdapter2(
         val model = getItem(position)
         if (holder is ItemViewHolder) {
             model as ModelListUiModel2.AvatarItem
-            holder.bind(model, glide, callback)
+            holder.bind(model, glide, callback, enableWaterMark)
         }
     }
 
@@ -681,7 +707,7 @@ class ModelListAdapter2(
         private val binding: ItemSquareImageBinding,
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(data: ModelListUiModel2.AvatarItem, glide: RequestManager, callback: Callback) = with(binding) {
+        fun bind(data: ModelListUiModel2.AvatarItem, glide: RequestManager, callback: Callback, showWaterMark: Boolean) = with(binding) {
             view1.apply {
                 newGlideBuilder(glide)
                     .originalImage(data.avatar.remoteFile)
@@ -690,6 +716,7 @@ class ModelListAdapter2(
                     .start()
             }
 
+            tvWatermarkBrand.isVisible = showWaterMark
             root.setOnClickListener { callback.onItemClick(adapterPosition, data) }
         }
 
