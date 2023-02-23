@@ -464,7 +464,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
         }
         pendingPurchaseFetchJob?.cancel(CancellationException("New request")) // just in case
         pendingPurchaseFetchJob = lifecycleScope.launch(Dispatchers.IO) {
-            kotlin.runCatching { InAppUtil.queryPurchases(billingClient) }
+            kotlin.runCatching { billingClient.queryPurchases(ProductType.INAPP) }
                 .onSuccess { purchases ->
                     val _p = purchases.map {
                         immutableListOf(it.products.joinToString(), it.purchaseState, it.signature)

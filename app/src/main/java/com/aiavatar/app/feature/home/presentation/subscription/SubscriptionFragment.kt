@@ -39,6 +39,7 @@ import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.pay.billing.InAppPurchaseActivity
 import com.aiavatar.app.pay.billing.InAppUtil
 import com.aiavatar.app.pay.billing.ResultCode
+import com.aiavatar.app.pay.billing.queryPurchases
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.BillingResponseCode
@@ -585,7 +586,7 @@ class SubscriptionFragment : Fragment() {
         }
         pendingPurchaseFetchJob?.cancel(CancellationException("New request")) // just in case
         pendingPurchaseFetchJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            kotlin.runCatching { InAppUtil.queryPurchases(billingClient) }
+            kotlin.runCatching { billingClient.queryPurchases(ProductType.INAPP) }
                 .onSuccess { purchases ->
                     val _p = purchases.map {
                         immutableListOf(it.products.joinToString(), it.purchaseState, it.signature)
