@@ -488,25 +488,7 @@ class HomeRepositoryImpl @Inject constructor(
             /* Executes the call in the application scope,
                 so that it won't get canceled when the calling scope is dead. *//*
             .flowOn(applicationScope.coroutineContext)*/
-            .map { networkResult ->
-                when (networkResult) {
-                    is NetworkResult.Loading -> Result.Loading
-                    is NetworkResult.Success -> {
-                        if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
-                            val data = networkResult.data.purchasePlanDataDto?.toPurchasePlanData()
-                            if (data != null) {
-                                Result.Success(data)
-                            } else {
-                                val cause = EmptyResponseException("No status id")
-                                Result.Error.NonRecoverableError(ApiException(cause))
-                            }
-                        } else {
-                            badResponse(networkResult)
-                        }
-                    }
-                    else -> parseErrorNetworkResult(networkResult)
-                }
-            }
+            .map(this::parsePurchasePlanResponse)
             .catch { t ->
                 emit(Result.Error.NonRecoverableError(t as Exception))
             }

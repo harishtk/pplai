@@ -53,9 +53,6 @@ class AvatarPreviewViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<AvatarPreviewUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private var selectedAvatarPosition: Int = 0
-    private val selectedToggleFlow = MutableStateFlow(false)
-
     val accept: (AvatarPreviewUiAction) -> Unit
 
     private var avatarsFetchJob: Job? = null
@@ -68,14 +65,16 @@ class AvatarPreviewViewModel @Inject constructor(
         val selectableAvatarUiModelListFlow = uiState.map { it.avatarList }
             .distinctUntilChanged()
 
+        val selectedPositionFlow = uiState.map { it.selectedAvatarPosition }
+            .distinctUntilChanged()
         combine(
-            selectedToggleFlow,
+            selectedPositionFlow,
             selectableAvatarUiModelListFlow,
             ::Pair
-        ).map { (selectedToggle, selectableAvatarList) ->
+        ).map { (selectedPosition, selectableAvatarList) ->
             val newSelectableAvatarList = selectableAvatarList.mapIndexed { index, selectableAvatarUiModel ->
                 if (selectableAvatarUiModel is SelectableAvatarUiModel.Item) {
-                    selectableAvatarUiModel.copy(selected = index == selectedAvatarPosition)
+                    selectableAvatarUiModel.copy(selected = index == selectedPosition)
                 } else {
                     selectableAvatarUiModel
                 }
@@ -203,9 +202,11 @@ class AvatarPreviewViewModel @Inject constructor(
     }
 
     fun toggleSelection(position: Int) {
-        selectedAvatarPosition = position
-        // Signals the flow
-        selectedToggleFlow.update { selectedToggleFlow.value.not() }
+        _uiState.update { state ->
+            state.copy(
+                selectedAvatarPosition = position
+            )
+        }
     }
 
     fun downloadCurrentAvatar(context: Context) {
@@ -533,6 +534,7 @@ data class AvatarPreviewState(
     val statusId: String? = null,
     val avatarStatusWithFiles: AvatarStatusWithFiles? = null,
     val avatarList: List<SelectableAvatarUiModel> = emptyList(),
+    val selectedAvatarPosition: Int = DEFAULT_SELECTED_POSITION,
     val currentDownloadProgress: Int? = null,
     val shareLoadState: LoadStates = LoadStates.IDLE,
     val shareLinkData: ShareLinkData? = null,
@@ -555,3 +557,5 @@ interface AvatarPreviewUiEvent {
 interface SelectableAvatarUiModel {
     data class Item(val modelAvatar: ModelAvatar, val selected: Boolean) : SelectableAvatarUiModel
 }
+
+private const val DEFAULT_SELECTED_POSITION = NO_POSITION

@@ -50,8 +50,6 @@ import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.RequestOptions
-import com.zhpan.indicator.enums.IndicatorSlideMode
-import com.zhpan.indicator.enums.IndicatorStyle
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -67,10 +65,6 @@ class ModelDetailFragment : Fragment() {
 
     @Inject
     lateinit var analyticsLogger: AnalyticsLogger
-
-    private var _binding: FragmentModelDetailBinding by autoCleared()
-    private val binding: FragmentModelDetailBinding
-        get() = _binding!!
 
     private val viewModel: ModelDetailViewModel by viewModels()
 
@@ -88,6 +82,8 @@ class ModelDetailFragment : Fragment() {
     private var jumpToPosition: Int? = null
 
     private var previousPosition: Int = -1
+
+    private var isViewPagerSettledAtLeastOnce = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,7 +142,7 @@ class ModelDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentModelDetailBinding.bind(view)
+        val binding = FragmentModelDetailBinding.bind(view)
 
         binding.bindState(
             uiState = viewModel.uiState,
@@ -208,23 +204,6 @@ class ModelDetailFragment : Fragment() {
             setPageTransformer(pageTransformer)
         }
 
-        /*circleIndicator.setViewPager(catalogPreviewPager)
-        catalogPresetAdapter.registerAdapterDataObserver(circleIndicator.adapterDataObserver)*/
-
-        val indicatorSizePx = resources.getDimensionPixelSize(R.dimen.tab_indicator_size)
-        val normalColor = resources.getColor(R.color.grey_divider, null)
-        val checkedColor = resources.getColor(R.color.white, null)
-        binding.indicatorView.apply {
-            setSliderColor(checkedColor, checkedColor)
-            // setCheckedSlideWidth((indicatorSizePx * 2).toFloat())
-            // setSliderWidth(indicatorSizePx.toFloat())
-            setSliderWidth(indicatorSizePx.toFloat(), (indicatorSizePx * 3).toFloat())
-            setSliderHeight(indicatorSizePx.toFloat())
-            setSlideMode(IndicatorSlideMode.SCALE)
-            setIndicatorStyle(IndicatorStyle.ROUND_RECT)
-            notifyDataChanged()
-        }
-
         // TODO: get catalog detail list
         val autoCenterLayoutManger = AutoCenterLayoutManger(
             context = avatarScrollerList.context,
@@ -236,9 +215,11 @@ class ModelDetailFragment : Fragment() {
         catalogPreviewPager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                // setUpCurrentIndicator(position)
-                // indicatorView.onPageSelected(position)
-                viewModel.toggleSelection(position)
+                if (isViewPagerSettledAtLeastOnce) {
+                    viewModel.toggleSelection(position)
+                } else {
+                    isViewPagerSettledAtLeastOnce = true
+                }
 
                 val delta = abs(previousPosition - position)
                 if (delta <= SCROLL_ANIMATION_THRESHOLD) {
@@ -261,20 +242,10 @@ class ModelDetailFragment : Fragment() {
                 positionOffsetPixels: Int,
             ) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels)
-                // indicatorView.onPageScrolled(position, positionOffset, positionOffsetPixels)
             }
 
             override fun onPageScrollStateChanged(state: Int) {
                 super.onPageScrollStateChanged(state)
-                // indicatorView.onPageScrollStateChanged(state)
-                if (state == ViewPager2.SCROLL_STATE_IDLE) {
-                    val isValidJumpToPos = (jumpToPosition != null && jumpToPosition!! >=0
-                            && jumpToPosition!! < catalogPresetAdapter.itemCount)
-                    Timber.d("Jump to position: onPageScrollStateChanged() jump to = $jumpToPosition valid = $isValidJumpToPos")
-                    if (isValidJumpToPos) {
-                        // TODO: jump to position
-                    }
-                }
             }
         })
 
@@ -332,7 +303,6 @@ class ModelDetailFragment : Fragment() {
                             }
                     }
                 }
-                // setUpIndicator(avatarList.size)
             }
         }
 
@@ -428,13 +398,6 @@ class ModelDetailFragment : Fragment() {
     }
 
     private fun FragmentModelDetailBinding.bindToolbar(uiState: StateFlow<ModelDetailState>) {
-        /*val catalogTitleFlow = uiState.mapNotNull { it.category?.categoryName }
-        viewLifecycleOwner.lifecycleScope.launch {
-            catalogTitleFlow.collectLatest { catalogTitle ->
-                toolbarIncluded.toolbarTitle.text = catalogTitle
-            }
-        }*/
-
         val modelDataFlow = uiState.map { it.modelData }
         viewLifecycleOwner.lifecycleScope.launch {
             modelDataFlow.collectLatest { modelData ->
@@ -570,44 +533,6 @@ class ModelDetailFragment : Fragment() {
             .intent
 
         startActivity(Intent.createChooser(shareIntent, "Share with"))
-    }
-
-    private fun setUpIndicator(count: Int) {
-        binding.indicatorView.setPageSize(count)
-        binding.indicatorView.notifyDataChanged()
-        /*val indicators = arrayOfNulls<View>(count)
-        *//*val displayMetrics = Resources.getSystem().displayMetrics
-        val tabIndicatorWidth = displayMetrics.widthPixels * 0.1
-        val tabIndicatorHeight = tabIndicatorWidth * 0.1*//*
-        val tabIndicatorWidth = resources.getDimensionPixelSize(R.dimen.tab_indicator_size)
-        val tabIndicatorHeight = resources.getDimensionPixelSize(R.dimen.tab_indicator_size)
-        val layoutParams: LinearLayout.LayoutParams =
-            LinearLayout.LayoutParams(tabIndicatorWidth.toInt(), tabIndicatorHeight.toInt(), 1f)
-        if (binding.pagerIndicators.orientation == LinearLayout.HORIZONTAL) {
-            layoutParams.setMargins(10, 0, 10, 0)
-        } else {
-            layoutParams.setMargins(0, 10, 0, 10)
-        }
-
-//        View(requireContext()).apply {
-//            this.background = ResourcesCompat.getDrawable(resources, R.drawable.grey_curved_bg, null)
-//            this.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.white, null))
-//            this.layoutParams = layoutParams
-//            this.layoutParams.width = tabIndicatorWidth * 2
-//        }.also { maskedIndicator ->
-//            binding.pagerIndicators.addView(maskedIndicator)
-//        }
-
-        for (i in indicators.indices) {
-            indicators[i] = View(requireContext())
-            indicators[i]?.apply {
-                // this.setImageResource(R.drawable.grey_curved_bg)
-                this.background = ResourcesCompat.getDrawable(resources, R.drawable.grey_curved_bg, null)
-                this.backgroundTintList = (resources.getColorStateList(R.color.selector_indicator, null))
-                this.layoutParams = layoutParams
-            }
-            binding.pagerIndicators.addView(indicators[i])
-        }*/
     }
 
     private fun checkPermissionAndScheduleWorker(downloadSessionId: Long) {

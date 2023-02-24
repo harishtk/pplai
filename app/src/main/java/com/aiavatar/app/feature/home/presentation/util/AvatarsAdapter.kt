@@ -2,28 +2,27 @@ package com.aiavatar.app.feature.home.presentation.util
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.LayoutManager
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.bumptech.glide.Glide
-import com.aiavatar.app.Constant
 import com.aiavatar.app.R
 import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.ItemBigAvatarBinding
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.catalog.AvatarUiModel
-import com.aiavatar.app.ifNull
-import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.Glide
 import timber.log.Timber
 
+/**
+ * Note: [loopEnable] currently uni-directional i.e. like infinite scroll.
+ */
 class AvatarsAdapter(
     private val layoutManager: LayoutManager,
-    private val callback: Callback
+    private val callback: Callback,
+    private val loopEnable: Boolean = false,
 ) : ListAdapter<AvatarUiModel, ViewHolder>(DIFF_CALLBACK) {
 
     /**
@@ -51,10 +50,11 @@ class AvatarsAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val model = getItem(position)
+        val normalizedPosition = generatePosition(position)
+        val model = getItem(normalizedPosition)
         if (holder is ItemViewHolder) {
             model as AvatarUiModel.AvatarItem
-            val heightRatio = getHeightRatioForPosition(position, getTotalRows())
+            val heightRatio = getHeightRatioForPosition(normalizedPosition, getTotalRows())
             holder.bind(model.category, heightRatio, callback)
         }
     }
@@ -78,8 +78,38 @@ class AvatarsAdapter(
         }
     }
 
+    /**
+     * Returns the corresponding position according to the current scroll mode
+     */
+    private fun generatePosition(position: Int): Int {
+        return if (getLoopEnable()) {
+            getActualPosition(position)
+        } else {
+            position
+        }
+    }
+
+    /**
+     * Returns the actual position of the item
+     *
+     * @param position The position after starting to scroll will grow indefinitely
+     * @return Item actual location
+     */
+    private fun getActualPosition(position: Int): Int {
+        val itemCount: Int = super.getItemCount()
+        return if (position >= itemCount) position % itemCount else position
+    }
+
+    private fun getLoopEnable() = loopEnable
+
+    override fun getItemCount(): Int {
+        //If it is an infinite scroll mode, set an unlimited number of items
+        val itemCount = super.getItemCount()
+        return if (getLoopEnable() && itemCount > 0) Int.MAX_VALUE else itemCount
+    }
+
     class ItemViewHolder private constructor(
-        private val binding: ItemBigAvatarBinding
+        private val binding: ItemBigAvatarBinding,
     ) : ViewHolder(binding.root) {
 
         private val cardConstraintSet = ConstraintSet()

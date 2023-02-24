@@ -37,16 +37,6 @@
             app:layout_constrainedHeight="true"
             tools:listitem="@layout/large_preset_preview" />
 
-        <com.zhpan.indicator.IndicatorView
-            android:id="@+id/indicator_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/catalog_preview_pager"
-            app:layout_constraintStart_toStartOf="@id/catalog_preview_pager"
-            app:layout_constraintEnd_toEndOf="@id/catalog_preview_pager"/>
-
         <LinearLayout
             android:id="@+id/pager_indicators"
             android:layout_width="wrap_content"

@@ -230,7 +230,7 @@ class SubscriptionFragment : Fragment() {
                         when (e) {
                             is ResolvableException -> {
                                 btnNext.shakeNow()
-                                HapticUtil.createError(requireContext())
+                                // HapticUtil.createError(requireContext())
                             }
                             is EmptyInAppProductsException -> {
                                 tvEmptyList.text = uiErr?.asString(requireContext())

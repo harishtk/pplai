@@ -50,7 +50,6 @@ class ModelDetailViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<ModelDetailUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private var selectedAvatarPosition: Int = 0
     private val selectedToggleFlow = MutableStateFlow(false)
 
     val accept: (ModelDetailUiAction) -> Unit
@@ -70,6 +69,7 @@ class ModelDetailViewModel @Inject constructor(
             selectableAvatarUiModelListFlow,
             ::Pair
         ).map { (selectedToggle, selectableAvatarList) ->
+            val selectedAvatarPosition = getSelectedAvatarPosition()
             val newSelectableAvatarList = selectableAvatarList.mapIndexed { index, selectableAvatarUiModel ->
                 if (selectableAvatarUiModel is SelectableAvatarUiModel.Item) {
                     selectableAvatarUiModel.copy(selected = index == selectedAvatarPosition)
@@ -122,7 +122,11 @@ class ModelDetailViewModel @Inject constructor(
     }
 
     fun getSelectedAvatarPosition(): Int {
-        return selectedAvatarPosition
+        return getSelectedAvatarPositionInternal()
+    }
+
+    private fun getSelectedAvatarPositionInternal(): Int {
+        return uiState.value.selectedAvatarPosition
     }
 
     fun createDownloadSession(modelName: String) {
@@ -187,14 +191,18 @@ class ModelDetailViewModel @Inject constructor(
         return uiState.value.modelId
     }
 
-    fun toggleSelection(position: Int) {
-        selectedAvatarPosition = position
+    fun toggleSelection(position: Int) = viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+            _uiState.updateAndGet { state ->
+                state.copy(selectedAvatarPosition = position)
+            }
+        }
         // Signals the flow
         selectedToggleFlow.update { selectedToggleFlow.value.not() }
     }
 
     fun jumpToPosition(position: Int) {
-        sendEvent(ModelDetailUiEvent.ScrollToPosition(selectedAvatarPosition))
+        sendEvent(ModelDetailUiEvent.ScrollToPosition(position))
     }
 
     private fun getModelDetail(modelId: String) {
@@ -492,6 +500,7 @@ data class ModelDetailState(
     val modelId: String? = null,
     val modelData: ModelData? = null,
     val avatarList: List<SelectableAvatarUiModel> = emptyList(),
+    val selectedAvatarPosition: Int = DEFAULT_POSITION,
     val currentDownloadProgress: Int? = null,
     val shareLoadState: LoadStates = LoadStates.IDLE,
     val shareLinkData: ShareLinkData? = null,
@@ -515,3 +524,5 @@ interface ModelDetailUiEvent {
 interface SelectableAvatarUiModel {
     data class Item(val modelAvatar: ModelAvatar, val selected: Boolean) : SelectableAvatarUiModel
 }
+
+private const val DEFAULT_POSITION = NO_POSITION

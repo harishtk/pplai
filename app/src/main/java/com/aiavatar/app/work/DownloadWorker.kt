@@ -135,6 +135,7 @@ class DownloadWorker @AssistedInject constructor(
                             /* To avoid raining updates to the database. */
                             val shouldUpdateProgress = lastProgress == -1 || abs(progress - lastProgress) > UPDATE_PROGRESS_DELTA
                                     || progress == 100
+
                             runBlocking(Dispatchers.IO) {
                                 appDatabase.downloadFilesDao().apply {
                                     if (!statusUpdated) {
