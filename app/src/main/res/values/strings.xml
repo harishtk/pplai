@@ -101,7 +101,8 @@
     <string name="good_examples">Good Examples</string>
     <string name="content_description_create">Create</string>
     <string name="label_next">Next</string>
-    <string name="test_terms_paragraph">Don\'t misuse our Services. You may use our Services only as permitted by law, including applicable export and re-export control laws and requlations. We may suspend or stop providing our Services to you if you do not comply with our terms or policies or if we are investigating suspected misconduct</string>
+    <string name="terms_paragraph">Our Platform offers its users with an option to engage with AI Avatar products. Upon your use of the said AI Avatar Products offered on our Platform…</string>
+    <string name="privacy_paragraph">This Privacy Policy applies to our collection, use and sharing of your personal information when you use our Platform or any other website, service, software application to which we post this privacy policy (the “Sites”); use our services through a user account; or receive our marketing communications. For convenience, we refer to the Sites and our services collectively as the “Service”.</string>
     <string name="Eta_text">ETA %1$s</string>
     <string name="label_loading">Loading..</string>
 

@@ -75,9 +75,11 @@ class LegalsBottomSheet(
 
         tvTermsReadMore.setOnClickListener {
             it.touchInteractFeedback()
+            callback.onReadLegal("terms")
         }
         tvPrivacyReadMore.setOnClickListener {
             it.touchInteractFeedback()
+            callback.onReadLegal("privacy")
         }
 
         btnNext.setOnClickListener {

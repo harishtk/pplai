@@ -85,9 +85,8 @@
             android:layout_height="wrap_content"
             android:maxLines="4"
             android:ellipsize="end"
-            android:text="@string/test_terms_paragraph"
-            android:textColor="@color/signal_inverse_primary"
-            tools:text="@tools:sample/lorem/random" />
+            android:text="@string/terms_paragraph"
+            android:textColor="@color/signal_inverse_primary" />
 
         <TextView android:id="@+id/tv_terms_read_more"
             style="@style/TextStyle.VerySmall.Bold"
@@ -121,9 +120,8 @@
             android:layout_height="wrap_content"
             android:maxLines="4"
             android:ellipsize="end"
-            android:text="@string/test_terms_paragraph"
-            android:textColor="@color/signal_inverse_primary"
-            tools:text="@tools:sample/lorem/random"/>
+            android:text="@string/privacy_paragraph"
+            android:textColor="@color/signal_inverse_primary" />
 
         <TextView android:id="@+id/tv_privacy_read_more"
             style="@style/TextStyle.VerySmall.Bold"

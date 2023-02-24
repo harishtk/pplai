@@ -6,18 +6,17 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.VisibleForTesting
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
-import com.aiavatar.app.BuildConfig
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
-import com.aiavatar.app.autoCleared
+import com.aiavatar.app.commons.presentation.dialog.WebViewPresenterFragment
 import com.aiavatar.app.databinding.FragmentWalkThroughBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.utils.FragmentPagerAdapter
-import com.aiavatar.app.safeCall
 import com.zhpan.indicator.enums.IndicatorSlideMode
 import com.zhpan.indicator.enums.IndicatorStyle
 import dagger.hilt.android.AndroidEntryPoint
@@ -196,9 +195,11 @@ class WalkThroughFragment : Fragment() {
                 override fun onReadLegal(type: String) {
                     when (type) {
                         "privacy" -> {
+                            openWebPage(PRIVACY_POLICY_URL)
                             analyticsLogger.logEvent(Analytics.Event.ONBOARD_LEGAL_READ_PRIVACY, null)
                         }
                         "terms" -> {
+                            openWebPage(TERMS_URL)
                             analyticsLogger.logEvent(Analytics.Event.ONBOARD_LEGAL_READ_TERMS, null)
                         }
                     }
@@ -209,5 +210,20 @@ class WalkThroughFragment : Fragment() {
                 it.show(childFragmentManager, LegalsBottomSheet.FRAGMENT_TAG)
             }
         }
+    }
+
+    private fun openWebPage(url: String) = safeCall {
+        findNavController().apply {
+            val args = bundleOf(WebViewPresenterFragment.EXTRA_URL to url)
+            val navOpts = defaultNavOptsBuilder()
+                .build()
+
+            navigate(R.id.web_view, args, navOpts)
+        }
+    }
+
+    companion object {
+        const val PRIVACY_POLICY_URL    = "https://aiavatars.ai/privacy"
+        const val TERMS_URL             = "https://aiavatars.ai/terms"
     }
 }
