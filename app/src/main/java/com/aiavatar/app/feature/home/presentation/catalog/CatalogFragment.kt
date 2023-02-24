@@ -39,6 +39,7 @@ import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
+import com.aiavatar.app.core.data.source.local.entity.cacheKeyForTable
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.LegalsBottomSheet
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.SharedFlow
@@ -125,7 +126,7 @@ class CatalogFragment : Fragment() {
 
         val avatarsAdapter = AvatarsAdapter(
             layoutManager = staggeredGridLayoutManager,
-            avatarsAdapterCallback
+            callback = avatarsAdapterCallback,
         )
 
         val notLoadingFlow = uiState.map { it.loadState }
@@ -382,7 +383,13 @@ class CatalogFragment : Fragment() {
                         pendingPopupWindow?.dismiss()
                         pendingPopupWindow = null
                     } else {
-
+                        findNavController().apply {
+                            if (!navigateUp()) {
+                                if (!popBackStack()) {
+                                    activity?.finishAffinity()
+                                }
+                            }
+                        }
                     }
                 }
             })

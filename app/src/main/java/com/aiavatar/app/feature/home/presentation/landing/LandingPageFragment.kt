@@ -152,7 +152,11 @@ class LandingPageFragment : Fragment() {
                         pendingPopupWindow = null
                     } else {
                         findNavController().apply {
-                            navigateUp()
+                            if (!navigateUp()) {
+                                if (!popBackStack()) {
+                                    activity?.finishAffinity()
+                                }
+                            }
                         }
                     }
                 }
@@ -177,8 +181,8 @@ class LandingPageFragment : Fragment() {
 
         popupView1.setOnTouchListener { _, _ ->
             popupWindow.dismiss()
-            showExploreMoreGuidedStep(anchorView)
             pendingPopupWindow = null
+            showExploreMoreGuidedStep(anchorView)
             true
         }
     }
