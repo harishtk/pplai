@@ -53,7 +53,23 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
             app:layout_constrainedWidth="true"
-            android:text="Please do not close this page until the payment is complete.."/>
+            android:text="@string/in_app_payment_processing_des_1" />
+
+        <TextView android:id="@+id/small_description_1"
+            style="@style/TextStyle.VerySmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/inset_large_medium"
+            android:textColor="@color/text_secondary_alt"
+            android:text="We recommend you to stay on this page."
+            android:textAlignment="center"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="1.0"
+            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

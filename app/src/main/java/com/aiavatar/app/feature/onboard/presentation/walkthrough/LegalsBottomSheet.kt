@@ -54,11 +54,9 @@ class LegalsBottomSheet(
         tvAcceptTerms.text = "I agree with the $termsAndConditionString"
         tvAcceptPrivacy.text = "I agree with the $privacyPolicyString"
         val privacyClicked = {
-            context?.showToast("Privacy policy")
             callback.onReadLegal("privacy")
         }
         val termsClicked = {
-            context?.showToast("Terms")
             callback.onReadLegal("terms")
         }
 

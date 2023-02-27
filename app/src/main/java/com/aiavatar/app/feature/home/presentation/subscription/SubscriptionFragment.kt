@@ -648,7 +648,9 @@ class SubscriptionFragment : Fragment() {
                                     .build()
                             ).productDetailsList?.first()?.let { productDetails ->
                                 Timber.d("Purchases: details $productDetails")
-                                showPendingPurchaseDialog(productDetails, planDetail)
+                                withContext(Dispatchers.Main) {
+                                    showPendingPurchaseDialog(productDetails, planDetail)
+                                }
                             }
                         }
                     }
@@ -707,8 +709,6 @@ class SubscriptionFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        if (isBillingClientConnected) {
-            viewModel.setPendingPurchaseSignal()
-        }
+        viewModel.setPendingPurchaseSignal()
     }
 }

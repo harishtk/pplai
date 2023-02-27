@@ -1,5 +1,6 @@
 package com.aiavatar.app.pay.billing
 
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
@@ -12,9 +13,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.aiavatar.app.*
+import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.core.data.source.local.entity.PAYMENT_STATUS_CANCELED
 import com.aiavatar.app.core.data.source.local.entity.PAYMENT_STATUS_PROCESSING
 import com.aiavatar.app.databinding.ActivityInappPurchaseBinding
+import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.ifNull
 import com.android.billingclient.api.*
 import com.android.billingclient.api.BillingClient.BillingResponseCode
@@ -48,7 +51,6 @@ class InAppPurchaseActivity : AppCompatActivity() {
             BillingResponseCode.OK -> {
                 Timber.d("purchaseUpdatedListener: purchases = $purchases")
                 if (purchases != null) {
-                    // TODO: save and send the purchase details to server
                     viewModel.setPaymentSequence(PaymentSequence.PAYMENT_PROCESSING)
                     purchases.firstOrNull()?.let { purchase ->
                         Timber.d("purchaseUpdatedListener: state = ${purchase.purchaseState} token = ${purchase.purchaseToken}")
@@ -59,9 +61,11 @@ class InAppPurchaseActivity : AppCompatActivity() {
                             in setOf(
                                 PurchaseState.PENDING,
                                 PurchaseState.UNSPECIFIED_STATE
-                            ) -> {
+                            ),
+                            -> {
                                 // TODO: wait for pending purchase to complete
-                                val extras = Bundle().apply {
+                                viewModel.setPaymentSequence(PaymentSequence.WAITING_PAYMENT_CONFIRMATION)
+                                /*val extras = Bundle().apply {
                                     putString(EXTRA_PURCHASE_TOKEN, purchase.purchaseToken)
                                 }
                                 showToast("Please wait..")
@@ -72,7 +76,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
                                     errorMessage = msg,
                                     debugMessage = msg + " ${billingResult.debugMessage}"
                                 )
-                                finish()
+                                finish()*/
                             }
                             PURCHASE_STATE_FAILED -> {
                                 val extras = Bundle().apply {
@@ -116,7 +120,8 @@ class InAppPurchaseActivity : AppCompatActivity() {
             }
             BillingResponseCode.ITEM_ALREADY_OWNED,
             BillingResponseCode.ITEM_NOT_OWNED,
-            BillingResponseCode.ITEM_UNAVAILABLE -> {
+            BillingResponseCode.ITEM_UNAVAILABLE,
+            -> {
                 // item error
                 viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
             }
@@ -168,6 +173,8 @@ class InAppPurchaseActivity : AppCompatActivity() {
             .build()
     }
 
+    private var pendingDialogWeakRef: Dialog? = null
+
     // Helper flags
     private var isBillingClientConnected: Boolean = false
     private var billingConnectionRetries: Int = 0
@@ -188,15 +195,15 @@ class InAppPurchaseActivity : AppCompatActivity() {
         )
 
         parseIntentInternal(intent)
-        val msg = "User canceled the payment."
-        setResultInternal(ResultCode.USER_CANCELED, errorMessage = msg, debugMessage = msg + " Untouched.")
+        setCanceledResult()
         setupOnBackPressedDispatcher()
+        setupObservers()
     }
 
     private fun ActivityInappPurchaseBinding.bindState(
         uiState: StateFlow<InAppPurchaseState>,
         uiAction: (InAppPurchaseUiAction) -> Unit,
-        uiEvent: SharedFlow<InAppPurchaseUiEvent>
+        uiEvent: SharedFlow<InAppPurchaseUiEvent>,
     ) {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -216,10 +223,12 @@ class InAppPurchaseActivity : AppCompatActivity() {
             paymentSequenceFlow.collectLatest { paymentSequence ->
                 Timber.d("Payment sequence: $paymentSequence")
                 when (paymentSequence) {
-                    PaymentSequence.UNKNOWN -> { /* Noop */ }
-                    PaymentSequence.CONNECTING_BILLING -> { /* Noop */ }
+                    PaymentSequence.UNKNOWN -> { /* Noop */
+                    }
+                    PaymentSequence.CONNECTING_BILLING -> { /* Noop */
+                    }
                     PaymentSequence.BILLING_CONNECTED -> {
-                        validateProductSku(uiState.value.productSku!!)
+                        /* Noop. Is moved to check with the pending purchases */
                     }
                     PaymentSequence.BILLING_CONNECTION_FAILED -> {
                         if (billingConnectionRetries < MAX_BILLING_CLIENT_CONNECTION_ATTEMPTS) {
@@ -245,6 +254,10 @@ class InAppPurchaseActivity : AppCompatActivity() {
                     PaymentSequence.PAYMENT_PROCESSING -> {
                         /* Noop */
                     }
+                    PaymentSequence.WAITING_PAYMENT_CONFIRMATION -> {
+                        helpDescription1.setText(R.string.in_app_payment_bank_processing_des_1)
+                        smallDescription1.isVisible = true
+                    }
                     PaymentSequence.PAYMENT_FAILED -> {
                         debugToast("Purchase failed")
                         finish()
@@ -260,6 +273,24 @@ class InAppPurchaseActivity : AppCompatActivity() {
                     }
                 }
 
+            }
+        }
+
+        val pendingPurchaseCheckFlow = uiState.map { it.pendingPurchaseCheck }
+            .distinctUntilChanged()
+
+        lifecycleScope.launch {
+            combine(
+                paymentSequenceFlow,
+                pendingPurchaseCheckFlow,
+                ::Pair
+            ).collectLatest { (paymentSequence, pendingPurchaseCheck) ->
+                Timber.d("Purchase: seq = $paymentSequence pending = $pendingPurchaseCheck")
+                if (paymentSequence == PaymentSequence.BILLING_CONNECTED &&
+                    pendingPurchaseCheck
+                ) {
+                    validateProductSku(viewModel.uiState.value.productSku!!)
+                }
             }
         }
 
@@ -313,12 +344,11 @@ class InAppPurchaseActivity : AppCompatActivity() {
 
                 val productDetailList = productDetailsResult.productDetailsList
                 if (productDetailList != null && productDetailList.isNotEmpty()) {
-                    // TODO: next
                     Timber.d("Billing: product detail list = $productDetailList")
                     val productDetailsParams = listOf(
                         BillingFlowParams.ProductDetailsParams.newBuilder()
                             .setProductDetails(productDetailList.first())
-                                // set offer tokens here
+                            // set offer tokens here
                             .build()
                     )
 
@@ -350,7 +380,8 @@ class InAppPurchaseActivity : AppCompatActivity() {
                         }
                         BillingResponseCode.SERVICE_TIMEOUT,
                         BillingResponseCode.SERVICE_DISCONNECTED,
-                        BillingResponseCode.SERVICE_UNAVAILABLE -> {
+                        BillingResponseCode.SERVICE_UNAVAILABLE,
+                        -> {
                             // service error
                             // This causes the billing client not to retry
                             billingConnectionRetries = MAX_BILLING_CLIENT_CONNECTION_ATTEMPTS
@@ -362,7 +393,8 @@ class InAppPurchaseActivity : AppCompatActivity() {
                         }
                         BillingResponseCode.ITEM_ALREADY_OWNED,
                         BillingResponseCode.ITEM_NOT_OWNED,
-                        BillingResponseCode.ITEM_UNAVAILABLE -> {
+                        BillingResponseCode.ITEM_UNAVAILABLE,
+                        -> {
                             // item error
                             viewModel.setPaymentSequence(PaymentSequence.PAYMENT_FAILED)
                         }
@@ -378,10 +410,29 @@ class InAppPurchaseActivity : AppCompatActivity() {
 
                 } else {
                     val msg = "Failed to fetch product details. "
-                    setResultInternal(ResultCode.ERROR,
+                    setResultInternal(
+                        ResultCode.ERROR,
                         errorMessage = msg,
-                        debugMessage = msg)
+                        debugMessage = msg
+                    )
                     finish()
+                }
+            }
+        }
+    }
+
+    private fun setupObservers() {
+        val billingConnectionStateFlow = viewModel.uiState.map { it.billingConnectionState }
+            .distinctUntilChanged()
+
+        lifecycleScope.launch {
+            combine(
+                billingConnectionStateFlow,
+                viewModel.pendingPurchaseSignal,
+                ::Pair
+            ).collectLatest { (connected, signal) ->
+                if (connected && signal) {
+                    checkPendingPurchases()
                 }
             }
         }
@@ -396,6 +447,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
                     isBillingClientConnected = true
                     billingConnectionRetries = 0
                     viewModel.setPaymentSequence(PaymentSequence.BILLING_CONNECTED)
+                    viewModel.setBillingConnectionState(isBillingClientConnected)
                     val msg = "Billing client setup finished"
                     Timber.v(msg)
                     Timber.d("code = ${p0.responseCode} ${p0.debugMessage} ")
@@ -405,6 +457,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
                     isBillingClientConnected = false
                     billingConnectionRetries++
                     viewModel.setPaymentSequence(PaymentSequence.BILLING_CONNECTION_FAILED)
+                    viewModel.setBillingConnectionState(isBillingClientConnected)
                     val msg = "Billing client disconnected"
                     val t = IllegalStateException(msg)
                     Timber.w(t)
@@ -439,7 +492,6 @@ class InAppPurchaseActivity : AppCompatActivity() {
                     finish()
                 } else {
                     viewModel.setPaymentSequence(PaymentSequence.CONSUME_FAILED)
-                    // TODO: handle consume failed
                     val extras = Bundle().apply {
                         putString(EXTRA_PURCHASE_TOKEN, purchaseToken)
                     }
@@ -458,7 +510,8 @@ class InAppPurchaseActivity : AppCompatActivity() {
 
     private fun checkPendingPurchases() {
         if (pendingPurchaseFetchJob?.isActive == true) {
-            val t = IllegalStateException("A pending purchase fetch job is already active. Ignoring request.")
+            val t =
+                IllegalStateException("A pending purchase fetch job is already active. Ignoring request.")
             ifDebug { Timber.e(t) }
             return
         }
@@ -472,12 +525,75 @@ class InAppPurchaseActivity : AppCompatActivity() {
                         .joinToString()
                     Timber.d("Purchases: $_p")
 
-                    // TODO: handle pending purchase
+                    val purchasesProducts =
+                        purchases.filter { it.purchaseState == PurchaseState.PURCHASED }
+                    Timber.d("Purchases: is empty = ${purchasesProducts.isEmpty()}")
+                    if (purchasesProducts.isNotEmpty()) {
+                        purchasesProducts.onEach { purchase ->
+                            billingClient.queryProductDetails(
+                                QueryProductDetailsParams.newBuilder()
+                                    .setProductList(
+                                        purchase.products.map { productId ->
+                                            QueryProductDetailsParams.Product.newBuilder()
+                                                .setProductId(productId)
+                                                .setProductType(ProductType.INAPP)
+                                                .build()
+                                        }
+                                    )
+                                    .build()
+                            ).productDetailsList?.first()?.let { productDetails ->
+                                Timber.d("Purchases: details $productDetails")
+                                if (productDetails.productId == viewModel.uiState.value.productSku) {
+                                    // TODO: consume the pending purchase product using the purchase token
+                                    handlePurchase(purchase)
+                                } else {
+                                    withContext(Dispatchers.Main) {
+                                        showPendingPurchaseDialog(productDetails, purchase)
+                                    }
+                                }
+                            } ?: kotlin.run {
+                                viewModel.setPendingPurchaseCheck(true)
+                            }
+                        }
+                    } else {
+                        viewModel.setPendingPurchaseCheck(true)
+                    }
                 }
                 .onFailure { t ->
                     Timber.e(t)
+                    viewModel.setPendingPurchaseCheck(true)
                 }
-            // checkPurchaseHistory()
+        }
+    }
+
+    private fun showPendingPurchaseDialog(productDetails: ProductDetails, purchase: Purchase) {
+        val message = if (productDetails.productId == viewModel.uiState.value.productSku) {
+            "You already own this product. Continue with this package? " +
+                    "If you cancel any amount deducted will be refunded to your account."
+        } else {
+            "You have already purchased a product '${productDetails.name}'. Would you like to proceed? " +
+                    "If you cancel any amount deducted will be refunded to your account."
+        }
+        SimpleDialog(
+            context = this,
+            titleText = "Purchase",
+            message = message,
+            positiveButtonText = "Proceed",
+            positiveButtonAction = {
+                // TODO: consume the pending purchase product.
+            },
+            negativeButtonText = "Cancel",
+            negativeButtonAction = {
+                // This will trigger the product presentation from Google Play
+                viewModel.setPendingPurchaseCheck(true)
+                // TODO: handle canceled pending purchase
+                // No need, the payment will be automatically refunded to the source.
+            },
+            cancellable = false,
+            showCancelButton = false
+        ).also {
+            it.show()
+            pendingDialogWeakRef = it
         }
     }
     /* END - Play Billing */
@@ -496,7 +612,7 @@ class InAppPurchaseActivity : AppCompatActivity() {
         maxTries: Int = Int.MAX_VALUE,
         initialDelay: Long = Long.MAX_VALUE,
         retryFactor: Int = Int.MAX_VALUE,
-        block: suspend () -> T
+        block: suspend () -> T,
     ): T? {
         var currentDelay = initialDelay
         var retryAttempt = 1
@@ -523,21 +639,30 @@ class InAppPurchaseActivity : AppCompatActivity() {
         if (VersionCompat.isAtLeastT) {
             onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT) {
                 // on back pressed
-                handleBackPressed()
+                if (!handleBackPressed()) {
+                    setCanceledResult(true)
+                }
             }
         } else {
             onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     // on back pressed
-                    handleBackPressed()
+                    if (!handleBackPressed()) {
+                        setCanceledResult(true)
+                    }
                 }
             })
         }
     }
 
     private fun handleBackPressed(): Boolean {
-        showToast("Please wait while the payment is processing")
-        return true
+        if (viewModel.uiState.value.paymentSequence.sequenceNumber >=
+            PaymentSequence.PAYMENT_PROCESSING.sequenceNumber
+        ) {
+            showToast("Please wait while the payment is processing")
+            return true
+        }
+        return false
     }
 
     private fun setResultInternal(
@@ -561,12 +686,24 @@ class InAppPurchaseActivity : AppCompatActivity() {
         }
     }
 
+    /* Util */
+    private fun setCanceledResult(shouldFinish: Boolean = false) {
+        val msg = "User canceled the payment."
+        setResultInternal(
+            ResultCode.USER_CANCELED,
+            errorMessage = msg,
+            debugMessage = msg + " Untouched."
+        )
+        if (shouldFinish) {
+            finish()
+        }
+    }
+    /* END - Util */
+
     override fun onResume() {
         super.onResume()
 
-        if (isBillingClientConnected) {
-            checkPendingPurchases()
-        }
+        viewModel.setPendingPurchaseSignal()
     }
 
     companion object {
@@ -580,6 +717,8 @@ class InAppPurchaseActivity : AppCompatActivity() {
 
         const val MAX_BILLING_CLIENT_CONNECTION_ATTEMPTS = 3
         const val PURCHASE_STATE_FAILED = 4
+        const val MAX_PENDING_PURCHASE_QUERY_ATTEMPTS = 5
+        const val PENDING_PURCHASE_QUERY_TIMEOUT = 5000L
 
         val retriableBillingResponses = setOf(
             BillingResponseCode.SERVICE_TIMEOUT,

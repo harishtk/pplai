@@ -26,6 +26,9 @@ class InAppPurchaseViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<InAppPurchaseUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
+    private val _pendingPurchaseSignal = MutableStateFlow(false)
+    val pendingPurchaseSignal = _pendingPurchaseSignal.asStateFlow()
+
     val accept: (InAppPurchaseUiAction) -> Unit
 
     init {
@@ -42,6 +45,29 @@ class InAppPurchaseViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun setBillingConnectionState(connected: Boolean) {
+        _uiState.update { state -> state.copy(billingConnectionState = connected) }
+    }
+
+    /**
+     * Signals that a pending purchase fetch should be performed
+     */
+    fun setPendingPurchaseSignal() {
+        _pendingPurchaseSignal.update { state -> state.not() }
+    }
+
+    /**
+     * Sets the flag that a pending purchase check is complete.
+     * Only then the productSku will be presented.
+     */
+    fun setPendingPurchaseCheck(isChecked: Boolean = true) {
+        _uiState.update { state ->
+            state.copy(
+                pendingPurchaseCheck = isChecked
+            )
         }
     }
 
@@ -85,6 +111,8 @@ data class InAppPurchaseState(
     val loadState: LoadStates = LoadStates.IDLE,
     val productSku: String? = null,
     val paymentSequence: PaymentSequence = PaymentSequence.Default,
+    val billingConnectionState: Boolean = false,
+    val pendingPurchaseCheck: Boolean = false,
     val description: UiText? = null,
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
@@ -102,9 +130,9 @@ enum class PaymentSequence(val sequenceNumber: Int) {
     UNKNOWN(-1), CONNECTING_BILLING(0), BILLING_CONNECTED(1),
     BILLING_CONNECTION_FAILED(2), VALIDATING_PRODUCT_SKU(3),
     CONTACTING_STORE(4), PRODUCT_PRESENTED(5),
-    PAYMENT_PROCESSING(6), PAYMENT_FAILED(7),
-    CONSUMING_PRODUCT(8), CONSUME_FAILED(9),
-    PURCHASE_VALIDATION_PENDING(10);
+    PAYMENT_PROCESSING(6), WAITING_PAYMENT_CONFIRMATION(7), PAYMENT_FAILED(8),
+    CONSUMING_PRODUCT(9), CONSUME_FAILED(10),
+    PURCHASE_VALIDATION_PENDING(11);
 
     companion object  {
         internal val Default = PaymentSequence.UNKNOWN

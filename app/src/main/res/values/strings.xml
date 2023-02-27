@@ -105,6 +105,9 @@
     <string name="privacy_paragraph">This Privacy Policy applies to our collection, use and sharing of your personal information when you use our Platform or any other website, service, software application to which we post this privacy policy (the “Sites”); use our services through a user account; or receive our marketing communications. For convenience, we refer to the Sites and our services collectively as the “Service”.</string>
     <string name="Eta_text">ETA %1$s</string>
     <string name="label_loading">Loading..</string>
+    <string name="in_app_payment_processing_des_1">Please do not close this page until the payment is complete…</string>
+    <string name="in_app_payment_bank_processing_des_1">The Bank Servers are taking too long to process the payment. Please wait until we confirm with the bank.</string>
+    <string name="i_have_coupon_code">I have a coupon code</string>
 
     <plurals name="hours_ago">
         <item quantity="one">@string/hours_single</item>

@@ -192,7 +192,6 @@
                     android:textColor="@color/black"
                     android:textAppearance="@style/Base.TextAppearance.Bold"
                     android:textSize="16sp"
-                    android:text="@string/label_continue"
                     app:cornerRadius="@dimen/button_corner_size"
                     app:cpb_colorIndicator="@color/white"
                     app:cpb_colorProgress="?attr/colorSecondary"
