@@ -45,7 +45,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.math.log
 
 @HiltViewModel
 class SubscriptionViewModel @Inject constructor(
@@ -88,7 +87,15 @@ class SubscriptionViewModel @Inject constructor(
                 }
             }
             newSubscriptionPlanList
-        }.onEach { subscriptionModelList ->
+        }
+            /*.map {
+                if (it.filterIsInstance<SubscriptionUiModel.Footer>().isEmpty()) {
+                    it.toMutableList().apply { add(it.size, SubscriptionUiModel.Footer("coupon")) }
+                } else {
+                    it
+                }
+            }*/
+            .onEach { subscriptionModelList ->
             _uiState.update { state ->
                 state.copy(
                     subscriptionPlansUiModels = subscriptionModelList
@@ -492,4 +499,5 @@ interface SubscriptionUiEvent {
 
 interface SubscriptionUiModel {
     data class Plan(val subscriptionPlan: SubscriptionPlan, val selected: Boolean = false) : SubscriptionUiModel
+    data class Footer(val type: String) : SubscriptionUiModel
 }

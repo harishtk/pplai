@@ -27,8 +27,8 @@ object AnimationUtil {
         startAnimation(shake)
     }
 
-    fun View.touchInteractFeedback() {
-        val scale = ScaleAnimation(1.2f, 1.0f, 1.2f, 1.0f, ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
+    fun View.touchInteractFeedback(scaleMultiplier: Float = DEFAULT_SCALE_MULTIPLIER) {
+        val scale = ScaleAnimation(scaleMultiplier, 1.0f, scaleMultiplier, 1.0f, ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
             ScaleAnimation.RELATIVE_TO_SELF, 0.5f)
         scale.duration = QUICK_ANIMATION_DURATION
         scale.interpolator = LinearInterpolator()
@@ -58,4 +58,6 @@ object AnimationUtil {
     private const val SHAKE_ANIMATION_DURATION = 500
     private const val DEFAULT_ANIMATION_DURATION = 500L
     private const val QUICK_ANIMATION_DURATION = 200L
+
+    private const val DEFAULT_SCALE_MULTIPLIER = 1.2F
 }

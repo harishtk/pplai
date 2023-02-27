@@ -160,7 +160,17 @@
     <fragment android:id="@+id/subscription_plans"
         android:name="com.aiavatar.app.feature.home.presentation.subscription.SubscriptionFragment"
         android:label="Subscription"
-        tools:layout="@layout/fragment_subscription" />
+        tools:layout="@layout/fragment_subscription">
+
+        <action android:id="@+id/action_subscription_plans_to_claim_coupon"
+            app:destination="@id/claim_coupon"
+            app:enterAnim="@anim/fragment_open_enter"
+            app:exitAnim="@anim/fragment_open_exit"
+            app:popEnterAnim="@anim/fragment_close_enter"
+            app:popExitAnim="@anim/fragment_close_exit"
+            app:popUpTo="@id/claim_coupon"
+            app:popUpToInclusive="true" />
+    </fragment>
 
     <fragment android:id="@+id/subscriptionSuccess"
         android:name="com.aiavatar.app.feature.home.presentation.subscription.SubscriptionSuccessFragment"
@@ -211,4 +221,9 @@
         android:name="com.aiavatar.app.commons.presentation.dialog.WebViewPresenterFragment"
         android:label="WebView"
         tools:layout="@layout/fragment_web_view_presenter" />
+
+    <fragment android:id="@+id/claim_coupon"
+        android:name="com.aiavatar.app.feature.home.presentation.coupon.CouponFragment"
+        android:label="Coupon"
+        tools:layout="@layout/fragment_coupon" />
 </navigation>

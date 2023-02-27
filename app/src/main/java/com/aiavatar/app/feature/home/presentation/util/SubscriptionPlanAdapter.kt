@@ -3,12 +3,15 @@ package com.aiavatar.app.feature.home.presentation.util
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.StringRes
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
+import com.aiavatar.app.databinding.ItemCouponFooterBinding
 import com.aiavatar.app.databinding.ItemSubscriptionPackageBinding
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.subscription.SubscriptionUiModel
@@ -20,6 +23,7 @@ class SubscriptionPlanAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return when (viewType) {
             VIEW_TYPE_ITEM -> ItemViewHolder.from(parent)
+            VIEW_TYPE_FOOTER -> FooterViewHolder.from(parent)
             else -> throw IllegalStateException("Unknown view type $viewType")
         }
     }
@@ -30,6 +34,9 @@ class SubscriptionPlanAdapter(
             is ItemViewHolder -> {
                 model as SubscriptionUiModel.Plan
                 holder.bind(model.subscriptionPlan, model.selected, callback)
+            }
+            is FooterViewHolder -> {
+                holder.bind(R.string.i_have_coupon_code, callback)
             }
         }
     }
@@ -55,6 +62,7 @@ class SubscriptionPlanAdapter(
     override fun getItemViewType(position: Int): Int {
         return when (getItem(position)) {
             is SubscriptionUiModel.Plan -> VIEW_TYPE_ITEM
+            is SubscriptionUiModel.Footer -> VIEW_TYPE_FOOTER
             else -> throw IllegalStateException("Cannot decide a view type for position $position")
         }
     }
@@ -70,8 +78,13 @@ class SubscriptionPlanAdapter(
         ) : ViewHolder(binding.root) {
 
         fun bind(data: SubscriptionPlan, selected: Boolean, callback: Callback) = with(binding) {
-            textPrice.text = data.price
-            textCurrencySymbol.text = data.currencySymbol
+            if (data.price != "0") {
+                textPrice.text = data.price
+                textCurrencySymbol.text = data.currencySymbol
+            } else {
+                textPrice.text = "FREE"
+                textCurrencySymbol.text = ""
+            }
             textPhotos.text = binding.root.context.getString(R.string.num_photos, data.photo)
             description.text = binding.root.context.getString(R.string.subscription_description, data.variation, data.style)
 
@@ -109,13 +122,41 @@ class SubscriptionPlanAdapter(
         }
     }
 
+    class FooterViewHolder private constructor(
+        private val binding: ItemCouponFooterBinding
+    ) : ViewHolder(binding.root) {
+
+        fun bind(@StringRes titleRes: Int, callback: Callback) = with(binding) {
+            tvFooterTitle.setText(titleRes)
+
+            root.setOnClickListener {
+                tvFooterTitle.touchInteractFeedback(scaleMultiplier = 1.1F)
+                callback.onFooterClick(adapterPosition)
+            }
+        }
+
+        companion object {
+            fun from(parent: ViewGroup): FooterViewHolder {
+                val itemView = LayoutInflater.from(parent.context).inflate(
+                    R.layout.item_coupon_footer,
+                    parent,
+                    false
+                )
+                val binding = ItemCouponFooterBinding.bind(itemView)
+                return FooterViewHolder(binding)
+            }
+        }
+    }
+
     interface Callback {
         fun onItemClick(position: Int)
         fun onSelectPlan(position: Int, plan: SubscriptionPlan)
+        fun onFooterClick(position: Int)
     }
 
     companion object {
         private const val VIEW_TYPE_ITEM = 0
+        private const val VIEW_TYPE_FOOTER = 1
 
         private const val SELECTION_TOGGLE_PAYLOAD = "selection_toggle"
 
@@ -124,8 +165,15 @@ class SubscriptionPlanAdapter(
                 oldItem: SubscriptionUiModel,
                 newItem: SubscriptionUiModel,
             ): Boolean {
-                return (oldItem is SubscriptionUiModel.Plan && newItem is SubscriptionUiModel.Plan &&
-                        oldItem.subscriptionPlan.id == newItem.subscriptionPlan.id)
+                return when {
+                    oldItem is SubscriptionUiModel.Plan && newItem is SubscriptionUiModel.Plan -> {
+                        oldItem.subscriptionPlan.id == newItem.subscriptionPlan.id
+                    }
+                    oldItem is SubscriptionUiModel.Footer && newItem is SubscriptionUiModel.Footer -> {
+                        oldItem.type == newItem.type
+                    }
+                    else -> false
+                }
             }
 
             override fun areContentsTheSame(

@@ -3,9 +3,13 @@ package com.aiavatar.app.feature.home.presentation.subscription
 import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.style.ClickableSpan
+import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.os.bundleOf
@@ -21,6 +25,7 @@ import com.aiavatar.app.*
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.*
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
+import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadType
 import com.aiavatar.app.commons.util.net.ApiException
@@ -212,6 +217,14 @@ class SubscriptionFragment : Fragment() {
             }
         }
 
+        val text = "I have a coupon code"
+
+        btnIHaveCouponCode.makeLinks(listOf(
+            text to {
+                context?.showToast("Coupon code")
+            }
+        ))
+
         val notLoadingFlow = uiState.map { it.loadState }
             .map { it.refresh !is LoadState.Loading }
         val hasErrorsFlow = uiState.map { it.exception != null }
@@ -256,6 +269,10 @@ class SubscriptionFragment : Fragment() {
             override fun onSelectPlan(position: Int, plan: SubscriptionPlan) {
                 Timber.d("onSelectPlan: $position ${plan.price}")
                 uiAction(SubscriptionUiAction.ToggleSelectedPlan(planId = plan.id))
+            }
+
+            override fun onFooterClick(position: Int) {
+
             }
         }
         val subscriptionPlanAdapter = SubscriptionPlanAdapter(subscriptionAdapterCallback)
@@ -316,6 +333,7 @@ class SubscriptionFragment : Fragment() {
                 adapter.submitList(subscriptionPlansList)
 
                 btnNext.isVisible = subscriptionPlansList.isNotEmpty()
+                tvIHaveCouponCode.isVisible = subscriptionPlansList.isNotEmpty()
             }
         }
     }
@@ -338,6 +356,16 @@ class SubscriptionFragment : Fragment() {
                 findNavController().navigateUp()
             } catch (ignore: Exception) {
             }
+        }
+
+        val couponCodeString = getString(R.string.i_have_coupon_code)
+        val sb = SpannableString(couponCodeString).also {
+            it.setSpan(UnderlineSpan(), 0, it.length, SpannableString.SPAN_INCLUSIVE_EXCLUSIVE)
+        }
+        tvIHaveCouponCode.setText(sb, TextView.BufferType.SPANNABLE)
+        tvIHaveCouponCode.setOnClickListener {
+            it.touchInteractFeedback(scaleMultiplier = 1.1F)
+            gotoClaimCoupon()
         }
 
         retryButton.setOnClickListener { viewModel.refresh() }
@@ -485,6 +513,14 @@ class SubscriptionFragment : Fragment() {
                         clearNavigationResult<Boolean>(LoginFragment.LOGIN_RESULT)
                     }
                 }
+            }
+        }
+    }
+
+    private fun gotoClaimCoupon() {
+        safeCall {
+            findNavController().apply {
+                navigate(R.id.action_subscription_plans_to_claim_coupon)
             }
         }
     }

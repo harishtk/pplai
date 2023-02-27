@@ -92,13 +92,26 @@
     </style>
 
     <style name="Widget.App.EditText.OutlinedBox" parent="@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox">
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">@color/signal_inverse_primary</item>
+    </style>
+
+    <style name="Widget.App.TextInputLayout.Outline" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.TextInputLayout</item>
+        <item name="textAppearanceCaption">@style/Base.TextAppearance</item>
+        <item name="textAppearanceSubtitle1">@style/Base.TextAppearance</item>
+    </style>
+
+    <style name="ThemeOverlay.App.TextInputLayout" parent="">
+        <item name="colorPrimary">@color/signal_inverse_primary</item>
+        <item name="android:colorPrimary">@color/signal_inverse_primary</item>
+        <item name="colorOnSurface">@color/signal_inverse_primary</item>
+        <item name="colorOutline">@color/yellow_200</item>
     </style>
 
     <style name="Widget.App.EditText.OutlinedBox.Rounded" parent="@style/Widget.MaterialComponents.TextInputEditText.OutlinedBox">
         <item name="background">@drawable/bg_outline_rounded_alt</item>
         <item name="android:background">@drawable/bg_outline_rounded_alt</item>
-        <item name="android:textColor">@color/white</item>
+        <item name="android:textColor">@color/signal_inverse_primary</item>
         <item name="android:textColorHint">@color/text_secondary_alt</item>
         <item name="android:paddingStart">10dp</item>
         <item name="android:paddingEnd">10dp</item>
@@ -209,6 +222,10 @@
         <item name="android:paddingBottom">8dp</item>
         <item name="android:paddingStart">15dp</item>
         <item name="android:paddingEnd">15dp</item>
+    </style>
+
+    <style name="Widget.App.TextButton.Small.Alt" parent="Widget.App.TextButton.Small">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Button.TextButton.Alt</item>
     </style>
 
     <style name="Widget.App.TextButton.Alt" parent="Widget.MaterialComponents.Button.TextButton">
@@ -360,7 +377,7 @@
 
     <style name="ThemeOverlay.App.FancyButton" parent="">
         <item name="colorPrimary">@color/white</item>
-        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorOnPrimary">@color/yellow_200</item>
         <item name="colorOnSurface">@color/white</item>
         <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
         <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
@@ -384,7 +401,7 @@
         <item name="android:textAppearanceButton">@style/Base.TextAppearance.Bold</item>
         <item name="textAppearanceButton">@style/Base.TextAppearance.Bold</item>
         <item name="android:textAppearance">@style/Base.TextAppearance.Bold</item>
-        <item name="colorPrimary">@color/text_secondary_alt</item>
+        <item name="colorPrimary">@color/yellow_200</item>
     </style>
 
     <style name="Widget.App.Dialog" parent="Theme.AppCompat.Dialog">

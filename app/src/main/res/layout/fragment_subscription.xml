@@ -111,7 +111,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:listitem="@layout/item_subscription_package"/>
+            tools:listitem="@layout/item_subscription_package"
+            tools:itemCount="3" />
 
     </FrameLayout>
 
@@ -120,7 +121,28 @@
         app:barrierDirection="top"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="btn_next" />
+        app:constraint_referenced_ids="btn_next,btn_i_have_coupon_code,tv_i_have_coupon_code" />
+
+    <TextView android:id="@+id/btn_i_have_coupon_code"
+        style="@style/TextStyle.VerySmall.Bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/inset_large_medium"
+        android:layout_marginTop="@dimen/inset_very_small"
+        android:text="I have a coupon code"
+        android:textSize="@dimen/text_size_very_small"
+        android:paddingHorizontal="@dimen/inset_large_medium"
+        android:includeFontPadding="false"
+        android:gravity="center|start"
+        android:textColor="?colorSecondary"
+        android:selectAllOnFocus="false"
+        android:textIsSelectable="false"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
+        app:layout_constraintBottom_toTopOf="@id/btn_next"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <com.dd.CircularProgressButton
         android:id="@+id/btn_next"
@@ -141,10 +163,22 @@
         app:cpb_selectorIdle="@drawable/progress_button_state"
         app:cpb_textIdle="@string/label_continue"
         app:elevation="4dp"
-        app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_i_have_coupon_code"
+        app:layout_constraintBottom_toTopOf="@id/tv_i_have_coupon_code"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView android:id="@+id/tv_i_have_coupon_code"
+        style="@style/TextStyle.VerySmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/inset_very_small"
+        android:text="@string/i_have_coupon_code"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_next"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <com.google.android.material.button.MaterialButton
         style="@style/Widget.App.Button"
