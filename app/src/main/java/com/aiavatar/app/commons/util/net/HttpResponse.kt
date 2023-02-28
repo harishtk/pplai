@@ -1,6 +1,7 @@
 package com.aiavatar.app.commons.util.net
 
 object HttpResponse {
-    const val HTTP_TOO_MANY_REQUESTS = 429
-    const val HTTP_PAYLOAD_TOO_LARGE = 413
+    const val HTTP_TOO_MANY_REQUESTS:       Int = 429
+    const val HTTP_PAYLOAD_TOO_LARGE:       Int = 413
+    const val HTTP_INVALID_TOKEN:           Int = 498
 }

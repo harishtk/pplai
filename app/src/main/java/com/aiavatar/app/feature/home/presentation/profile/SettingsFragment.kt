@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -17,19 +18,16 @@ import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
-import com.aiavatar.app.BuildConfig
-import com.aiavatar.app.MainActivity
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
+import com.aiavatar.app.commons.presentation.dialog.WebViewPresenterFragment
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentSettingsBinding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.home.presentation.util.SettingsAdapter
 import com.aiavatar.app.feature.home.presentation.util.SettingsItem
 import com.aiavatar.app.feature.home.presentation.util.SettingsListType
-import com.aiavatar.app.safeCall
-import com.aiavatar.app.showToast
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
@@ -90,6 +88,9 @@ class SettingsFragment : Fragment() {
         val settingsCallback = object : SettingsAdapter.Callback {
             override fun onItemClick(position: Int) {
                 when (settingsListData[position].id) {
+                    0 -> {
+                        openWebPage(FAQ_URL)
+                    }
                     5 -> {
                         confirmLogout {
                             analyticsLogger.logEvent(Analytics.Event.SETTINGS_LOGOUT_CLICK)
@@ -100,6 +101,9 @@ class SettingsFragment : Fragment() {
                             context?.showToast("Logged out!")
                             gotoUploadStep1()
                         }
+                    }
+                    else -> {
+                        openWebPage(LANDING_URL)
                     }
                 }
             }
@@ -166,6 +170,21 @@ class SettingsFragment : Fragment() {
             Timber.e(e)
             (activity as? MainActivity)?.restart()
         }
+    }
+
+    private fun openWebPage(url: String) = safeCall {
+        findNavController().apply {
+            val args = bundleOf(WebViewPresenterFragment.EXTRA_URL to url)
+            val navOpts = defaultNavOptsBuilder()
+                .build()
+
+            navigate(R.id.web_view, args, navOpts)
+        }
+    }
+
+    companion object {
+        private const val FAQ_URL = "https://aiavatars.ai/#FAQ"
+        private const val LANDING_URL = "https://aiavatars.ai"
     }
 
 }

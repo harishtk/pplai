@@ -108,6 +108,7 @@
     <string name="in_app_payment_processing_des_1">Please do not close this page until the payment is complete…</string>
     <string name="in_app_payment_bank_processing_des_1">The Bank Servers are taking too long to process the payment. Please wait until we confirm with the bank.</string>
     <string name="i_have_coupon_code">I have a coupon code</string>
+    <string name="hint_enter_the_coupon_code">Enter the coupon code</string>
 
     <plurals name="hours_ago">
         <item quantity="one">@string/hours_single</item>

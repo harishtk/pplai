@@ -36,4 +36,7 @@ interface HomeApi {
 
     @POST("subscription/log")
     suspend fun subscriptionLog(@Body subscriptionLogRequestDto: SubscriptionLogRequestDto): Response<BaseResponse>
+
+    @POST("subscription/verifyCoupon")
+    suspend fun verifyCoupon(@Body verifyCouponRequestDto: VerifyCouponRequestDto): Response<VerifyCouponResponse>
 }

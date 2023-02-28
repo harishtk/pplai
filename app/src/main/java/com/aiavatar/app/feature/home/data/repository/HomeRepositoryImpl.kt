@@ -5,6 +5,7 @@ import com.aiavatar.app.commons.util.NetworkResultParser
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.EmptyResponseException
+import com.aiavatar.app.commons.util.net.HttpResponse
 import com.aiavatar.app.core.data.source.local.CacheLocalDataSource
 import com.aiavatar.app.core.data.source.local.entity.CacheKeyProvider
 import com.aiavatar.app.core.data.source.local.entity.modify
@@ -16,14 +17,13 @@ import com.aiavatar.app.feature.home.data.model.toModelListWithModel
 import com.aiavatar.app.feature.home.data.source.local.HomeLocalDataSource
 import com.aiavatar.app.feature.home.data.source.local.entity.*
 import com.aiavatar.app.feature.home.data.source.remote.HomeRemoteDataSource
-import com.aiavatar.app.feature.home.data.source.remote.dto.SubscriptionPlanDto
-import com.aiavatar.app.feature.home.data.source.remote.dto.asDto
-import com.aiavatar.app.feature.home.data.source.remote.dto.toSubscriptionPlan
+import com.aiavatar.app.feature.home.data.source.remote.dto.*
 import com.aiavatar.app.feature.home.data.source.remote.model.*
 import com.aiavatar.app.feature.home.data.source.remote.model.dto.*
 import com.aiavatar.app.feature.home.domain.model.*
 import com.aiavatar.app.feature.home.domain.model.request.*
 import com.aiavatar.app.feature.home.domain.repository.HomeRepository
+import com.aiavatar.app.feature.home.presentation.util.InvalidCouponCodeException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
@@ -629,6 +629,47 @@ class HomeRepositoryImpl @Inject constructor(
                     }
                 }
                 else -> parseErrorNetworkResult(networkResult)
+            }
+        }
+    }
+
+    override fun verifyCoupon(request: VerifyCouponRequest): Flow<Result<VerifyCouponData>> {
+        return remoteDataSource.verifyCoupon(request.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val data = networkResult.data?.data?.toVerifyCoupon()
+                        if (data != null) {
+                            Result.Success(data)
+                        } else {
+                            emptyResponse(networkResult)
+                        }
+                    } else {
+                        badResponse(networkResult)
+                    }
+                }
+                else -> {
+                    when (networkResult.code) {
+                        HttpsURLConnection.HTTP_PRECON_FAILED -> {
+                            // Invalid coupon code
+                            val cause = InvalidCouponCodeException(
+                                "Invalid coupon code",
+                                debugMessage = "Coupon code is invalid."
+                            )
+                            Result.Error.RecoverableError(ApiException(cause))
+                        }
+                        HttpResponse.HTTP_INVALID_TOKEN -> {
+                            // Coupon code is expired
+                            val cause = InvalidCouponCodeException(
+                                "Coupon code expired",
+                                debugMessage = "Coupon code is expired."
+                            )
+                            Result.Error.RecoverableError(ApiException(cause))
+                        }
+                        else -> parseErrorNetworkResult(networkResult)
+                    }
+                }
             }
         }
     }

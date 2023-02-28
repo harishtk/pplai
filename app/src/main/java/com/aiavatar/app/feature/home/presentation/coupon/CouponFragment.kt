@@ -15,13 +15,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.databinding.FragmentCouponBinding
-import com.aiavatar.app.feature.onboard.presentation.login.LoginUiAction
+import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
+import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
 import com.aiavatar.app.hideKeyboard
 import com.aiavatar.app.showToast
-import com.mukesh.mukeshotpview.completeListener.MukeshOtpCompleteListener
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -80,16 +80,63 @@ class CouponFragment : Fragment() {
             couponValidationResultFlow.collectLatest { couponValidationResult ->
                 Timber.d("Validation Result: (coupon) = $couponValidationResult")
                 if (couponValidationResult != null) {
-                    couponInputLayout.isErrorEnabled = true
-                    couponInputLayout.error = couponValidationResult.errorMessage?.asString(requireContext())
+                    if (couponValidationResult.successful) {
+                        couponInputLayout.isEndIconVisible = true
+                        btnVerify.isVisible = false
+                        edCoupon.clearFocus()
+                        edCoupon.hideKeyboard()
+                    } else {
+                        btnVerify.isVisible = true
+                        couponInputLayout.isEndIconVisible = false
+                        couponInputLayout.isErrorEnabled = true
+                        couponInputLayout.error =
+                            couponValidationResult.errorMessage?.asString(requireContext())
+                    }
                 } else {
+                    btnVerify.isVisible = true
+                    couponInputLayout.isEndIconVisible = false
                     couponInputLayout.isErrorEnabled = false
                     couponInputLayout.error = null
                 }
             }
         }
 
+        val loadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChangedBy { it.refresh }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                Timber.d("Load state: $loadState")
+                smallProgressBar.isVisible = loadState.refresh is LoadState.Loading
+            }
+        }
+
+        val cb = object : SubscriptionPlanAdapter.Callback {
+            override fun onItemClick(position: Int) {
+                // Noop.
+            }
+
+            override fun onSelectPlan(position: Int, plan: SubscriptionPlan) {
+                viewModel.toggleSelection(plan.id)
+            }
+
+            override fun onFooterClick(position: Int) {
+                /* Noop */
+            }
+        }
+        val adapter = SubscriptionPlanAdapter(cb)
+
+        bindList(
+            adapter = adapter,
+            uiState = uiState,
+            uiAction = uiAction
+        )
+
         bindInput(
+            uiState = uiState,
+            uiAction = uiAction
+        )
+
+        bindClick(
             uiState = uiState,
             uiAction = uiAction
         )
@@ -97,14 +144,37 @@ class CouponFragment : Fragment() {
         bindToolbar()
     }
 
+    private fun FragmentCouponBinding.bindClick(
+        uiState: StateFlow<CouponState>,
+        uiAction: (CouponUiAction) -> Unit
+    ) {
+        btnVerify.setOnClickListener {
+            uiAction(CouponUiAction.Validate)
+        }
+
+        btnNext.setOnClickListener {
+            uiAction(CouponUiAction.NextClick)
+        }
+
+        val selectedPlanIdFlow = uiState.map { it.selectedPlanId }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            selectedPlanIdFlow.collectLatest { selectedPlanId ->
+                // TODO: show continue button
+                Timber.d("selectedPlanId: $selectedPlanId")
+                btnNext.isVisible = selectedPlanId != -1
+            }
+        }
+    }
+
     private fun FragmentCouponBinding.bindInput(
         uiState: StateFlow<CouponState>,
         uiAction: (CouponUiAction) -> Unit,
     ) {
         edCoupon.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_GO) {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
                 updateTypedCouponValue(uiAction)
-                uiAction(CouponUiAction.NextClick)
+                uiAction(CouponUiAction.Validate)
                 edCoupon.hideKeyboard()
                 true
             } else {
@@ -115,7 +185,7 @@ class CouponFragment : Fragment() {
         edCoupon.setOnKeyListener { _, keyCode, event ->
             if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
                 updateTypedCouponValue(uiAction)
-                uiAction(CouponUiAction.NextClick)
+                uiAction(CouponUiAction.Validate)
                 edCoupon.hideKeyboard()
                 true
             } else {
@@ -132,6 +202,23 @@ class CouponFragment : Fragment() {
         edCoupon.text.toString().trim().let {
             if (it.isNotBlank()) {
                 onTyped(CouponUiAction.TypingCoupon(typed = it))
+            }
+        }
+    }
+
+    private fun FragmentCouponBinding.bindList(
+        adapter: SubscriptionPlanAdapter,
+        uiState: StateFlow<CouponState>,
+        uiAction: (CouponUiAction) -> Unit
+    ) {
+        plansListView.adapter = adapter
+
+        val uiModelListFlow = uiState.map { it.uiModelList }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            uiModelListFlow.collectLatest { uiModelList ->
+                Timber.d("Plans: size = ${uiModelList.size} $uiModelList")
+                adapter.submitList(uiModelList)
             }
         }
     }

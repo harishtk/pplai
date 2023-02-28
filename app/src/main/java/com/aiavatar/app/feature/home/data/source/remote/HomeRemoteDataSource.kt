@@ -90,4 +90,9 @@ class HomeRemoteDataSource @Inject constructor(
         emit(safeApiCall { apiService.subscriptionLog(subscriptionLogRequestDto) })
     }.flowOn(dispatcher)
 
+    fun verifyCoupon(verifyCouponRequestDto: VerifyCouponRequestDto): Flow<NetworkResult<VerifyCouponResponse>> = flow<NetworkResult<VerifyCouponResponse>> {
+        emit(NetworkResult.Loading())
+        emit(safeApiCall { apiService.verifyCoupon(verifyCouponRequestDto) })
+    }.flowOn(dispatcher)
+
 }
