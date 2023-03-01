@@ -19,4 +19,5 @@ interface AccountsRepository {
 
     fun getShareLink(getShareLinkRequest: GetShareLinkRequest): Flow<Result<ShareLinkData>>
 
+    fun feedback(feedbackRequest: FeedbackRequest): Flow<Result<String>>
 }

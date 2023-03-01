@@ -249,7 +249,7 @@ class CatalogFragment : Fragment() {
                     navigate(CatalogFragmentDirections.actionCatalogListToUploadStep1())
                 }
             }*/
-            ifDebug {
+            /*ifDebug {
                 findNavController().apply {
                     val args = bundleOf(WebViewPresenterFragment.EXTRA_URL to "https://www.freecodecamp.org")
                     val navOpts = defaultNavOptsBuilder()
@@ -257,7 +257,7 @@ class CatalogFragment : Fragment() {
 
                     navigate(R.id.web_view, args, navOpts)
                 }
-            }
+            }*/
         }
 
         retryButton.setOnClickListener { viewModel.refresh(true) }

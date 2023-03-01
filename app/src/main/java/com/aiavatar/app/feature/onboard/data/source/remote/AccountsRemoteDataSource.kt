@@ -41,10 +41,15 @@ class AccountsRemoteDataSource @Inject constructor(
     fun logout(logoutRequestDto: LogoutRequestDto): Flow<NetworkResult<BaseResponse>> = flow {
         emit(NetworkResult.Loading())
         emit(safeApiCall { apiService.logout(logoutRequestDto) })
-    }
+    }.flowOn(dispatcher)
 
     fun getShareLink(getShareLinkRequestDto: GetShareLinkRequestDto): Flow<NetworkResult<GetShareLinkResponse>> = flow {
         emit(NetworkResult.Loading())
         emit(safeApiCall { apiService.getShareLink(getShareLinkRequestDto) })
-    }
+    }.flowOn(dispatcher)
+
+    fun feedback(feedbackRequestDto: FeedbackRequestDto): Flow<NetworkResult<BaseResponse>> = flow {
+        emit(NetworkResult.Loading())
+        emit(safeApiCall { apiService.feedback(feedbackRequestDto) })
+    }.flowOn(dispatcher)
 }

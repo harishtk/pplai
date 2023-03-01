@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="0dp"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:contentInsetStart="0dp">
+            <include layout="@layout/default_app_toolbar"
+                android:id="@+id/toolbar_included"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.appbar.MaterialToolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+            android:layout_weight="1">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+                <Space android:id="@+id/spacer1"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/spacer_size_very_small"
+                    android:visibility="visible"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toTopOf="@id/title_1"
+                    app:layout_constraintVertical_bias="0.0"
+                    app:layout_constraintVertical_chainStyle="packed"/>
+
+                <TextView android:id="@+id/title_1"
+                    style="@style/Base.TextAppearance.Bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="How did we do?"
+                    android:textSize="@dimen/text_size_large"
+                    android:lineSpacingMultiplier="0.9"
+                    android:textAlignment="center"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/spacer1"
+                    app:layout_constraintBottom_toTopOf="@id/description_1"
+                    app:layout_constraintVertical_chainStyle="packed"/>
+
+                <TextView style="@style/TextStyle.VerySmall"
+                    android:id="@+id/description_1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/inset_large_medium"
+                    android:text="Kindly share your positive feedback which helps us to improve more."
+                    android:textAlignment="center"
+                    app:layout_constraintTop_toBottomOf="@id/title_1"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toTopOf="@id/top_barrier"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+                <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/top_barrier"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:barrierDirection="bottom"
+                    app:barrierMargin="@dimen/inset_small"
+                    app:constraint_referenced_ids="spacer1,title_1,description_1" />
+
+                <ImageView android:id="@+id/iv_big_emoji"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="@dimen/spacer_size_small"
+                    android:src="@drawable/smiley_happyface"
+                    android:contentDescription="@string/content_description_feedback_emoction"
+                    app:layout_constraintTop_toBottomOf="@id/top_barrier"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toTopOf="@id/slider"
+                    app:layout_constraintWidth_percent="0.44"
+                    app:layout_constraintDimensionRatio="H,1:1" />
+
+                <FrameLayout android:id="@+id/popup_view_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="@id/iv_big_emoji"
+                    app:layout_constraintBottom_toTopOf="@id/iv_big_emoji"
+                    app:layout_constraintEnd_toStartOf="@id/iv_big_emoji"
+                    app:layout_constraintTop_toTopOf="@id/iv_big_emoji">
+
+                    <include layout="@layout/popup_caption"
+                        android:id="@+id/popup_caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </FrameLayout>
+
+                <View android:id="@+id/slider_old"
+                    android:layout_width="match_parent"
+                    android:layout_height="10dp"
+                    app:layout_constraintTop_toBottomOf="@id/iv_big_emoji"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toTopOf="@id/bottom_barrier"/>
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/slider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:trackColorActive="@color/yellow_200"
+                    app:trackColorInactive="@color/yellow_50"
+                    android:value="0.5"
+                    android:valueFrom="0.0"
+                    android:valueTo="1.0"
+                    app:labelBehavior="gone"
+                    android:contentDescription="Feedback"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
+                    app:layout_constraintTop_toBottomOf="@id/iv_big_emoji"
+                    app:layout_constraintVertical_bias="1.0"/>
+
+                <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/bottom_barrier"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:barrierDirection="top"
+                    app:constraint_referenced_ids="ed_experience,ed_character_counter,btn_next,tv_maybe_later,chip_container_title,chip_list_view"/>
+
+                <TextView android:id="@+id/chip_container_title"
+                    style="@style/TextStyle.VerySmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="@dimen/inset_large_medium"
+                    android:text="I'm happy with the app"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
+                    app:layout_constraintBottom_toTopOf="@id/chip_group"
+                    app:layout_constraintVertical_chainStyle="packed"
+                    app:layout_constraintVertical_bias="1.0"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constrainedWidth="true" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="false"
+                    android:padding="8dp"
+                    app:chipSpacingHorizontal="4dp"
+                    app:chipSpacingVertical="0dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/chip_container_title"
+                    app:layout_constraintBottom_toTopOf="@id/ed_experience"
+                    app:layout_constraintVertical_chainStyle="packed"
+                    app:layout_constraintVertical_bias="1.0">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_others"
+                        style="@style/Widget.App.Chip.OutlinedBox.Choice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Other"
+                        android:visibility="gone"/>
+
+                </com.google.android.material.chip.ChipGroup>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/chip_list_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/inset_small"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/chip_container_title"
+                    app:layout_constraintBottom_toTopOf="@id/ed_experience"
+                    app:layout_constraintVertical_chainStyle="packed"
+                    app:layout_constraintVertical_bias="1.0"
+                    tools:listitem="@layout/item_selectable_chip"
+                    tools:itemCount="4"/>
+
+                <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/ed_experience"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/text_area_height_small"
+                    android:layout_margin="@dimen/inset_large_medium"
+                    android:paddingStart="8dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="20dp"
+                    android:paddingEnd="8dp"
+                    android:inputType="text|textMultiLine"
+                    android:gravity="top"
+                    android:hint="@string/write_your_experience"
+                    android:textAppearance="@style/TextStyle.Small"
+                    android:textColorHint="@color/text_secondary_alt"
+                    android:background="@drawable/bg_outline_curved_secondary"
+                    android:overScrollMode="ifContentScrolls"
+                    android:maxLength="@integer/max_feedback_comment_length"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed"
+                    app:layout_constraintVertical_bias="1.0" />
+
+                <TextView android:id="@+id/ed_character_counter"
+                    style="@style/TextStyle.Tiny"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:text="0 / 200"
+                    android:textColor="@color/text_secondary_alt"
+                    app:layout_constraintEnd_toEndOf="@id/ed_experience"
+                    app:layout_constraintBottom_toBottomOf="@id/ed_experience"
+                    app:layout_constraintTop_toTopOf="@id/ed_experience"
+                    app:layout_constraintStart_toStartOf="@id/ed_experience"
+                    app:layout_constraintVertical_bias="1.0"
+                    app:layout_constraintHorizontal_bias="1.0"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+
+        <LinearLayout android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="bottom|center">
+
+            <com.dd.CircularProgressButton
+                android:id="@+id/btn_next"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="@dimen/inset_large"
+                android:textAllCaps="false"
+                android:textColor="@color/black"
+                android:textAppearance="@style/Base.TextAppearance.Bold"
+                android:textSize="16sp"
+                app:cornerRadius="@dimen/button_corner_size"
+                app:cpb_colorIndicator="@color/white"
+                app:cpb_colorProgress="?attr/colorSecondary"
+                app:cpb_colorIndicatorBackground="?attr/colorSecondaryVariant"
+                app:cpb_cornerRadius="@dimen/button_corner_size"
+                app:cpb_selectorIdle="@drawable/progress_button_state"
+                app:cpb_textIdle="Submit Feedback"
+                app:elevation="4dp"
+                app:layout_constraintTop_toBottomOf="@id/ed_character_counter"
+                app:layout_constraintBottom_toTopOf="@id/tv_maybe_later"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+            <TextView android:id="@+id/tv_maybe_later"
+                style="@style/TextStyle.VerySmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/inset_very_small"
+                android:text="Maybe later"
+                android:textColor="@color/text_secondary_alt"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/btn_next"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintVertical_chainStyle="packed"
+                app:layout_constraintVertical_bias="1.0"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

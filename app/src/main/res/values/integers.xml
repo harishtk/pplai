@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="default_content_loader_delay">500</integer>
+    <integer name="max_feedback_comment_length">200</integer>
 </resources>

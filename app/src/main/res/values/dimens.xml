@@ -59,6 +59,9 @@
     <dimen name="medium_card_size">120dp</dimen>
     <dimen name="tab_indicator_size">8dp</dimen>
 
+    <dimen name="default_text_area_height">140dp</dimen>
+    <dimen name="text_area_height_small">100dp</dimen>
+
     <dimen name="profile_image_size_small">40dp</dimen>
     <dimen name="profile_image_size_small_medium">42dp</dimen>
     <dimen name="profile_image_size_medium">50dp</dimen>
@@ -79,4 +82,5 @@
     <dimen name="otp_view_border_size">2dp</dimen>
 
     <dimen name="default_adapter_circle_image_size">100dp</dimen>
+    <dimen name="chip_min_width">120dp</dimen>
 </resources>

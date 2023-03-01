@@ -57,4 +57,6 @@
     <color name="icon_tint">@color/transparent_black_40</color>
 
     <color name="bottom_sheet_background">@color/core_white</color>
+
+    <color name="chip_stroke_color">#464646</color>
 </resources>

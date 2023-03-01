@@ -1,6 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Chips -->
+    <style name="Widget.App.Chip.Choice" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="android:textAppearance">@style/Base.TextAppearance</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Chip.Choice</item>
+    </style>
+
+    <style name="Widget.App.Chip.Choice.Alt" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="chipStrokeColor">@color/white</item>
+        <item name="chipBackgroundColor">@null</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Chip.Choice</item>
+    </style>
+
+    <style name="Widget.App.Chip.OutlinedBox.Choice" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="android:textAppearance">@style/Base.TextAppearance.Bold</item>
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Chip.Choice</item>
+        <item name="chipBackgroundColor">@color/m_chip_background</item>
+        <item name="chipStrokeColor">@color/m_chip_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="closeIconTint">@color/ds_chip_close_icon</item>
+        <item name="android:textColor">@color/m_chip_text</item>
+    </style>
+
+    <style name="Widget.App.ChipGroup.Choice" parent="Widget.MaterialComponents.ChipGroup">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.Chip.Choice</item>
+        <item name="chipStyle">@style/Widget.App.Chip.OutlinedBox.Choice</item>
+    </style>
+
     <style name="Widget.App.PopupMenu" parent="Widget.AppCompat.PopupMenu">
         <item name="textAppearanceSmallPopupMenu">@style/Base.TextAppearance</item>
         <item name="android:textAppearanceSmallPopupMenu">@style/Base.TextAppearance</item>

@@ -91,6 +91,9 @@ class SettingsFragment : Fragment() {
                     0 -> {
                         openWebPage(FAQ_URL)
                     }
+                    1 -> {
+                        gotoFeedback()
+                    }
                     5 -> {
                         confirmLogout {
                             analyticsLogger.logEvent(Analytics.Event.SETTINGS_LOGOUT_CLICK)
@@ -169,6 +172,16 @@ class SettingsFragment : Fragment() {
         } catch (e: Exception) {
             Timber.e(e)
             (activity as? MainActivity)?.restart()
+        }
+    }
+
+    private fun gotoFeedback() {
+        safeCall {
+            findNavController().apply {
+                val navOptions = defaultNavOptsBuilder()
+                    .build()
+                navigate(R.id.feedback_form, null, navOptions)
+            }
         }
     }
 

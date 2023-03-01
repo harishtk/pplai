@@ -5,8 +5,6 @@ import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.commons.util.NetworkResultParser
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.net.ApiException
-import com.aiavatar.app.commons.util.net.BadResponseException
-import com.aiavatar.app.commons.util.net.EmptyResponseException
 import com.aiavatar.app.commons.util.net.HttpResponse
 import com.aiavatar.app.core.di.ApplicationCoroutineScope
 import com.aiavatar.app.di.IoDispatcher
@@ -27,7 +25,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
@@ -114,6 +111,24 @@ class AccountsRepositoryImpl @Inject constructor(
                 val cause = ApiException(t)
                 emit(Result.Error.NonRecoverableError(cause))
             }
+    }
+
+    override fun feedback(feedbackRequest: FeedbackRequest): Flow<Result<String>> {
+        return remoteDataSource.feedback(feedbackRequest.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val message = networkResult.data?.message
+                            ?: "Success. No message."
+                        Result.Success(message)
+                    } else {
+                        badResponse(networkResult)
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
     }
 
     private fun parseLoginResult(networkResult: NetworkResult<LoginResponse>): Result<LoginData> {

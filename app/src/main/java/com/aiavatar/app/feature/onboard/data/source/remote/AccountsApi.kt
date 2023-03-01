@@ -26,4 +26,6 @@ interface AccountsApi {
     @POST("user/share")
     suspend fun getShareLink(@Body getShareLinkRequestDto: GetShareLinkRequestDto): Response<GetShareLinkResponse>
 
+    @POST("user/feedback")
+    suspend fun feedback(@Body feedbackRequestDto: FeedbackRequestDto): Response<BaseResponse>
 }
