@@ -13,6 +13,7 @@ import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.core.Env
 import com.aiavatar.app.core.envForConfig
 import timber.log.Timber
+import java.text.NumberFormat
 
 fun <T> List<T>.mapButReplace(targetItem: T, newItem: T) = map {
     if (it == targetItem) {
@@ -115,6 +116,15 @@ fun Context.debugToast(message: String, isShort: Boolean = true) {
 
 fun Long.format(): String {
     return String.format("%02d", this)
+}
+
+fun Float.format(formatString: String = "0.##"): String {
+    val formatter = java.text.DecimalFormat(formatString)
+    return try {
+        formatter.format(this)
+    } catch (e: Exception) {
+        this.toString()
+    }
 }
 
 fun Long.pad(): String = format()

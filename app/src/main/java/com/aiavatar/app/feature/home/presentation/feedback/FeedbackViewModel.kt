@@ -39,8 +39,17 @@ class FeedbackViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<FeedbackUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
+    fun errorShown(e: Exception) {
+        _uiState.update { state ->
+            state.copy(
+                exception = null,
+                uiErrorText = null
+            )
+        }
+    }
+
     fun sendFeedback(
-        rating: Float,
+        rating: String,
         tags: String,
         comment: String
     ) {

@@ -11,19 +11,19 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.cancelSpinning
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentFeedbackBinding
-import com.aiavatar.app.showToast
 import com.google.android.material.chip.Chip
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.onEach
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.properties.Delegates
@@ -35,6 +35,7 @@ import kotlin.properties.Delegates
  * Pepul Tech
  * hariskumar@pepul.com
  */
+@AndroidEntryPoint
 class FeedbackFragment : Fragment() {
 
     private val viewModel: FeedbackViewModel by viewModels()
@@ -104,7 +105,7 @@ class FeedbackFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         return inflater.inflate(R.layout.fragment_feedback, container, false)
     }
@@ -124,17 +125,23 @@ class FeedbackFragment : Fragment() {
 
     private fun FragmentFeedbackBinding.bindState(
         uiState: StateFlow<FeedbackState>,
-        uiEvent: SharedFlow<FeedbackUiEvent>
+        uiEvent: SharedFlow<FeedbackUiEvent>,
     ) {
-        uiEvent.onEach { event ->
-            when (event) {
-                is FeedbackUiEvent.ShowToast -> {
-                    context?.showToast(event.message.asString(requireContext()))
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                uiEvent.collectLatest { event ->
+                    when (event) {
+                        is FeedbackUiEvent.ShowToast -> {
+                            context?.showToast(event.message.asString(requireContext()))
+                        }
+                        is FeedbackUiEvent.FeedbackSubmitted -> {
+                            safeCall { findNavController().navigateUp() }
+                        }
+                    }
                 }
             }
-        }.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED)
+        }
 
-        setup(feedbackStateList[1])
         slider.addOnChangeListener { _, slideValue, fromUser ->
             Timber.d("Slider: delta = $slideValue")
             when {
@@ -158,6 +165,44 @@ class FeedbackFragment : Fragment() {
                 }
             }
             Timber.d("Slider: lastSlide = $lastSlideValue")
+        }
+        slider.value = lastSlideValue
+
+        val loadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChangedBy { it.action }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                if (loadState.action is LoadState.Loading) {
+                    btnNext.setSpinning()
+                } else {
+                    btnNext.cancelSpinning()
+                }
+            }
+        }
+
+        val notLoading = uiState.map { it.loadState }
+            .distinctUntilChangedBy { it.action }
+            .map { it.action !is LoadState.Loading }
+        val hasErrors = uiState.map { it.exception != null }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                combine(
+                    notLoading,
+                    hasErrors,
+                    Boolean::and
+                ).collectLatest {
+                    if (it) {
+                        val (e, uiErr) = uiState.value.exception to
+                                uiState.value.uiErrorText
+                        if (e != null) {
+                            ifDebug { Timber.e(e) }
+                            uiErr?.let { uiText -> context?.showToast(uiText.asString(requireContext())) }
+                            viewModel.errorShown(e)
+                        }
+                    }
+                }
+            }
         }
 
         /*nextButton.setOnClickListener {
@@ -183,6 +228,21 @@ class FeedbackFragment : Fragment() {
 
     private fun FragmentFeedbackBinding.bindClick() {
         tvMaybeLater.setOnClickListener { findNavController().navigateUp() }
+
+        btnNext.setOnClickListener {
+            // TODO: validate
+            val rating: String = slider.value.format()
+            val tags = chipGroup.checkedChipIds.map { id ->
+                val text = chipGroup.findViewById<Chip>(id)?.text?.toString()
+                    .nullAsEmpty()
+                text
+            }.filter { it.isNotBlank() }
+                .joinToString()
+            val comment = edExperience.text.toString().trim()
+            viewModel.sendFeedback(
+                rating = rating, tags = tags, comment = comment
+            )
+        }
     }
 
     private fun FragmentFeedbackBinding.setup(feedbackDescState: FeedbackDescState) {
@@ -217,7 +277,8 @@ class FeedbackFragment : Fragment() {
 
     private fun FragmentFeedbackBinding.bindToolbar() {
         toolbarIncluded.apply {
-            toolbarTitle.isVisible = false
+            toolbarTitle.isVisible = true
+            toolbarTitle.text = getString(R.string.feedback)
             toolbarNavigationIcon.isVisible = true
             toolbarNavigationIcon.setOnClickListener {
                 findNavController().navigateUp()

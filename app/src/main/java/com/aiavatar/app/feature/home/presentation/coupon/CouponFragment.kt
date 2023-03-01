@@ -168,6 +168,7 @@ class CouponFragment : Fragment() {
                     if (e != null) {
                         ifDebug { Timber.e(e) }
                         uiErr?.let { uiText -> context?.showToast(uiErr.asString(requireContext())) }
+                        uiAction(CouponUiAction.ErrorShown(e))
                     }
                 }
             }
