@@ -7,6 +7,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.MainThread
 import com.aiavatar.app.R
 import com.aiavatar.app.core.util.BlurTransformation
+import com.aiavatar.app.safeCall
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.RequestManager
@@ -368,8 +369,10 @@ class GlideImageLoader private constructor(
             }
 
         fun <T : ImageView> T.disposeGlideLoad() {
-            Glide.with(this).clear(this)
-            setImageDrawable(null)
+            try {
+                Glide.with(this).clear(this)
+                setImageDrawable(null)
+            } catch (ignore: Exception) {}
         }
     }
 }

@@ -1,24 +1,32 @@
 package com.aiavatar.app.feature.home.presentation.util
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.CompoundButton
+import android.widget.CompoundButton.OnCheckedChangeListener
+import android.widget.TimePicker
 import androidx.annotation.StringRes
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import com.aiavatar.app.NO_POSITION
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.databinding.ItemCouponFooterBinding
 import com.aiavatar.app.databinding.ItemSubscriptionPackageBinding
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.subscription.SubscriptionUiModel
+import timber.log.Timber
 
 class SubscriptionPlanAdapter(
     private val callback: Callback
 ) : ListAdapter<SubscriptionUiModel, ViewHolder>(DIFF_CALLBACK) {
+
+    private var selectedPosition: Int = NO_POSITION
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return when (viewType) {
@@ -91,21 +99,14 @@ class SubscriptionPlanAdapter(
             toggleSelection(selected)
 
             root.setOnClickListener {
-                checkbox.isChecked = true
-                // callback.onItemClick(adapterPosition)
-            }
-            checkbox.setOnCheckedChangeListener { _, isChecked ->
-                // callback.onSelectPlan(adapterPosition, data)
-                if (isChecked) {
-                    callback.onSelectPlan(adapterPosition, data)
-                }
+                callback.onSelectPlan(adapterPosition, data)
             }
 
             bestSellerContainer.isVisible = data.bestSeller
         }
 
         fun toggleSelection(selected: Boolean) = with(binding) {
-            checkbox.isChecked = selected
+            ivCheckbox.isSelected = selected
             priceContainer.isSelected = selected
         }
 

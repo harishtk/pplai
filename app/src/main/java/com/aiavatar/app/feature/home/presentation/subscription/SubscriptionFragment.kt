@@ -4,7 +4,6 @@ import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.text.SpannableString
-import android.text.style.ClickableSpan
 import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
 import android.view.View
@@ -42,7 +41,6 @@ import com.aiavatar.app.feature.home.presentation.util.EmptyInAppProductsExcepti
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
 import com.aiavatar.app.feature.onboard.presentation.login.LoginFragment
 import com.aiavatar.app.pay.billing.InAppPurchaseActivity
-import com.aiavatar.app.pay.billing.InAppUtil
 import com.aiavatar.app.pay.billing.ResultCode
 import com.aiavatar.app.pay.billing.queryPurchases
 import com.aiavatar.app.viewmodels.UserViewModel
@@ -365,7 +363,8 @@ class SubscriptionFragment : Fragment() {
         tvIHaveCouponCode.setText(sb, TextView.BufferType.SPANNABLE)
         tvIHaveCouponCode.setOnClickListener {
             it.touchInteractFeedback(scaleMultiplier = 1.1F)
-            gotoClaimCoupon()
+            val modelId = viewModel.uiState.value.modelId.nullAsEmpty()
+            gotoClaimCoupon(modelId)
         }
 
         retryButton.setOnClickListener { viewModel.refresh() }
@@ -517,10 +516,13 @@ class SubscriptionFragment : Fragment() {
         }
     }
 
-    private fun gotoClaimCoupon() {
+    private fun gotoClaimCoupon(modelId: String) {
         safeCall {
             findNavController().apply {
-                navigate(R.id.action_subscription_plans_to_claim_coupon)
+                val args = Bundle().apply {
+                    putString(Constant.ARG_MODEL_ID, modelId)
+                }
+                navigate(R.id.action_subscription_plans_to_claim_coupon, args)
             }
         }
     }

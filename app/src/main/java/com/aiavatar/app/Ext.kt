@@ -1,6 +1,8 @@
 package com.aiavatar.app
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.text.InputFilter
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText

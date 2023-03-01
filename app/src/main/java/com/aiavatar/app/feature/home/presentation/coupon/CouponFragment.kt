@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -14,13 +15,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.aiavatar.app.R
+import com.aiavatar.app.*
+import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentCouponBinding
 import com.aiavatar.app.feature.home.domain.model.SubscriptionPlan
 import com.aiavatar.app.feature.home.presentation.util.SubscriptionPlanAdapter
-import com.aiavatar.app.hideKeyboard
-import com.aiavatar.app.showToast
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -37,6 +38,16 @@ import timber.log.Timber
 class CouponFragment : Fragment() {
 
     private val viewModel: CouponViewModel by viewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        arguments?.apply {
+            getString(Constant.ARG_MODEL_ID, null)?.let { modelId ->
+                viewModel.setModelId(modelId)
+            } ?: error("No model id available")
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -68,6 +79,23 @@ class CouponFragment : Fragment() {
                     when (event) {
                         is CouponUiEvent.ShowToast -> {
                             context?.showToast(event.message.asString(requireContext()))
+                        }
+                        is CouponUiEvent.PurchaseComplete -> {
+                            findNavController().apply {
+                                val args = bundleOf(
+                                    Constant.EXTRA_FROM to "login",
+                                    Constant.ARG_PLAN_ID to event.planId,
+                                    Constant.ARG_STATUS_ID to event.statusId
+                                )
+                                val navOpts = defaultNavOptsBuilder()
+                                    .setPopUpTo(
+                                        R.id.subscription_plans,
+                                        inclusive = true,
+                                        saveState = false
+                                    )
+                                    .build()
+                                navigate(R.id.subscriptionSuccess, args, navOpts)
+                            }
                         }
                     }
                 }
@@ -101,12 +129,47 @@ class CouponFragment : Fragment() {
             }
         }
 
-        val loadStateFlow = uiState.map { it.loadState }
+        val refreshLoadStateFlow = uiState.map { it.loadState }
             .distinctUntilChangedBy { it.refresh }
         viewLifecycleOwner.lifecycleScope.launch {
-            loadStateFlow.collectLatest { loadState ->
+            refreshLoadStateFlow.collectLatest { loadState ->
                 Timber.d("Load state: $loadState")
                 smallProgressBar.isVisible = loadState.refresh is LoadState.Loading
+            }
+        }
+
+        val actionLoadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChangedBy { it.action }
+        viewLifecycleOwner.lifecycleScope.launch {
+            actionLoadStateFlow.collectLatest { loadState ->
+                if (loadState.action is LoadState.Loading) {
+                    btnNext.setSpinning()
+                } else {
+                    btnNext.cancelSpinning()
+                }
+            }
+        }
+
+        val notLoading = uiState.map { it.loadState }
+            .distinctUntilChangedBy { it.action }
+            .map { it.action !is LoadState.Loading }
+            .distinctUntilChanged()
+
+        val hasErrors = uiState.map { it.exception != null }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            combine(
+                notLoading,
+                hasErrors,
+                Boolean::and
+            ).collectLatest {
+                if (it) {
+                    val (e, uiErr) = uiState.value.exception to uiState.value.uiErrorMessage
+                    if (e != null) {
+                        ifDebug { Timber.e(e) }
+                        uiErr?.let { uiText -> context?.showToast(uiErr.asString(requireContext())) }
+                    }
+                }
             }
         }
 
