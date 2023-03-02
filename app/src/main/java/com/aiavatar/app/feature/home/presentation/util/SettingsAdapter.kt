@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.databinding.ItemSimpleSettingsBinding
 
 class SettingsAdapter(
@@ -53,7 +54,10 @@ class SettingsAdapter(
             }
             ivArrow.isVisible = data.hasMore
 
-            binding.root.setOnClickListener { callback.onItemClick(adapterPosition) }
+            binding.root.setOnClickListener {
+                ivArrow.touchInteractFeedback(scaleMultiplier = 1.1F)
+                callback.onItemClick(adapterPosition)
+            }
         }
 
         companion object {

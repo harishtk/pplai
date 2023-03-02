@@ -192,17 +192,13 @@ class GenderAdapter(
             checkboxTitle.text = data.title
 
             toggleSelection(data.selected)
-            root.setOnClickListener { checkbox.isChecked = true }
-            checkbox.setOnCheckedChangeListener { _, isChecked ->
-                if (isChecked) {
-                    onToggleSelection(adapterPosition)
-                }
+            root.setOnClickListener {
+                onToggleSelection(adapterPosition)
             }
         }
 
         fun toggleSelection(selected: Boolean) = with(binding) {
             root.isSelected = selected
-            checkbox.isChecked = selected
         }
     }
 

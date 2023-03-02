@@ -231,4 +231,9 @@
         android:name="com.aiavatar.app.feature.home.presentation.feedback.FeedbackFragment"
         android:label="Feedback"
         tools:layout="@layout/fragment_feedback" />
+
+    <fragment android:id="@+id/delete_account"
+        android:name="com.aiavatar.app.feature.home.presentation.deleteaccount.DeleteAccountFragment"
+        android:label="Delete Account"
+        tools:layout="@layout/fragment_delete_account" />
 </navigation>

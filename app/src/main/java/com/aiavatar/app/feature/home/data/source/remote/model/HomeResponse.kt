@@ -28,7 +28,9 @@ data class ListAvatarDto(
     @SerializedName("imageName")
     val imageName: String,
     @SerializedName("fileSize")
-    val fileSize: Int?
+    val fileSize: Int?,
+    @SerializedName("thumbnail")
+    val thumbnail: String?
 )
 
 fun ListAvatarDto.toCategory(): Category {
@@ -43,7 +45,8 @@ fun ListAvatarDto.toListAvatar(): ListAvatar {
         id = id,
         categoryName = categoryName,
         imageName = imageName,
-        fileSize = fileSize ?: -1
+        fileSize = fileSize ?: -1,
+        thumbnail = thumbnail
     )
 }
 

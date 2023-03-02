@@ -1,6 +1,7 @@
 package com.aiavatar.app.feature.home.presentation.profile
 
 import android.content.DialogInterface
+import android.content.Intent
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.net.toUri
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -75,13 +77,14 @@ class SettingsFragment : Fragment() {
         val appName = getString(R.string.app_name)
         val version = "v${BuildConfig.VERSION_NAME}"
         tvVersionInfo.text = getString(R.string.version_info, appName, version)
+        tvVersionInfo.setOnClickListener { gotoMarket() }
 
         val settingsListData = listOf<SettingsItem>(
             SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 0, title = "FAQs", R.drawable.ic_faq_outline, "Frequently asked questions", true),
             SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 1, title = "Feedback", R.drawable.ic_feedback_outline, "Tell us something you like", true),
             SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 2, title = "Help & Support", R.drawable.ic_helpline_outline, "Our experts will guide you", true),
             SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 3, title = "About", R.drawable.ic_info_outline, "Some little help", true),
-            SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 4, title = "Delete my account", R.drawable.ic_info_outline, "Want out? But We will miss you.", true),
+            // SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 4, title = "Delete my account", R.drawable.ic_info_outline, "Want out? But We will miss you.", true),
             SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 5, title = "Logout", R.drawable.ic_logout_outline, null, hasMore = false)
         )
 
@@ -93,6 +96,9 @@ class SettingsFragment : Fragment() {
                     }
                     1 -> {
                         gotoFeedback()
+                    }
+                    4 -> {
+                        gotoDeleteAccount()
                     }
                     5 -> {
                         confirmLogout {
@@ -185,6 +191,16 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    private fun gotoDeleteAccount() {
+        safeCall {
+            findNavController().apply {
+                val navOptions = defaultNavOptsBuilder()
+                    .build()
+                navigate(R.id.delete_account, null, navOptions)
+            }
+        }
+    }
+
     private fun openWebPage(url: String) = safeCall {
         findNavController().apply {
             val args = bundleOf(WebViewPresenterFragment.EXTRA_URL to url)
@@ -195,9 +211,23 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    private fun gotoMarket() {
+        safeCall {
+            Intent(Intent.ACTION_VIEW, MARKET_URI.toUri()).also { intent ->
+                if (intent.resolveActivity(requireActivity().packageManager) != null) {
+                    startActivity(intent)
+                } else {
+                    throw IllegalStateException("Cannot perform this action!")
+                }
+            }
+        }
+    }
+
     companion object {
         private const val FAQ_URL = "https://aiavatars.ai/#FAQ"
         private const val LANDING_URL = "https://aiavatars.ai"
+
+        private val MARKET_URI: String = "market://details?id=${BuildConfig.APPLICATION_ID}"
     }
 
 }

@@ -1,6 +1,7 @@
 package com.aiavatar.app.core
 
 import com.aiavatar.app.BuildConfig
+import org.jetbrains.annotations.Contract
 
 object URLProvider {
 
@@ -20,7 +21,9 @@ object URLProvider {
         return getImageUrl(URLSource.AVATAR, fileName)
     }
 
-    fun avatarThumbUrl(fileName: String): String {
+    @Contract("null -> null")
+    fun avatarThumbUrl(fileName: String?): String? {
+        fileName ?: return null
         return getImageUrl(URLSource.AVATAR, fileName, SourceCategory.THUMBNAIL)
     }
 

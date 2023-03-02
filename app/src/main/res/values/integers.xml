@@ -2,4 +2,5 @@
 <resources>
     <integer name="default_content_loader_delay">500</integer>
     <integer name="max_feedback_comment_length">200</integer>
+    <integer name="max_delete_account_comment_length">200</integer>
 </resources>

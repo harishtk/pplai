@@ -12,4 +12,5 @@ data class ModelAvatar(
     var downloadedAt: Long? = null
     var downloadedSize: Int? = null
     var fileSize: Int? = null
+    var thumbnail: String? = null
 }

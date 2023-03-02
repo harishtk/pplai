@@ -169,7 +169,7 @@ class ProfileFragment : Fragment() {
                     // TODO: Show empty list container
                     // emptyListContainer.isVisible = adapter.itemCount <= 0
                     if (loadState.refresh is LoadState.Error) {
-                        errorContainer.isVisible = true
+                        errorContainer.isVisible = adapter.itemCount <= 0
                         if (loadState.refresh.error !is NoInternetException) {
                             HapticUtil.createError(requireContext())
                         }
