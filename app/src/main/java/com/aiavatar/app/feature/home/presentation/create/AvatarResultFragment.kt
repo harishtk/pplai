@@ -34,6 +34,7 @@ import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newG
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.commons.util.shakeNow
+import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.FragmentAvatarResultBinding
 import com.aiavatar.app.databinding.ItemSquareImageBinding
 import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
@@ -520,6 +521,7 @@ class AvatarResultAdapter(
             with(binding) {
                 view1.apply {
                     newGlideBuilder(glide)
+                        .thumbnail(URLProvider.avatarThumbUrl(data.avatar.thumbnail))
                         .originalImage(data.avatar.remoteFile)
                         .placeholder(R.drawable.loading_animation)
                         .error(R.color.grey_900)

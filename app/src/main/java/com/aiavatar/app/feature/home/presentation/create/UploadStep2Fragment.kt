@@ -591,8 +591,8 @@ class UploadStep2Fragment : Fragment() {
     }
 
     companion object {
-        const val MAX_IMAGES = 10
-        const val MIN_IMAGES = 7
+        const val MAX_IMAGES = 20
+        const val MIN_IMAGES = 15
 
         const val ARG_CACHED_SESSION_ID = "cached_session_id"
     }

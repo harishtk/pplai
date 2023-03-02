@@ -54,7 +54,7 @@ object StorageUtil {
         val cr = context.contentResolver
         val savedFiles = uris.mapNotNull { uri ->
             try {
-                val outFile = File(targetDir, getNewPhotoFileName())
+                val outFile = File(targetDir, getNewPhotoFileName(EXTENSION_PNG))
                 Timber.d("Output file: ${outFile.absolutePath}")
 
                 val reqSize = Size(UPLOAD_MAX_WIDTH, UPLOAD_MAX_HEIGHT)
@@ -67,7 +67,7 @@ object StorageUtil {
                         .submit().get()
 
                     BufferedOutputStream(FileOutputStream(outFile)).use { outputStream ->
-                        compressed.compress(Bitmap.CompressFormat.JPEG, UPLOAD_JPEG_QUALITY, outputStream)
+                        compressed.compress(Bitmap.CompressFormat.PNG, UPLOAD_PNG_QUALITY, outputStream)
                         outputStream.flush()
                     }
                 }
@@ -265,8 +265,8 @@ object StorageUtil {
         return UPLOAD_DIR_PREFIX + System.currentTimeMillis()
     }
 
-    private fun getNewPhotoFileName(): String {
-        return PHOTO_FILE_PREFIX + System.currentTimeMillis() + EXTENSION_JPEG
+    private fun getNewPhotoFileName(extension: String): String {
+        return PHOTO_FILE_PREFIX + System.currentTimeMillis() + extension
     }
 
     @WorkerThread
@@ -306,7 +306,8 @@ object StorageUtil {
     }
 
     const val THUMB_PREFIX = "thumbnail_"
-    private const val EXTENSION_JPEG = ".jpg"
+    private const val EXTENSION_JPEG    = ".jpg"
+    private const val EXTENSION_PNG     = ".png"
 
     const val FIRST_THUMBNAIL_FILENAME = "${THUMB_PREFIX}00$EXTENSION_JPEG"
 
@@ -317,8 +318,9 @@ object StorageUtil {
     private const val UPLOAD_MAX_WIDTH = 512
     private const val UPLOAD_MAX_HEIGHT = 512
 
-    private const val THUMBNAIL_JPEG_QUALITY = 70
-    private const val UPLOAD_JPEG_QUALITY = 80
+    private const val THUMBNAIL_JPEG_QUALITY    = 70
+    private const val UPLOAD_JPEG_QUALITY       = 80
+    private const val UPLOAD_PNG_QUALITY        = 80
 
     private const val DEFAULT_BUFF_SIZE = 1024
 

@@ -26,10 +26,10 @@
         app:constraint_referenced_ids="view_bottom_sheet_handle"/>
 
     <TextView android:id="@+id/tv_title_1"
-        style="@style/TextStyle.Medium.Bold"
+        style="@style/TextStyle.Small.Bold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="@dimen/inset_large_medium"
+        android:padding="@dimen/inset_large"
         android:text="Choose a payment method"
         android:textColor="@color/signal_inverse_primary"
         app:layout_constraintStart_toStartOf="parent"

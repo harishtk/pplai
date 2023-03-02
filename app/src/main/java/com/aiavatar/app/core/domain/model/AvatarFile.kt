@@ -10,4 +10,5 @@ data class AvatarFile(
     var id: Long? = null
     var downloadedAt: Long? = null
     var downloadedSize: Int? = null
+    var thumbnail: String? = null
 }

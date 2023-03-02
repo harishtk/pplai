@@ -97,6 +97,9 @@ class SettingsFragment : Fragment() {
                     1 -> {
                         gotoFeedback()
                     }
+                    2 -> {
+                        openWebPage(SUPPORT_URL)
+                    }
                     4 -> {
                         gotoDeleteAccount()
                     }
@@ -226,6 +229,7 @@ class SettingsFragment : Fragment() {
     companion object {
         private const val FAQ_URL = "https://aiavatars.ai/#FAQ"
         private const val LANDING_URL = "https://aiavatars.ai"
+        private const val SUPPORT_URL = "https://aiavatars.ai/support"
 
         private val MARKET_URI: String = "market://details?id=${BuildConfig.APPLICATION_ID}"
     }

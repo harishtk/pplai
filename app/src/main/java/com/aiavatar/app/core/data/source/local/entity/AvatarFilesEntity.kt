@@ -51,6 +51,9 @@ data class AvatarFilesEntity(
 
     @ColumnInfo("downloaded_size")
     var downloadedSize: Int? = null
+
+    @ColumnInfo("thumbnail")
+    var thumbnail: String? = null
 }
 
 fun AvatarFilesEntity.toAvatarFile(): AvatarFile {
@@ -78,6 +81,7 @@ fun AvatarFilesEntity.toModelAvatar(): ModelAvatar {
         it._id = _id
         it.downloadedAt = downloadedAt
         it.downloadedSize = downloadedSize
+        it.thumbnail = thumbnail
     }
 }
 
@@ -91,6 +95,7 @@ fun AvatarFile.toModelAvatar(): ModelAvatar {
     ).also {
         it.downloadedAt = downloadedAt
         it.downloadedSize = downloadedSize
+        it.thumbnail = thumbnail
     }
 }
 
@@ -105,6 +110,7 @@ fun AvatarFile.toEntity(): AvatarFilesEntity {
         it._id = id
         it.downloadedAt = downloadedAt
         it.downloadedSize = downloadedSize
+        it.thumbnail = thumbnail
     }
 }
 
@@ -120,14 +126,15 @@ object AvatarFilesTable {
     const val name = AppDatabase.TABLE_AVATAR_FILES
 
     object Columns {
-        const val ID = "id"
-        const val MODEL_ID = "model_id"
-        const val REMOTE_FILE = "remote_file"
-        const val LOCAL_URI = "local_uri"
-        const val DOWNLOADED = "downloaded"
-        const val PROGRESS = "progress"
-        const val DOWNLOADED_AT = "downloaded_at"
-        const val DOWNLOADED_SIZE = "downloaded_size"
+        const val ID                        = "id"
+        const val MODEL_ID                  = "model_id"
+        const val REMOTE_FILE               = "remote_file"
+        const val LOCAL_URI                 = "local_uri"
+        const val DOWNLOADED                = "downloaded"
+        const val PROGRESS                  = "progress"
+        const val DOWNLOADED_AT             = "downloaded_at"
+        const val DOWNLOADED_SIZE           = "downloaded_size"
+        const val THUMBNAIL                 = "thumbnail"
     }
 
 }
