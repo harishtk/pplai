@@ -166,7 +166,7 @@ class FeedbackFragment : Fragment() {
             }
             Timber.d("Slider: lastSlide = $lastSlideValue")
         }
-        slider.value = lastSlideValue
+        setup(feedbackStateList[1])
 
         val loadStateFlow = uiState.map { it.loadState }
             .distinctUntilChangedBy { it.action }

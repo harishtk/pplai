@@ -129,7 +129,8 @@
                     android:valueFrom="0.0"
                     android:valueTo="1.0"
                     app:labelBehavior="gone"
-                    android:contentDescription="Feedback"
+                    app:thumbColor="@color/core_white"
+                    android:contentDescription="@string/content_description_feedback"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
@@ -141,7 +142,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:barrierDirection="top"
-                    app:constraint_referenced_ids="ed_experience,ed_character_counter,btn_next,tv_maybe_later,chip_container_title,chip_list_view"/>
+                    app:constraint_referenced_ids="ed_experience,ed_character_counter,chip_container_title,chip_list_view"/>
 
                 <TextView android:id="@+id/chip_container_title"
                     style="@style/TextStyle.VerySmall"

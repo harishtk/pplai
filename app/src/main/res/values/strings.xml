@@ -112,6 +112,34 @@
     <string name="write_your_experience">Write Your Experience</string>
     <string name="content_description_feedback_emoction">Feedback emoction</string>
     <string name="feedback">Feedback</string>
+    <string name="content_description_feedback">Feedback</string>
+
+    <string name="delete_my_account">Delete my Account</string>
+    <string name="delete_account_description_1"><![CDATA[The account deletion process will take place after 7 days. Until that, the data associated with your account, will not be instantly removed from AI Avatar.  At this time, if you want, you can easily retrieve your account by signing in.]]>
+    </string>
+    <string name="delete_account_title_1">Please note that, deleting your account will lead to</string>
+    <string-array name="delete_account_pt_entries">
+        <item>Permanent removal of your account from AI Avatar.</item>
+        <item>Permanently erase all your history associated with AI Avatar</item>
+        <item>Permanently delete all your text, media content in AI Avatar</item>
+    </string-array>
+    <string name="delete_account_pt_1">Permanent removal of your account from AI Avatar.</string>
+    <string name="delete_account_pt_2">Permanently erase all your history associated with AI Avatar</string>
+    <string name="delete_account_pt_3">Permanently delete all your text, media content in AI Avatar</string>
+    <string name="delete_account_otp_title">To delete your account, You need to verify your email with OTP</string>
+    <string name="delete_account_consent_1">Deleting your account will completely remove your profile, stories posted, highlights, reactions, comments and your followers from AI Avatar platform. Kindly ensure this and proceed with yourdeleting process.</string>
+    <string name="delete_account_questionnaire_title">Why do you delete AI Avatar account?</string>
+    <string name="delete_account_questionnaire_opt_1">Privacy concerns</string>
+    <string name="delete_account_questionnaire_opt_2">Poor app UI &amp; UX</string>
+    <string name="delete_account_questionnaire_opt_3">Other troubles in using the app</string>
+    <string name="delete_account_questionnaire_opt_4">It\'s too distracting one</string>
+    <string-array name="delete_account_questionnaire_opts">
+        <item>Privacy concerns</item>
+        <item>Poor app UI &amp; UX</item>
+        <item>Other troubles in using the app</item>
+        <item>It\'s too distracting one</item>
+    </string-array>
+    <string name="optional_write_your_experience">Write your Experience (Optional)</string>
 
     <plurals name="hours_ago">
         <item quantity="one">@string/hours_single</item>

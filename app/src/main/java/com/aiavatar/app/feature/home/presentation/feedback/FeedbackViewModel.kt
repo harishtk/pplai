@@ -1,6 +1,5 @@
 package com.aiavatar.app.feature.home.presentation.feedback
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aiavatar.app.commons.util.Result
@@ -30,16 +29,15 @@ class FeedbackViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     @ApplicationCoroutineScope
     private val externalScope: CoroutineScope,
-    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<FeedbackState>(FeedbackState())
+    private val _uiState = MutableStateFlow(FeedbackState())
     val uiState: StateFlow<FeedbackState> = _uiState.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<FeedbackUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    fun errorShown(e: Exception) {
+    fun errorShown(@Suppress("UNUSED_PARAMETER") e: Exception) {
         _uiState.update { state ->
             state.copy(
                 exception = null,
@@ -54,7 +52,7 @@ class FeedbackViewModel @Inject constructor(
         comment: String
     ) {
         val request = FeedbackRequest(
-            rating = rating.toString(),
+            rating = rating,
             tags = tags,
             comment = comment,
         )
@@ -99,6 +97,7 @@ class FeedbackViewModel @Inject constructor(
         }
     }
 
+    @Suppress("SameParameterValue")
     private fun setLoadingInternal(
         loadType: LoadType,
         loadState: LoadState
