@@ -236,4 +236,9 @@
         android:name="com.aiavatar.app.feature.home.presentation.deleteaccount.DeleteAccountFragment"
         android:label="Delete Account"
         tools:layout="@layout/fragment_delete_account" />
+
+    <fragment android:id="@+id/maintenance"
+        android:name="com.aiavatar.app.feature.home.presentation.maintenance.MaintenanceFragment"
+        android:label="Maintenance"
+        tools:layout="@layout/fragment_maintenance" />
 </navigation>

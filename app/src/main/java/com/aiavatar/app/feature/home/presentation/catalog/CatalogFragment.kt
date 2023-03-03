@@ -258,6 +258,11 @@ class CatalogFragment : Fragment() {
                     navigate(R.id.web_view, args, navOpts)
                 }
             }*/
+            safeCall {
+                findNavController().apply {
+                    navigate(R.id.maintenance, null, defaultNavOptsBuilder().build())
+                }
+            }
         }
 
         retryButton.setOnClickListener { viewModel.refresh(true) }
