@@ -142,6 +142,7 @@ class FeedbackFragment : Fragment() {
             }
         }
 
+        slider.setCustomThumbDrawable(R.drawable.fancly_slider_thumb)
         slider.addOnChangeListener { _, slideValue, fromUser ->
             Timber.d("Slider: delta = $slideValue")
             when {

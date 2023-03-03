@@ -47,6 +47,18 @@
         app:layout_constraintBottom_toBottomOf="parent"
         tools:text="My " />
 
+    <ImageView android:id="@+id/iv_more_title_options"
+        android:layout_width="@dimen/default_icon_size"
+        android:layout_height="@dimen/default_icon_size"
+        android:src="@drawable/ic_baseline_chevron_down_24"
+        app:tint="@color/signal_inverse_primary"
+        android:contentDescription="@string/content_description_model_options"
+        app:layout_constraintStart_toEndOf="@id/toolbar_title"
+        app:layout_constraintTop_toTopOf="@id/toolbar_title"
+        app:layout_constraintBottom_toBottomOf="@id/toolbar_title"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/right_barrier"
         android:layout_width="wrap_content"

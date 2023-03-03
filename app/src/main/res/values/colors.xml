@@ -61,4 +61,6 @@
     <color name="chip_stroke_color">#464646</color>
 
     <color name="err_color_primary">#FF8787</color>
+    <color name="slider_thumb_track_color_active">#00B2FF</color>
+    <color name="slider_thumb_track_color_inactive">#979797</color>
 </resources>

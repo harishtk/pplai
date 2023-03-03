@@ -68,9 +68,6 @@ import javax.inject.Inject
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
-/**
- * TODO: -done- show download progress
- */
 @AndroidEntryPoint
 class ModelListFragment : Fragment() {
 
@@ -114,12 +111,10 @@ class ModelListFragment : Fragment() {
                         }
                         map[Constant.PERMISSION_DENIED]?.let {
                             requireContext().showToast("Storage permission is required to download photos")
-                            // TODO: show storage rationale
                             showStoragePermissionRationale(false)
                         }
                         map[Constant.PERMISSION_PERMANENTLY_DENIED]?.let {
                             requireContext().showToast("Storage permission is required to download photos")
-                            // TODO: show storage rationale permanent
                             showStoragePermissionRationale(openSettings = true)
                         }
                     }
@@ -308,10 +303,8 @@ class ModelListFragment : Fragment() {
         icDownload.setOnClickListener {
             val modelData = uiState.value.modelData ?: return@setOnClickListener
             if (modelData.paid) {
-                // TODO: -done- get folder name
                 if (modelData.renamed) {
                     analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_DOWNLOAD_CLICK)
-                    // TODO: -done- if model is renamed directly save the photos
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         if (!checkStoragePermission()) {
                             askStoragePermission()
@@ -329,7 +322,6 @@ class ModelListFragment : Fragment() {
                     }
                 }
             } else {
-                // TODO: goto payment
                 gotoPlans(modelData.id)
                 analyticsLogger.logEvent(Analytics.Event.MODEL_LIST_RECREATE_CLICK)
             }
@@ -360,9 +352,10 @@ class ModelListFragment : Fragment() {
 
         retryButton.setOnClickListener { viewModel.refresh() }
 
-        toolbarIncluded.toolbarTitle.setOnClickListener {
-            showModelOptions(it)
-        }
+        val modelOptionsClickListener =
+            View.OnClickListener { showModelOptions(anchor = toolbarIncluded.toolbarTitle) }
+        toolbarIncluded.toolbarTitle.setOnClickListener(modelOptionsClickListener)
+        toolbarIncluded.ivMoreTitleOptions.setOnClickListener(modelOptionsClickListener)
     }
 
     private fun FragmentModelListBinding.bindDownloadProgress(
@@ -438,8 +431,10 @@ class ModelListFragment : Fragment() {
         }
 
         toolbarIncluded.toolbarNavigationIcon.setOnClickListener { findNavController().navigateUp() }
+        toolbarIncluded.ivMoreTitleOptions.isVisible = true
     }
 
+    @Deprecated("unimplemented")
     private fun checkFolderName(name: String) {
 
     }

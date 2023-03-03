@@ -356,7 +356,7 @@ class ModelDetailFragment : Fragment() {
 
     private fun FragmentModelDetailBinding.bindClick(
         uiState: StateFlow<ModelDetailState>,
-        uiAction: (ModelDetailUiAction) -> Unit
+        uiAction: (ModelDetailUiAction) -> Unit,
     ) {
 
         icDownload.setOnClickListener {
@@ -392,9 +392,10 @@ class ModelDetailFragment : Fragment() {
             }
         }
 
-        toolbarIncluded.toolbarTitle.setOnClickListener {
-            showModelOptions(it)
-        }
+        val modelOptionsClickListener =
+            View.OnClickListener { showModelOptions(anchor = toolbarIncluded.toolbarTitle) }
+        toolbarIncluded.toolbarTitle.setOnClickListener(modelOptionsClickListener)
+        toolbarIncluded.ivMoreTitleOptions.setOnClickListener(modelOptionsClickListener)
     }
 
     private fun FragmentModelDetailBinding.bindToolbar(uiState: StateFlow<ModelDetailState>) {
@@ -422,11 +423,12 @@ class ModelDetailFragment : Fragment() {
             }
             analyticsLogger.logEvent(Analytics.Event.MODEL_DETAIL_BACK_BTN_CLICK)
         }
+        toolbarIncluded.ivMoreTitleOptions.isVisible = true
     }
 
     private fun FragmentModelDetailBinding.bindDownloadProgress(
         uiState: StateFlow<ModelDetailState>,
-        uiAction: (ModelDetailUiAction) -> Unit
+        uiAction: (ModelDetailUiAction) -> Unit,
     ) {
         val downloadProgressFlow = uiState.map { it.currentDownloadProgress }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -447,7 +449,7 @@ class ModelDetailFragment : Fragment() {
 
     private fun FragmentModelDetailBinding.bindShareProgress(
         uiState: StateFlow<ModelDetailState>,
-        uiAction: (ModelDetailUiAction) -> Unit
+        uiAction: (ModelDetailUiAction) -> Unit,
     ) {
         val loadStateFlow = uiState.map { it.shareLoadState }
             .distinctUntilChangedBy { it.refresh }
@@ -467,7 +469,7 @@ class ModelDetailFragment : Fragment() {
     }
 
     private fun FragmentModelDetailBinding.handleDownloadComplete(
-        savedUri: Uri
+        savedUri: Uri,
     ) {
         sdkBelowQ {
             MediaScannerConnection.scanFile(
@@ -511,7 +513,7 @@ class ModelDetailFragment : Fragment() {
 
     private fun showEditModelNameDialog(
         modelName: String,
-        successContinuation: () -> Unit
+        successContinuation: () -> Unit,
     ) {
         EditFolderNameDialog(previousModelName = modelName) { /* onSave */ typedName ->
             if (typedName.isBlank()) {
@@ -722,7 +724,12 @@ class AvatarScrollAdapter(
         private val binding: ItemScrollerListBinding,
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(listAvatar: ModelAvatar, selected: Boolean, glide: RequestManager, onCardClick: (position: Int) -> Unit) =
+        fun bind(
+            listAvatar: ModelAvatar,
+            selected: Boolean,
+            glide: RequestManager,
+            onCardClick: (position: Int) -> Unit,
+        ) =
             with(binding) {
                 title.text = listAvatar.remoteFile
                 glide.load(listAvatar.remoteFile)
@@ -780,7 +787,10 @@ class AvatarScrollAdapter(
                 newItem: SelectableAvatarUiModel,
             ): Boolean {
                 return (oldItem is SelectableAvatarUiModel.Item && newItem is SelectableAvatarUiModel.Item &&
-                        modelAvatarEquals(oldItem.modelAvatar, newItem.modelAvatar) && oldItem.selected == newItem.selected)
+                        modelAvatarEquals(
+                            oldItem.modelAvatar,
+                            newItem.modelAvatar
+                        ) && oldItem.selected == newItem.selected)
             }
 
             override fun getChangePayload(

@@ -140,6 +140,8 @@
         <item>It\'s too distracting one</item>
     </string-array>
     <string name="optional_write_your_experience">Write your Experience (Optional)</string>
+    <string name="content_description_model_options">Model options</string>
+    <string name="server_maintenance_des_1">We apologize for the inconvenience, our site is currently undergoing maintenance.</string>
 
     <plurals name="hours_ago">
         <item quantity="one">@string/hours_single</item>
