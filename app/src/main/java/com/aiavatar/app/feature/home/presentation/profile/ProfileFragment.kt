@@ -25,6 +25,7 @@ import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
 import com.aiavatar.app.databinding.FragmentProfileBinding
 import com.aiavatar.app.databinding.ItemAvatarStatusBinding
 import com.aiavatar.app.databinding.ItemModelListBinding
@@ -36,6 +37,9 @@ import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.core.URLProvider
+import com.bumptech.glide.RequestManager
+import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
@@ -152,7 +156,10 @@ class ProfileFragment : Fragment() {
             viewModel.refresh(true)
         }
 
-        val adapter = ModelListAdapter(callback)
+        val adapter = ModelListAdapter(
+            glide = initGlide(),
+            callback = callback
+        )
 
         val loadStateFlow = uiState.map { it.loadState }
             .distinctUntilChanged()
@@ -435,6 +442,12 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private fun initGlide(): RequestManager {
+        val options: RequestOptions = RequestOptions()
+        return Glide.with(this)
+            .setDefaultRequestOptions(options)
+    }
+
     override fun onStart() {
         super.onStart()
         if (Build.VERSION.SDK_INT > 23) {
@@ -509,6 +522,7 @@ class ProfileFragment : Fragment() {
 }
 
 class ModelListAdapter(
+    private val glide: RequestManager,
     private val callback: Callback,
 ) : ListAdapter<ProfileListUiModel, ViewHolder>(DIFF_CALLBACK) {
 
@@ -528,7 +542,7 @@ class ModelListAdapter(
             is ProfileListUiModel.Item -> {
                 when (holder) {
                     is ModelListAdapter.ItemViewHolder -> {
-                        holder.bind(data = model, callback)
+                        holder.bind(data = model, glide, callback)
                     }
                     is AvatarStatusViewHolder -> {
                         holder.bind(data = model, callback)
@@ -581,14 +595,25 @@ class ModelListAdapter(
         private val binding: ItemModelListBinding,
     ) : ViewHolder(binding.root) {
 
-        fun bind(data: ProfileListUiModel.Item, callback: Callback) = with(binding) {
+        fun bind(data: ProfileListUiModel.Item, glide: RequestManager, callback: Callback) = with(binding) {
             title.text = data.modelListWithModel.model?.name
             description.text = "${data.modelListWithModel.model?.totalCount} creations"
-            Glide.with(imageView)
-                .load(data.modelListWithModel.model?.latestImage)
-                .placeholder(R.drawable.loading_animation)
-                .error(R.color.white)
-                .into(imageView)
+
+            val imageUrl: String = data.modelListWithModel.model.let { modelData ->
+                if (modelData?.thumbnail?.isNotBlank() == true) {
+                    URLProvider.avatarThumbUrl(modelData.thumbnail)!!
+                } else {
+                    modelData?.latestImage.nullAsEmpty()
+                }
+            }
+
+            imageView.apply {
+                newGlideBuilder(glide)
+                    .originalImage(imageUrl)
+                    .placeholder(R.drawable.loading_animation)
+                    .error(R.color.white)
+                    .start()
+            }
 
             // toggleSelection(selected)
 

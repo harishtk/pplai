@@ -28,6 +28,9 @@ data class ModelEntity(
 ) {
     @ColumnInfo("status_id")
     var statusId: String? = null
+
+    @ColumnInfo("thumbnail")
+    var thumbnail: String? = null
 }
 
 fun ModelData.toEntity(): ModelEntity {
@@ -41,6 +44,7 @@ fun ModelData.toEntity(): ModelEntity {
         updatedAt = updatedAt
     ).also {
         it.statusId = statusId
+        it.thumbnail = thumbnail
     }
 }
 
@@ -55,6 +59,7 @@ fun ModelEntity.toModelData(): ModelData {
         updatedAt = updatedAt
     ).also {
         it.statusId = statusId
+        it.thumbnail = thumbnail
     }
 }
 
@@ -70,5 +75,6 @@ object ModelEntityTable {
         const val RENAMED       = "renamed"
         const val STATUS_ID     = "status_id"
         const val UPDATED_AT    = "updated_at"
+        const val THUMBNAIL     = "thumbnail"
     }
 }

@@ -38,6 +38,7 @@ import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
@@ -48,6 +49,7 @@ import com.aiavatar.app.feature.home.presentation.util.CatalogPagerAdapter
 import com.aiavatar.app.work.WorkUtil
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.core.URLProvider
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.RequestOptions
 import dagger.hilt.android.AndroidEntryPoint
@@ -732,6 +734,20 @@ class AvatarScrollAdapter(
         ) =
             with(binding) {
                 title.text = listAvatar.remoteFile
+
+                val imageUrl = if (listAvatar.thumbnail?.isBlank() == true) {
+                    listAvatar.remoteFile
+                } else {
+                    URLProvider.avatarThumbUrl(listAvatar.thumbnail)
+                }
+
+                previewImage.apply {
+                    newGlideBuilder(glide)
+                        .originalImage(imageUrl)
+                        .placeholder(R.drawable.loading_animation)
+                        .error(R.color.grey_900)
+                        .start()
+                }
                 glide.load(listAvatar.remoteFile)
                     .placeholder(R.drawable.loading_animation)
                     .error(R.color.white)

@@ -67,6 +67,7 @@ fun AvatarFilesEntity.toAvatarFile(): AvatarFile {
         it.id = _id
         it.downloadedAt = downloadedAt
         it.downloadedSize = downloadedSize
+        it.thumbnail = thumbnail
     }
 }
 

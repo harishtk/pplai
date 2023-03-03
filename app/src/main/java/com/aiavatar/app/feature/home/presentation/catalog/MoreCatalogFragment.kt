@@ -18,6 +18,7 @@ import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.FragmentMoreCatalogBinding
@@ -27,6 +28,8 @@ import com.aiavatar.app.safeCall
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.bumptech.glide.RequestManager
+import com.bumptech.glide.request.RequestOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -78,7 +81,9 @@ class MoreCatalogFragment : Fragment() {
         uiAction: (MoreCatalogUiAction) -> Unit
     ) {
 
-        val adapter = MoreCatalogScrollAdapter { clickedPosition ->
+        val adapter = MoreCatalogScrollAdapter(
+            glide = initGlide()
+        ) { clickedPosition ->
             // Noop
         }
         avatarScrollerList.adapter = adapter
@@ -150,6 +155,12 @@ class MoreCatalogFragment : Fragment() {
         }
     }
 
+    private fun initGlide(): RequestManager {
+        val options: RequestOptions = RequestOptions()
+        return Glide.with(this)
+            .setDefaultRequestOptions(options)
+    }
+
     companion object {
         const val ARG_CATEGORY_ID = "com.aiavatar.app.args.CATEGORY_ID"
         const val ARG_CATALOG_NAME = "com.aiavatar.app.args.CATALOG_NAME"
@@ -157,6 +168,7 @@ class MoreCatalogFragment : Fragment() {
 }
 
 class MoreCatalogScrollAdapter(
+    private val glide: RequestManager,
     private val onCardClick: (position: Int) -> Unit = { }
 ) : ListAdapter<MoreCatalogUiModel, MoreCatalogScrollAdapter.ItemViewHolder>(DIFF_CALLBACK) {
 
@@ -167,7 +179,7 @@ class MoreCatalogScrollAdapter(
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val model = getItem(position)
         model as MoreCatalogUiModel.Item
-        holder.bind(model.catalogList, model.selected, onCardClick)
+        holder.bind(model.catalogList, model.selected, glide, onCardClick)
     }
 
     override fun onBindViewHolder(
@@ -202,13 +214,17 @@ class MoreCatalogScrollAdapter(
         private val binding: ItemMoreCatalogBinding
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(preset: CatalogList, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
+        fun bind(preset: CatalogList, selected: Boolean, glide: RequestManager, onCardClick: (position: Int) -> Unit) = with(binding) {
             title.text = preset.imageName
-            Glide.with(imageView)
-                .load(URLProvider.avatarUrl(preset.imageName))
-                .placeholder(R.drawable.loading_animation)
-                .error(R.color.white)
-                .into(imageView)
+
+            imageView.apply {
+                newGlideBuilder(glide)
+                    // .thumbnail()
+                    .originalImage(URLProvider.avatarUrl(preset.imageName))
+                    .placeholder(R.drawable.loading_animation)
+                    .error(R.color.white)
+                    .start()
+            }
 
             // toggleSelection(selected)
 

@@ -9,12 +9,15 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.R
 import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
+import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.LargePresetPreviewBinding
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
 import com.aiavatar.app.feature.home.presentation.catalog.SelectableAvatarUiModel
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
+import timber.log.Timber
 
 class CatalogPagerAdapter(
     private val context: Context,
@@ -69,11 +72,16 @@ class CatalogPagerAdapter(
             val radius = binding.root.resources.getDimensionPixelSize(R.dimen.default_corner_size)
             title.text = listAvatar.remoteFile
 
-            glide.load(listAvatar.remoteFile)
-                .placeholder(R.color.transparent_black)
-                .error(R.color.white)
-                // .transform(RoundedCornersTransformation(radius, 0, RoundedCornersTransformation.CornerType.ALL))
-                .into(previewImage)
+            previewImage.apply {
+                newGlideBuilder(glide)
+                    .thumbnail(
+                        URLProvider.avatarThumbUrl(listAvatar.thumbnail)
+                    )
+                    .originalImage(listAvatar.remoteFile)
+                    .placeholder(R.drawable.loading_animation)
+                    .error(R.color.grey_900)
+                    .start()
+            }
 
             // toggleSelection(selected)
 

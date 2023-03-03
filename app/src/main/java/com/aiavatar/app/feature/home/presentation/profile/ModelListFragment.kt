@@ -705,14 +705,15 @@ class ModelListAdapter2(
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
         fun bind(data: ModelListUiModel2.AvatarItem, glide: RequestManager, callback: Callback, showWaterMark: Boolean) = with(binding) {
+            val imageUrl = if (data.avatar.thumbnail?.isBlank() == true) {
+                data.avatar.remoteFile
+            } else {
+                URLProvider.avatarThumbUrl(data.avatar.thumbnail)
+            }
+
             view1.apply {
                 newGlideBuilder(glide)
-                    .thumbnail(
-                        URLProvider.avatarThumbUrl(data.avatar.thumbnail).also {
-                            Timber.d("Thumbnail: $it")
-                        }
-                    )
-                    .originalImage(data.avatar.remoteFile)
+                    .originalImage(imageUrl)
                     .placeholder(R.drawable.loading_animation)
                     .error(R.color.grey_900)
                     .start()

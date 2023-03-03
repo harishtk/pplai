@@ -519,10 +519,15 @@ class AvatarResultAdapter(
 
         fun bind(data: AvatarResultUiModel.AvatarItem, glide: RequestManager, callback: Callback, showWaterMark: Boolean) =
             with(binding) {
+
+                val imageUrl = if (data.avatar.thumbnail?.isBlank() == true) {
+                    data.avatar.remoteFile
+                } else {
+                    URLProvider.avatarThumbUrl(data.avatar.thumbnail)
+                }
                 view1.apply {
                     newGlideBuilder(glide)
-                        .thumbnail(URLProvider.avatarThumbUrl(data.avatar.thumbnail))
-                        .originalImage(data.avatar.remoteFile)
+                        .originalImage(imageUrl)
                         .placeholder(R.drawable.loading_animation)
                         .error(R.color.grey_900)
                         .start()

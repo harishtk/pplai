@@ -2,6 +2,7 @@ package com.aiavatar.app.core
 
 import com.aiavatar.app.BuildConfig
 import org.jetbrains.annotations.Contract
+import timber.log.Timber
 
 object URLProvider {
 
@@ -32,7 +33,7 @@ object URLProvider {
             Env.DEV -> when (source) {
                 URLSource.AVATAR -> {
                     when (sourceCategory) {
-                        SourceCategory.THUMBNAIL -> "$baseUrl/aiAvatar/"
+                        SourceCategory.THUMBNAIL -> "$baseUrl/thumbnail/"
                         SourceCategory.ORIGINAL -> "$baseUrl/aiAvatar/"
                     }
                 }
@@ -40,7 +41,7 @@ object URLProvider {
             Env.PROD, Env.INTERNAL -> when (source) {
                 URLSource.AVATAR -> {
                     when (sourceCategory) {
-                        SourceCategory.THUMBNAIL -> "$baseUrl/aiAvatar/"
+                        SourceCategory.THUMBNAIL -> "$baseUrl/thumbnail/"
                         SourceCategory.ORIGINAL -> "$baseUrl/aiAvatar/"
                     }
                 }

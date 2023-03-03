@@ -219,6 +219,7 @@ class AvatarStatusFragment : Fragment() {
                             dismissUploadStatusNotification()
                         }
                         ModelStatus.AVATAR_PROCESSING -> {
+                            etaCountdownView.stopCountDown()
                             description.text = "Generating your awesome photos!"
 
                             logo.isVisible = false

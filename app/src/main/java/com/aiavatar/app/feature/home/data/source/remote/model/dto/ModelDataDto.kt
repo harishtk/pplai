@@ -20,7 +20,10 @@ data class ModelDataDto(
     val renamed: Boolean,
     @SerializedName("updatedAt")
     val updatedAt: String
-)
+) {
+    @SerializedName("thumbnail")
+    var thumbnail: String? = null
+}
 
 fun ModelDataDto.toModelData(statusId: String): ModelData {
     return ModelData(
@@ -33,5 +36,6 @@ fun ModelDataDto.toModelData(statusId: String): ModelData {
         updatedAt = updatedAt
     ).also {
         it.statusId = statusId
+        it.thumbnail = thumbnail
     }
 }

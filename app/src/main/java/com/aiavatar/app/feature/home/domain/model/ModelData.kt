@@ -10,4 +10,5 @@ data class ModelData(
     val updatedAt: String
 ) {
     var statusId: String? = null
+    var thumbnail: String? = null
 }

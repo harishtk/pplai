@@ -36,6 +36,7 @@ import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.SimpleDialog
 import com.aiavatar.app.commons.util.HapticUtil
 import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.disposeGlideLoad
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
 import com.aiavatar.app.commons.util.recyclerview.Recyclable
 import com.aiavatar.app.databinding.FragmentAvatarPreviewBinding
 import com.aiavatar.app.databinding.ItemScrollerListBinding
@@ -45,9 +46,12 @@ import com.aiavatar.app.feature.home.presentation.dialog.EditFolderNameDialog
 import com.aiavatar.app.feature.home.presentation.util.AutoCenterLayoutManger
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.FragmentModelDetailBinding
 import com.aiavatar.app.feature.home.presentation.catalog.ModelDetailUiEvent
 import com.aiavatar.app.viewmodels.UserViewModel
+import com.bumptech.glide.RequestManager
+import com.bumptech.glide.request.RequestOptions
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
@@ -178,7 +182,10 @@ class AvatarPreviewFragment : Fragment() {
             }
         }
 
-        val catalogPresetAdapter = AvatarPreviewPagerAdapter(requireContext())
+        val catalogPresetAdapter = AvatarPreviewPagerAdapter(
+            context = requireContext(),
+            glide = initGlide(),
+        )
 
         val pageTransformer = CompositePageTransformer().apply {
             addTransformer(MarginPageTransformer(80))
@@ -257,7 +264,9 @@ class AvatarPreviewFragment : Fragment() {
             }
         }
 
-        val scrollerAdapter = AvatarScrollAdapter { clickedPosition ->
+        val scrollerAdapter = AvatarScrollAdapter(
+            glide = initGlide()
+        ) { clickedPosition ->
             if (previousPosition != clickedPosition) {
                 HapticUtil.createOneShot(requireContext())
             }
@@ -570,6 +579,12 @@ class AvatarPreviewFragment : Fragment() {
         }
     }
 
+    private fun initGlide(): RequestManager {
+        val options: RequestOptions = RequestOptions()
+        return Glide.with(this@AvatarPreviewFragment)
+            .setDefaultRequestOptions(options)
+    }
+
     override fun onResume() {
         super.onResume()
         if (isSettingsLaunched) {
@@ -588,6 +603,7 @@ class AvatarPreviewFragment : Fragment() {
 }
 
 class AvatarScrollAdapter(
+    private val glide: RequestManager,
     private val onCardClick: (position: Int) -> Unit = { },
 ) : ListAdapter<SelectableAvatarUiModel, AvatarScrollAdapter.ItemViewHolder>(DIFF_CALLBACK) {
 
@@ -598,7 +614,7 @@ class AvatarScrollAdapter(
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val model = getItem(position)
         model as SelectableAvatarUiModel.Item
-        holder.bind(model.modelAvatar, model.selected, onCardClick)
+        holder.bind(model.modelAvatar, model.selected, glide, onCardClick)
     }
 
     override fun onBindViewHolder(
@@ -636,9 +652,20 @@ class AvatarScrollAdapter(
         private val binding: ItemScrollerListBinding,
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(listAvatar: ModelAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) =
+        fun bind(listAvatar: ModelAvatar, selected: Boolean, glide: RequestManager, onCardClick: (position: Int) -> Unit) =
             with(binding) {
                 title.text = listAvatar.remoteFile
+
+                previewImage.apply {
+                    newGlideBuilder(glide)
+                        .thumbnail(
+                            URLProvider.avatarThumbUrl(listAvatar.thumbnail)
+                        )
+                        .originalImage(listAvatar.remoteFile)
+                        .placeholder(R.drawable.loading_animation)
+                        .error(R.color.grey_900)
+                        .start()
+                }
                 Glide.with(previewImage)
                     .load(listAvatar.remoteFile)
                     .placeholder(R.drawable.loading_animation)
@@ -717,6 +744,7 @@ class AvatarScrollAdapter(
 
 class AvatarPreviewPagerAdapter(
     private val context: Context,
+    private val glide: RequestManager,
     private val onCardClick: (position: Int) -> Unit = { }
 ): ListAdapter<SelectableAvatarUiModel, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -727,7 +755,7 @@ class AvatarPreviewPagerAdapter(
         val model = getItem(position)
         if (holder is ItemViewHolder) {
             model as SelectableAvatarUiModel.Item
-            holder.bind(model.modelAvatar, model.selected, onCardClick)
+            holder.bind(model.modelAvatar, model.selected, glide, onCardClick)
         }
     }
 
@@ -763,13 +791,19 @@ class AvatarPreviewPagerAdapter(
         private val binding: LargePresetPreviewBinding
     ) : RecyclerView.ViewHolder(binding.root), Recyclable {
 
-        fun bind(listAvatar: ModelAvatar, selected: Boolean, onCardClick: (position: Int) -> Unit) = with(binding) {
+        fun bind(listAvatar: ModelAvatar, selected: Boolean, glide: RequestManager, onCardClick: (position: Int) -> Unit) = with(binding) {
             title.text = listAvatar.remoteFile
-            Glide.with(previewImage)
-                .load(listAvatar.remoteFile)
-                .placeholder(R.drawable.loading_animation)
-                .error(R.color.white)
-                .into(previewImage)
+
+            previewImage.apply {
+                newGlideBuilder(glide)
+                    .thumbnail(
+                        URLProvider.avatarThumbUrl(listAvatar.thumbnail)
+                    )
+                    .originalImage(listAvatar.remoteFile)
+                    .placeholder(R.drawable.loading_animation)
+                    .error(R.color.grey_900)
+                    .start()
+            }
 
             // toggleSelection(selected)
 

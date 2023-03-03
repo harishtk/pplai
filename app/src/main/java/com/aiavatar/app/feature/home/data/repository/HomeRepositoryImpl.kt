@@ -580,18 +580,7 @@ class HomeRepositoryImpl @Inject constructor(
             )
             when (result) {
                 is Result.Success -> {
-                    val modelAvatarList = result.data.map { listAvatar ->
-                        ModelAvatar(
-                            modelId = getAvatarsRequest.modelId,
-                            remoteFile = listAvatar.imageName,
-                            downloaded = 0,
-                            localUri = "",
-                            progress = 0,
-                        ).also {
-                            it._id = listAvatar.id
-                            it.fileSize = listAvatar.fileSize
-                        }
-                    }
+                    val modelAvatarList = result.data.map { it.toModelAvatar(getAvatarsRequest.modelId) }
                     localDataSource.apply {
                         deleteAllModelAvatars(getAvatarsRequest.modelId)
                         insertAllModelAvatars(modelAvatarList.map(ModelAvatar::toEntity))

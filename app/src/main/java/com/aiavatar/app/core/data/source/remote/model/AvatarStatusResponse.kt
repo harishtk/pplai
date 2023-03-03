@@ -62,6 +62,7 @@ fun AvatarStatusDto.toAvatarFiles(): List<AvatarFile> {
             localUri = "",
         ).also {
             it.id = listAvatar.id
+            it.thumbnail = listAvatar.thumbnail
         }
     }
 }

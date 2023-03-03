@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.feature.home.domain.model.ListAvatar
 import com.aiavatar.app.feature.home.domain.model.ModelAvatar
+import timber.log.Timber
 
 @Entity(tableName = ModelAvatarTable.name)
 data class ModelAvatarEntity(
@@ -38,6 +39,7 @@ data class ModelAvatarEntity(
 }
 
 fun ModelAvatarEntity.toModelAvatar(): ModelAvatar {
+    Timber.tag("Parse.Msg").d("ModelAvatarEntity#toModelAvatar: thumb = $thumbnail")
     return ModelAvatar(
         modelId = modelId,
         remoteFile = remoteFile,
@@ -54,6 +56,7 @@ fun ModelAvatarEntity.toModelAvatar(): ModelAvatar {
 }
 
 fun ModelAvatar.toEntity(): ModelAvatarEntity {
+    Timber.tag("Parse.Msg").d("ModelAvatar#toEntity: thumb = $thumbnail")
     return ModelAvatarEntity(
         modelId = modelId,
         remoteFile = remoteFile,
