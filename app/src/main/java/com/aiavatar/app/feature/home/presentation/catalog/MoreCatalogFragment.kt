@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -13,6 +15,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aiavatar.app.R
+import com.aiavatar.app.VersionCompat
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
@@ -28,6 +31,7 @@ import com.aiavatar.app.safeCall
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.net.NoInternetException
+import com.aiavatar.app.isAtLeastT
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.RequestOptions
 import dagger.hilt.android.AndroidEntryPoint
@@ -74,6 +78,8 @@ class MoreCatalogFragment : Fragment() {
             uiState = viewModel.uiState,
             uiAction = viewModel.accept
         )
+
+        handleBackPressed()
     }
 
     private fun FragmentMoreCatalogBinding.bindState(
@@ -159,6 +165,10 @@ class MoreCatalogFragment : Fragment() {
         val options: RequestOptions = RequestOptions()
         return Glide.with(this)
             .setDefaultRequestOptions(options)
+    }
+
+    private fun handleBackPressed() {
+
     }
 
     companion object {

@@ -84,8 +84,9 @@ class SettingsFragment : Fragment() {
             SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 1, title = "Feedback", R.drawable.ic_feedback_outline, "Tell us something you like", true),
             SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 2, title = "Help & Support", R.drawable.ic_helpline_outline, "Our experts will guide you", true),
             SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 3, title = "About", R.drawable.ic_info_outline, "Some little help", true),
-            // SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 4, title = "Delete my account", R.drawable.ic_info_outline, "Want out? But We will miss you.", true),
-            SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 5, title = "Logout", R.drawable.ic_logout_outline, null, hasMore = false)
+            SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 4, title = "Terms & Conditions", R.drawable.ic_terms_outline, "We understand it may be difficult", true),
+            // SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 5, title = "Delete my account", R.drawable.ic_info_outline, "Want out? But We will miss you.", true),
+            SettingsItem(settingsListType = SettingsListType.SIMPLE, id = 6, title = "Logout", R.drawable.ic_logout_outline, null, hasMore = false)
         )
 
         val settingsCallback = object : SettingsAdapter.Callback {
@@ -101,9 +102,12 @@ class SettingsFragment : Fragment() {
                         openWebPage(SUPPORT_URL)
                     }
                     4 -> {
-                        gotoDeleteAccount()
+                        openWebPage(Constant.TERMS_URL)
                     }
                     5 -> {
+                        gotoDeleteAccount()
+                    }
+                    6 -> {
                         confirmLogout {
                             analyticsLogger.logEvent(Analytics.Event.SETTINGS_LOGOUT_CLICK)
                             analyticsLogger.setUserId(null)
@@ -144,7 +148,8 @@ class SettingsFragment : Fragment() {
                 dialog.dismiss()
             }
         MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialDialog)
-            .setMessage("Are you sure?")
+            .setTitle("Hey wait!")
+            .setMessage("Are you sure to log out?")
             .setPositiveButton("YES", clickListener)
             .setNegativeButton("NO", clickListener)
             .show()

@@ -4,9 +4,12 @@ import androidx.annotation.IdRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.net.ConnectivityManagerLiveData
+import com.aiavatar.app.commons.util.runtimetest.MockApiDataProvider
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.feature.onboard.domain.model.request.AutoLoginRequest
+import com.aiavatar.app.feature.onboard.domain.model.request.CreateCheckRequest
 import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -24,6 +27,7 @@ class SharedViewModel @Inject constructor(
     private val appDatabase: AppDatabase,
     private val connectivityManagerLiveData: ConnectivityManagerLiveData,
     private val accountsRepository: AccountsRepository,
+    private val mockApiDataProvider: MockApiDataProvider,
 ) : ViewModel() {
 
     init {
@@ -85,4 +89,14 @@ class SharedViewModel @Inject constructor(
             replay = 1,
         )
 
+    val createCheckDataFlow = accountsRepository.createCheck(
+        CreateCheckRequest(timestamp = System.currentTimeMillis())
+    )
+        .map { result ->
+            when (result) {
+                is Result.Success -> result.data
+                else -> null
+            }
+        }
+        .conflate() /* We only care 'bout the latest value */
 }

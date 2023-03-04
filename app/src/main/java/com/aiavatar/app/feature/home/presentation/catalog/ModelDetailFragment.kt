@@ -748,10 +748,6 @@ class AvatarScrollAdapter(
                         .error(R.color.grey_900)
                         .start()
                 }
-                glide.load(listAvatar.remoteFile)
-                    .placeholder(R.drawable.loading_animation)
-                    .error(R.color.white)
-                    .into(previewImage)
 
                 toggleSelection(selected)
 

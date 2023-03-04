@@ -213,7 +213,7 @@
                     android:inputType="text|textMultiLine"
                     android:gravity="top"
                     android:hint="@string/write_your_experience"
-                    android:textAppearance="@style/TextStyle.Small"
+                    android:textAppearance="@style/TextStyle.VerySmall"
                     android:textColorHint="@color/text_secondary_alt"
                     android:background="@drawable/bg_outline_curved_secondary"
                     android:overScrollMode="ifContentScrolls"

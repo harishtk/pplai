@@ -59,7 +59,7 @@ class DownloadWorker @AssistedInject constructor(
         = newFixedThreadPoolContext(NUM_THREADS, "Download photos pool")
 
     private val workerContext =
-        backgroundDispatcher.limitedParallelism(8) + SupervisorJob() + coroutineExceptionHandler
+        backgroundDispatcher.limitedParallelism(MAX_PARALLEL_THREADS) + SupervisorJob() + coroutineExceptionHandler
 
     private val workerScope = CoroutineScope(context = workerContext)
 
@@ -368,6 +368,8 @@ class DownloadWorker @AssistedInject constructor(
     }
 
     companion object {
+        private const val MAX_PARALLEL_THREADS: Int = 8
+
         private const val MODEL_ID = "model_id"
         private const val STATUS_ID = "status_id"
         private const val SESSION_ID = "session_id"

@@ -6,10 +6,7 @@ import com.aiavatar.app.commons.util.NetWorkHelper
 import com.aiavatar.app.commons.util.NetworkResult
 import com.aiavatar.app.di.IoDispatcher
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.*
-import com.aiavatar.app.feature.onboard.data.source.remote.model.AutoLoginResponse
-import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
-import com.aiavatar.app.feature.onboard.data.source.remote.model.GetShareLinkResponse
-import com.aiavatar.app.feature.onboard.data.source.remote.model.LoginResponse
+import com.aiavatar.app.feature.onboard.data.source.remote.model.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -51,5 +48,10 @@ class AccountsRemoteDataSource @Inject constructor(
     fun feedback(feedbackRequestDto: FeedbackRequestDto): Flow<NetworkResult<BaseResponse>> = flow {
         emit(NetworkResult.Loading())
         emit(safeApiCall { apiService.feedback(feedbackRequestDto) })
+    }.flowOn(dispatcher)
+
+    fun createCheck(createCheckRequestDto: CreateCheckRequestDto): Flow<NetworkResult<CreateCheckResponse>> = flow {
+        emit(NetworkResult.Loading())
+        emit(safeApiCall { apiService.createCheck(createCheckRequestDto) })
     }.flowOn(dispatcher)
 }

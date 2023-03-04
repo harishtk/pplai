@@ -11,6 +11,8 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.widget.ViewPager2
 import com.aiavatar.app.*
+import com.aiavatar.app.Constant.PRIVACY_POLICY_URL
+import com.aiavatar.app.Constant.TERMS_URL
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.presentation.dialog.WebViewPresenterFragment
@@ -222,8 +224,4 @@ class WalkThroughFragment : Fragment() {
         }
     }
 
-    companion object {
-        const val PRIVACY_POLICY_URL    = "https://aiavatars.ai/privacy"
-        const val TERMS_URL             = "https://aiavatars.ai/terms"
-    }
 }

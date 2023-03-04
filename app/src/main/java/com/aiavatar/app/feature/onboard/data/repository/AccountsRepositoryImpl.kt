@@ -9,12 +9,10 @@ import com.aiavatar.app.commons.util.net.HttpResponse
 import com.aiavatar.app.core.di.ApplicationCoroutineScope
 import com.aiavatar.app.di.IoDispatcher
 import com.aiavatar.app.feature.onboard.data.source.remote.AccountsRemoteDataSource
-import com.aiavatar.app.feature.onboard.data.source.remote.dto.asDto
-import com.aiavatar.app.feature.onboard.data.source.remote.dto.toAutoLoginData
-import com.aiavatar.app.feature.onboard.data.source.remote.dto.toLoginData
-import com.aiavatar.app.feature.onboard.data.source.remote.dto.toShareLinkData
+import com.aiavatar.app.feature.onboard.data.source.remote.dto.*
 import com.aiavatar.app.feature.onboard.data.source.remote.model.LoginResponse
 import com.aiavatar.app.feature.onboard.domain.model.AutoLoginData
+import com.aiavatar.app.feature.onboard.domain.model.CreateCheckData
 import com.aiavatar.app.feature.onboard.domain.model.LoginData
 import com.aiavatar.app.feature.onboard.domain.model.ShareLinkData
 import com.aiavatar.app.feature.onboard.domain.model.request.*
@@ -122,6 +120,27 @@ class AccountsRepositoryImpl @Inject constructor(
                         val message = networkResult.data?.message
                             ?: "Success. No message."
                         Result.Success(message)
+                    } else {
+                        badResponse(networkResult)
+                    }
+                }
+                else -> parseErrorNetworkResult(networkResult)
+            }
+        }
+    }
+
+    override fun createCheck(createCheckRequest: CreateCheckRequest): Flow<Result<CreateCheckData>> {
+        return remoteDataSource.createCheck(createCheckRequest.asDto()).map { networkResult ->
+            when (networkResult) {
+                is NetworkResult.Loading -> Result.Loading
+                is NetworkResult.Success -> {
+                    if (networkResult.data?.statusCode == HttpsURLConnection.HTTP_OK) {
+                        val dataDto = networkResult.data.data
+                        if (dataDto != null) {
+                            Result.Success(dataDto.toCreateCheckData())
+                        } else {
+                            emptyResponse(networkResult)
+                        }
                     } else {
                         badResponse(networkResult)
                     }

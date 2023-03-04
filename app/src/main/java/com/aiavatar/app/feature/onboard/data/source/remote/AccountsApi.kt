@@ -1,10 +1,7 @@
 package com.aiavatar.app.feature.onboard.data.source.remote
 
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.*
-import com.aiavatar.app.feature.onboard.data.source.remote.model.AutoLoginResponse
-import com.aiavatar.app.feature.onboard.data.source.remote.model.BaseResponse
-import com.aiavatar.app.feature.onboard.data.source.remote.model.GetShareLinkResponse
-import com.aiavatar.app.feature.onboard.data.source.remote.model.LoginResponse
+import com.aiavatar.app.feature.onboard.data.source.remote.model.*
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -28,4 +25,7 @@ interface AccountsApi {
 
     @POST("user/feedback")
     suspend fun feedback(@Body feedbackRequestDto: FeedbackRequestDto): Response<BaseResponse>
+
+    @POST("user/createCheck")
+    suspend fun createCheck(@Body createCheckRequest: CreateCheckRequestDto): Response<CreateCheckResponse>
 }
