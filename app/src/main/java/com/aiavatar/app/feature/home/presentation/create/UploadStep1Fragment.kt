@@ -2,6 +2,8 @@ package com.aiavatar.app.feature.home.presentation.create
 
 import android.Manifest
 import android.annotation.TargetApi
+import android.app.Dialog
+import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -12,34 +14,40 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
-import com.aiavatar.app.BuildConfig
-import com.aiavatar.app.MainActivity
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
+import com.aiavatar.app.commons.util.Result
+import com.aiavatar.app.commons.util.cancelSpinning
+import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentUploadStep1Binding
 import com.aiavatar.app.di.ApplicationDependencies
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageAdapter
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageItem
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageUiModel
-import com.aiavatar.app.safeCall
 import com.aiavatar.app.viewmodels.SharedViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class UploadStep1Fragment : Fragment() {
 
-    private val sharedViewModel: SharedViewModel by viewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val createSharedViewModel: CreateSharedViewModel by activityViewModels()
+
+    private val viewModel: UploadStep1ViewModel by viewModels()
 
     @Inject
     lateinit var analyticsLogger: AnalyticsLogger
@@ -54,6 +62,8 @@ class UploadStep1Fragment : Fragment() {
         }
     }
 
+    private var maxModelsReachedDialogWeakRef: Dialog? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -66,13 +76,17 @@ class UploadStep1Fragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentUploadStep1Binding.bind(view)
 
-        binding.bindState()
+        binding.bindState(
+            uiState = viewModel.uiState
+        )
         setupObservers()
 
         askNotificationPermission()
     }
 
-    private fun FragmentUploadStep1Binding.bindState() {
+    private fun FragmentUploadStep1Binding.bindState(
+        uiState: StateFlow<UploadStep1State>
+    ) {
 
         val adapter = SquareImageAdapter()
         goodExamplesList.adapter = adapter
@@ -132,6 +146,22 @@ class UploadStep1Fragment : Fragment() {
         )
         adapter.submitList(resList)
 
+        val loadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChangedBy { it.action }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                Timber.d("Load state: $loadState")
+                // btnNext.isEnabled = loadState.action !is LoadState.Loading
+                if (loadState.action is LoadState.Loading) {
+                    btnNext.setSpinning()
+                    // btnNext.fakeDisable()
+                } else {
+                    btnNext.cancelSpinning()
+                    // btnNext.fakeDisable(false)
+                }
+            }
+        }
+
         btnNext.setOnClickListener {
             analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_1_CONTINUE_BTN_CLICK)
             safeCall {
@@ -175,10 +205,30 @@ class UploadStep1Fragment : Fragment() {
     }
 
     private fun setupObservers() {
-        sharedViewModel.createCheckDataFlow
-            .onEach { createCheckData ->
-                if (createCheckData != null) {
+        createSharedViewModel.createCheckDataFlow
+            .onEach { result ->
+                Timber.d("Check data: $result")
+                when (result) {
+                    is Result.Loading -> {
 
+                    }
+                    is Result.Error -> {
+                        viewModel.setLoading(false)
+                    }
+                    is Result.Success -> {
+                        viewModel.setLoading(false)
+                        if (result.data != null) {
+                            if (!result.data.allowModelCreate) {
+                                if (maxModelsReachedDialogWeakRef?.isShowing != true) {
+                                    showMaxModelsReachedAlert {
+                                        gotoProfile()
+                                    }
+                                }
+                            } else {
+                                maxModelsReachedDialogWeakRef?.dismiss()
+                            }
+                        }
+                    }
                 }
             }
             .flowWithLifecycle(viewLifecycleOwner.lifecycle)
@@ -200,6 +250,38 @@ class UploadStep1Fragment : Fragment() {
             Timber.e(e)
             (activity as? MainActivity)?.restart()
         }
+    }
+
+    private fun gotoProfile() {
+        safeCall {
+            findNavController().apply {
+                val navOptions = defaultNavOptsBuilder()
+                    .setPopUpTo(R.id.upload_step_1, inclusive = true)
+                    .build()
+                navigate(R.id.profile, null, navOptions)
+            }
+        }
+    }
+
+    private fun showMaxModelsReachedAlert(cont: () -> Unit) {
+        val clickListener: DialogInterface.OnClickListener =
+            DialogInterface.OnClickListener { dialog, which ->
+                when (which) {
+                    DialogInterface.BUTTON_POSITIVE -> {
+                        cont()
+                    }
+                }
+                dialog.dismiss()
+            }
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialDialog)
+            .setTitle("Dear user")
+            .setMessage("You have already created your model. To view the model please go to your profile. " +
+                    "To create a new model you have to complete your previous model first")
+            .setPositiveButton("GO TO PROFILE", clickListener)
+            .setNegativeButton("CANCEL", clickListener)
+            .also {
+                maxModelsReachedDialogWeakRef = it.show()
+            }
     }
 
     @TargetApi(Build.VERSION_CODES.TIRAMISU)

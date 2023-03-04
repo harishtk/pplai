@@ -47,7 +47,7 @@ class MockApiDataProvider @Inject constructor(
                 "statusCode": 200,
                 "message": "success",
                 "data": {
-                    "allowModelCreate": true,
+                    "allowModelCreate": false,
                     "siteDown": true,
                     "modelPay": false
                 }

@@ -19,6 +19,12 @@ import com.aiavatar.app.feature.home.presentation.util.GenderModel
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
 import com.aiavatar.app.commons.util.net.UnAuthorizedException
+import com.aiavatar.app.commons.util.runtimetest.MockApiDataProvider
+import com.aiavatar.app.feature.home.presentation.create.util.CreateCreditExhaustedException
+import com.aiavatar.app.feature.onboard.domain.model.CreateCheckData
+import com.aiavatar.app.feature.onboard.domain.model.request.CreateCheckRequest
+import com.aiavatar.app.feature.onboard.domain.repository.AccountsRepository
+import com.aiavatar.app.ifDebug
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -44,7 +50,9 @@ class UploadStep3ViewModel @Inject constructor(
     @Deprecated("move to repo")
     private val appDatabase: AppDatabase,
     private val appRepository: AppRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val accountsRepository: AccountsRepository,
+    private val savedStateHandle: SavedStateHandle,
+    private val mockApiDataProvider: MockApiDataProvider
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<Step3State>(Step3State())
@@ -53,10 +61,13 @@ class UploadStep3ViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<Step3UiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
+    val accept: (Step3UiAction) -> Unit
+
     private var selectedGenderPosition: Int = 0
     private val selectedToggleFlow = MutableStateFlow(false)
 
     private var createModelJob: Job? = null
+    private var createCheckJob: Job? = null
 
     init {
         val genderModelList = mutableListOf<GenderModel>(
@@ -106,12 +117,34 @@ class UploadStep3ViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
+
+        accept = { uiAction -> onUiAction(uiAction) }
+    }
+
+    private fun onUiAction(action: Step3UiAction) {
+        when (action) {
+            is Step3UiAction.ErrorShown -> {
+                _uiState.update { state ->
+                    state.copy(
+                        exception = null,
+                        uiErrorText = null
+                    )
+                }
+            }
+        }
     }
 
     fun toggleSelection(position: Int) {
         selectedGenderPosition = position
         // Signals the flow
         selectedToggleFlow.update { selectedToggleFlow.value.not() }
+    }
+
+    fun checkCreate(onCompletion: (kotlin.Result<CreateCheckData>) -> Unit) {
+        val request = CreateCheckRequest(
+            timestamp = System.currentTimeMillis()
+        )
+        checkCreateInternal(request, onCompletion)
     }
 
     fun updateTrainingType(sessionId: Long) {
@@ -135,6 +168,47 @@ class UploadStep3ViewModel @Inject constructor(
             state.copy(
                 sessionId = sessionId
             )
+        }
+    }
+
+    private fun checkCreateInternal(
+        request: CreateCheckRequest,
+        onCompletion: (kotlin.Result<CreateCheckData>) -> Unit
+    ) {
+        if (createCheckJob?.isActive == true) {
+            val cause = IllegalStateException("A create check job is already active. Ignoring request.")
+            ifDebug { Timber.w(cause) }
+            return
+        }
+
+        createCheckJob?.cancel(CancellationException("New request")) // just in case
+        createCheckJob = viewModelScope.launch {
+            accountsRepository.createCheck(request).collectLatest { result ->
+                when (result) {
+                    is Result.Loading -> {
+                        setLoading(LoadType.ACTION, LoadState.Loading())
+                    }
+                    is Result.Error -> {
+                        onCompletion(kotlin.Result.failure(result.exception))
+                        setLoading(LoadType.ACTION, LoadState.Error(result.exception))
+                    }
+                    is Result.Success -> {
+                        if (result.data.allowModelCreate) {
+                            setLoading(LoadType.ACTION, LoadState.NotLoading.Complete)
+                            onCompletion(kotlin.Result.success(result.data))
+                        } else {
+                            setLoading(LoadType.ACTION, LoadState.NotLoading.InComplete)
+                            val t = CreateCreditExhaustedException()
+                            onCompletion(kotlin.Result.failure(t))
+                            _uiState.update { state ->
+                                state.copy(
+                                    exception = t,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -242,6 +316,10 @@ data class Step3State(
     val exception: Exception? = null,
     val uiErrorText: UiText? = null
 )
+
+interface Step3UiAction {
+    data class ErrorShown(val e: Exception) : Step3UiAction
+}
 
 interface Step3UiEvent {
     data class NextScreen(val restart: Boolean) : Step3UiEvent

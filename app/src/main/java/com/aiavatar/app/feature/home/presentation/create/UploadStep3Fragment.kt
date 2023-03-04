@@ -1,5 +1,7 @@
 package com.aiavatar.app.feature.home.presentation.create
 
+import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,26 +16,23 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import com.aiavatar.app.Constant
-import com.aiavatar.app.R
+import com.aiavatar.app.*
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.aiavatar.app.commons.util.UiText
+import com.aiavatar.app.commons.util.cancelSpinning
+import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.net.isConnected
-import com.aiavatar.app.databinding.FragmentUploadStep2Binding
+import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentUploadStep3Binding
 import com.aiavatar.app.databinding.ItemGenderSelectableBinding
+import com.aiavatar.app.feature.home.presentation.create.util.CreateCreditExhaustedException
 import com.aiavatar.app.feature.home.presentation.util.GenderModel
-import com.aiavatar.app.safeCall
-import com.aiavatar.app.showToast
-import com.aiavatar.app.work.WorkUtil
+import com.aiavatar.app.feature.onboard.domain.model.CreateCheckData
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -46,8 +45,10 @@ class UploadStep3Fragment : Fragment() {
 
     private val viewModel: UploadStep3ViewModel by viewModels()
     private val sharedViewModel: SharedViewModel by activityViewModels()
+    private val createSharedViewModel: CreateSharedViewModel by activityViewModels()
 
     private var sessionIdCache: Long? = null
+    private var maxModelsReachedDialogWeakRef: Dialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,6 +64,7 @@ class UploadStep3Fragment : Fragment() {
 
         binding.bindState(
             uiState = viewModel.uiState,
+            uiAction = viewModel.accept,
             uiEvent = viewModel.uiEvent
         )
 
@@ -71,7 +73,8 @@ class UploadStep3Fragment : Fragment() {
 
     private fun FragmentUploadStep3Binding.bindState(
         uiState: StateFlow<Step3State>,
-        uiEvent: SharedFlow<Step3UiEvent>
+        uiAction: (Step3UiAction) -> Unit,
+        uiEvent: SharedFlow<Step3UiEvent>,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             uiEvent.collectLatest { event ->
@@ -109,6 +112,47 @@ class UploadStep3Fragment : Fragment() {
             }
         }
 
+        val loadStateFlow = uiState.map { it.loadState }
+            .distinctUntilChanged { old, new ->
+                old.refresh == new.refresh && old.action == new.action
+            }
+        viewLifecycleOwner.lifecycleScope.launch {
+            loadStateFlow.collectLatest { loadState ->
+                if (loadState.action is LoadState.Loading) {
+                    btnNext.setSpinning()
+                } else {
+                    btnNext.cancelSpinning()
+                }
+            }
+        }
+
+        val notLoadingFlow = loadStateFlow
+            .map {
+                it.refresh !is LoadState.Loading && it.action !is LoadState.Loading
+            }
+        val hasErrorsFlow = uiState.map { it.exception != null }
+            .distinctUntilChanged()
+        viewLifecycleOwner.lifecycleScope.launch {
+            combine(
+                notLoadingFlow,
+                hasErrorsFlow,
+                Boolean::and
+            ).collectLatest {
+                if (it) {
+                    val (e, uiErr) = uiState.value.exception to
+                            uiState.value.uiErrorText
+                    if (e != null) {
+                        when (e) {
+                            is CreateCreditExhaustedException -> {
+                                // Noop
+                            }
+                        }
+                        uiAction(Step3UiAction.ErrorShown(e))
+                    }
+                }
+            }
+        }
+
         bindClick()
 
     }
@@ -119,12 +163,29 @@ class UploadStep3Fragment : Fragment() {
             if (context?.isConnected() != true) {
                 context?.showToast(UiText.noInternet.asString(requireContext()))
             } else {
-                if (sessionIdCache != null) {
-                    btnNext.setOnClickListener(null)
-                    viewModel.updateTrainingType(sessionIdCache!!)
-                    analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_3_NEXT_CLICK)
-                } else {
-                    context?.showToast(UiText.somethingWentWrong.asString(requireContext()))
+                viewModel.checkCreate { result: Result<CreateCheckData> ->
+                    result.onSuccess {
+                        if (sessionIdCache != null) {
+                            btnNext.setOnClickListener(null)
+                            viewModel.updateTrainingType(sessionIdCache!!)
+                            analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_3_NEXT_CLICK)
+                        } else {
+                            context?.showToast(UiText.somethingWentWrong.asString(requireContext()))
+                        }
+                    }
+                        .onFailure { t ->
+                            if (t is CreateCreditExhaustedException) {
+                                if (maxModelsReachedDialogWeakRef?.isShowing != true) {
+                                    showMaxModelsReachedAlert {
+                                        gotoProfile()
+                                    }
+                                } else {
+                                    maxModelsReachedDialogWeakRef?.dismiss()
+                                }
+                            } else {
+                                context?.showToast(UiText.somethingWentWrong.asString(requireContext()))
+                            }
+                        }
                 }
             }
         }
@@ -162,6 +223,38 @@ class UploadStep3Fragment : Fragment() {
             }
             navigate(R.id.avatar_status, args, navOpts)
         }
+    }
+
+    private fun gotoProfile() {
+        safeCall {
+            findNavController().apply {
+                val navOptions = defaultNavOptsBuilder()
+                    // .setPopUpTo(R.id.upload_step_1, inclusive = true)
+                    .build()
+                navigate(R.id.profile, null, navOptions)
+            }
+        }
+    }
+
+    private fun showMaxModelsReachedAlert(cont: () -> Unit) {
+        val clickListener: DialogInterface.OnClickListener =
+            DialogInterface.OnClickListener { dialog, which ->
+                when (which) {
+                    DialogInterface.BUTTON_POSITIVE -> {
+                        cont()
+                    }
+                }
+                dialog.dismiss()
+            }
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialDialog)
+            .setTitle("Dear user")
+            .setMessage("You have exceeded your free limit for model creation. Kindly recreate an existing model " +
+                    "to create a new one. (Profile -> Model -> Recreate)")
+            .setPositiveButton("GO TO PROFILE", clickListener)
+            .setNegativeButton("CANCEL", clickListener)
+            .also {
+                maxModelsReachedDialogWeakRef = it.show()
+            }
     }
 }
 

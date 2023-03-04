@@ -148,3 +148,11 @@ fun TextView.makeLinks(links: List<Pair<String, () -> Unit>>, drawUnderline: Boo
     try { links.forEach { setClickable(this, it.first, it.second, drawUnderline) } }
     catch (ignore: Exception) { }
 }
+
+fun View.fakeDisable(disabled: Boolean = true) {
+    if (disabled) {
+        this.alpha = 0.5f
+    } else {
+        this.alpha = 1f
+    }
+}

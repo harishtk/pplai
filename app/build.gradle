@@ -99,6 +99,7 @@ android {
 
             // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
             buildConfigField "String", "BASE_URL", '"https://ai.hifrds.com/api/v1/"'
+            // buildConfigField "String", "BASE_URL", '"https://xyaipro.hifrnds.in/api/v1/"'
             // buildConfigField "String", "BASE_URL", '"http://3.6.31.96/api/v1/"'
             buildConfigField "String", "THUMBNAIL_BASE_URL", '"https://d19quh86lv8eyv.cloudfront.net/thumbnail/"'
             // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'

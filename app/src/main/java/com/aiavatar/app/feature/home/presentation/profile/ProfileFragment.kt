@@ -167,7 +167,10 @@ class ProfileFragment : Fragment() {
             loadStateFlow.collectLatest { loadState ->
                 Timber.d("Load state: ${loadState.refresh}")
                 // swipeRefreshLayout.isEnabled = loadState.refresh !is LoadState.Loading
+                retryButton.isVisible = loadState.refresh is LoadState.Error &&
+                        adapter.itemCount <= 0
                 if (loadState.refresh is LoadState.Loading) {
+                    retryButton.isVisible = false
                     errorContainer.isVisible = false
                     emptyListContainer.isVisible = false
                     progressBar.isVisible = adapter.itemCount <= 0
@@ -180,9 +183,9 @@ class ProfileFragment : Fragment() {
                         if (loadState.refresh.error !is NoInternetException) {
                             HapticUtil.createError(requireContext())
                         }
-                        if (retryButton.isVisible) {
+                        /*if (retryButton.isVisible) {
                             retryButton.shakeNow()
-                        }
+                        }*/
                     }
                     progressBar.isVisible = false
                 }
@@ -192,9 +195,6 @@ class ProfileFragment : Fragment() {
                         swipeRefreshLayout.isRefreshing = false
                     }
                 }*/
-
-                retryButton.isVisible = loadState.refresh is LoadState.Error &&
-                        adapter.itemCount <= 0
             }
         }
 
