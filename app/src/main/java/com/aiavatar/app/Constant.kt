@@ -2,6 +2,8 @@ package com.aiavatar.app
 
 object Constant {
     const val PLATFORM = "android"
+    const val PRIVACY_POLICY_URL    = "https://aiavatars.ai/privacy"
+    const val TERMS_URL             = "https://aiavatars.ai/terms"
 
     /* Extras */
     const val EXTRA_DATA = "com.aiavatar.app.extras.DATA"

@@ -8,6 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.aiavatar.app.R
 import com.aiavatar.app.databinding.FragmentMaintenanceBinding
+import com.aiavatar.app.safeCall
+import timber.log.Timber
 
 
 /**
@@ -35,6 +37,16 @@ class MaintenanceFragment : Fragment() {
 
     private fun FragmentMaintenanceBinding.bindState() {
 
-        btnClose.setOnClickListener { findNavController().navigateUp() }
+        btnClose.setOnClickListener {
+            safeCall {
+                findNavController().apply {
+                    if (!navigateUp()) {
+                        if (!popBackStack()) {
+                            activity?.finishAffinity()
+                        }
+                    }
+                }
+            }
+        }
     }
 }

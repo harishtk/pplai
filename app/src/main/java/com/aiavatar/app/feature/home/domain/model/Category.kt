@@ -8,4 +8,5 @@ data class Category(
     val imageName: String
 ) {
     var id: Long? = null
+    var thumbnail: String? = null
 }

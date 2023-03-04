@@ -9,11 +9,13 @@ import androidx.recyclerview.widget.RecyclerView.LayoutManager
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.aiavatar.app.R
+import com.aiavatar.app.commons.util.imageloader.GlideImageLoader.Companion.newGlideBuilder
 import com.aiavatar.app.core.URLProvider
 import com.aiavatar.app.databinding.ItemBigAvatarBinding
 import com.aiavatar.app.feature.home.domain.model.Category
 import com.aiavatar.app.feature.home.presentation.catalog.AvatarUiModel
 import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
 import timber.log.Timber
 
 /**
@@ -21,6 +23,7 @@ import timber.log.Timber
  */
 class AvatarsAdapter(
     private val layoutManager: LayoutManager,
+    private val glide: RequestManager,
     private val callback: Callback,
     private val loopEnable: Boolean = false,
 ) : ListAdapter<AvatarUiModel, ViewHolder>(DIFF_CALLBACK) {
@@ -55,7 +58,7 @@ class AvatarsAdapter(
         if (holder is ItemViewHolder) {
             model as AvatarUiModel.AvatarItem
             val heightRatio = getHeightRatioForPosition(normalizedPosition, getTotalRows())
-            holder.bind(model.category, heightRatio, callback)
+            holder.bind(model.category, heightRatio, glide, callback)
         }
     }
 
@@ -114,12 +117,18 @@ class AvatarsAdapter(
 
         private val cardConstraintSet = ConstraintSet()
 
-        fun bind(category: Category, heightRatio: String, callback: Callback) = with(binding) {
-            val url = URLProvider.avatarUrl(category.imageName)
-            Glide.with(image)
-                .load(url)
+        fun bind(category: Category, heightRatio: String, glide: RequestManager, callback: Callback) = with(binding) {
+            val url = if (category.thumbnail?.isNotBlank() == true) {
+                URLProvider.avatarThumbUrl(category.thumbnail)
+            } else {
+                URLProvider.avatarUrl(category.imageName)
+            }
+
+            image.newGlideBuilder(glide)
+                .originalImage(url)
                 .placeholder(R.drawable.loading_animation)
-                .into(image)
+                .start()
+
             textCategory.text = category.categoryName
 
             cardConstraintSet.clone(cardContent)

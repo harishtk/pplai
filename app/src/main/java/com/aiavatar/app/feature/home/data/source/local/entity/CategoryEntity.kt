@@ -1,5 +1,6 @@
 package com.aiavatar.app.feature.home.data.source.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -12,14 +13,17 @@ import com.google.gson.annotations.SerializedName
     indices = [Index(name = "catalog_name_index", value = [AvatarCategoriesTable.Columns.NAME], unique = true)]
 )
 data class CategoryEntity(
-    @SerializedName("name")
+    @ColumnInfo("name")
     val name: String,
-    @SerializedName("imageName")
+    @ColumnInfo("imageName")
     val imageName: String
 ) {
-    @SerializedName("id")
+    @ColumnInfo("id")
     @PrimaryKey(autoGenerate = true)
     var _id: Long? = null
+
+    @ColumnInfo("thumbnail")
+    var thumbnail: String? = null
 }
 
 fun CategoryEntity.toCategory(): Category {
@@ -28,6 +32,7 @@ fun CategoryEntity.toCategory(): Category {
         imageName = imageName
     ).also {
         it.id = _id
+        it.thumbnail = thumbnail
     }
 }
 
@@ -37,6 +42,7 @@ fun Category.asEntity(): CategoryEntity {
         imageName = imageName
     ).also {
         it._id = id
+        it.thumbnail = thumbnail
     }
 }
 
@@ -47,5 +53,6 @@ object AvatarCategoriesTable {
         const val ID            = "_id"
         const val NAME          = "name"
         const val IMAGE_NAME    = "imageName"
+        const val THUMBNAIL     = "thumbnail"
     }
 }

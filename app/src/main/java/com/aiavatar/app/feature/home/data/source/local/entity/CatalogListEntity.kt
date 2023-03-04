@@ -20,6 +20,9 @@ data class CatalogListEntity(
     @ColumnInfo("id")
     @PrimaryKey(autoGenerate = true)
     var _id: Long? = null
+
+    @ColumnInfo("thumbnail")
+    var thumbnail: String? = null
 }
 
 fun CatalogListEntity.toCatalogList(): CatalogList {
@@ -28,6 +31,7 @@ fun CatalogListEntity.toCatalogList(): CatalogList {
         imageName = imageName
     ).also {
         it.id = _id
+        it.thumbnail = thumbnail
     }
 }
 
@@ -37,6 +41,7 @@ fun CatalogList.asEntity(): CatalogListEntity {
         imageName = imageName
     ).also {
         it._id = id
+        it.thumbnail = thumbnail
     }
 }
 
@@ -47,5 +52,6 @@ object CatalogListTable {
         const val ID            = "id"
         const val CATALOG_NAME  = "catalog_name"
         const val IMAGE_NAME    = "image_name"
+        const val THUMBNAIL     = "thumbnail"
     }
 }

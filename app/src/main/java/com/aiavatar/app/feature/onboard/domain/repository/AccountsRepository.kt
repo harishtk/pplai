@@ -2,6 +2,7 @@ package com.aiavatar.app.feature.onboard.domain.repository
 
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.feature.onboard.domain.model.AutoLoginData
+import com.aiavatar.app.feature.onboard.domain.model.CreateCheckData
 import com.aiavatar.app.feature.onboard.domain.model.LoginData
 import com.aiavatar.app.feature.onboard.domain.model.ShareLinkData
 import com.aiavatar.app.feature.onboard.domain.model.request.*
@@ -20,4 +21,6 @@ interface AccountsRepository {
     fun getShareLink(getShareLinkRequest: GetShareLinkRequest): Flow<Result<ShareLinkData>>
 
     fun feedback(feedbackRequest: FeedbackRequest): Flow<Result<String>>
+
+    fun createCheck(createCheckRequest: CreateCheckRequest): Flow<Result<CreateCheckData>>
 }

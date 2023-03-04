@@ -5,4 +5,5 @@ data class CatalogList(
     val imageName: String
 ) {
     var id: Long? = null
+    var thumbnail: String? = null
 }

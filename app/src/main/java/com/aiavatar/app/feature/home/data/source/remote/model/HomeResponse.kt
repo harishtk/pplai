@@ -37,7 +37,9 @@ fun ListAvatarDto.toCategory(): Category {
     return Category(
         categoryName = categoryName.nullAsEmpty(),
         imageName = imageName
-    )
+    ).also {
+        it.thumbnail = thumbnail
+    }
 }
 
 fun ListAvatarDto.toListAvatar(): ListAvatar {
@@ -54,7 +56,9 @@ fun ListAvatarDto.toCatalogList(catalogName: String): CatalogList {
     return CatalogList(
         catalogName = catalogName,
         imageName = imageName
-    )
+    ).also {
+        it.thumbnail = thumbnail
+    }
 }
 
 

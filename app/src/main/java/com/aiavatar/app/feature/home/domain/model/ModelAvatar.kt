@@ -18,7 +18,6 @@ data class ModelAvatar(
 }
 
 fun ListAvatar.toModelAvatar(modelId: String): ModelAvatar {
-    Timber.tag("Parse.Msg").d("ListAvatar#toModelAvatar: thumb = $thumbnail")
     return ModelAvatar(
         modelId = modelId,
         remoteFile = imageName,

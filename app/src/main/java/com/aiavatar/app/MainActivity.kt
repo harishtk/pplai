@@ -43,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
@@ -271,6 +272,17 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
                 }
             }
         }
+
+        sharedViewModel.createCheckDataFlow
+            .onEach { createCheckData ->
+                Timber.d("Create check: $createCheckData")
+                if (createCheckData != null) {
+                    if (createCheckData.siteDown) {
+                        setNavGraph(jumpToDestination = R.id.maintenance)
+                    }
+                }
+            }
+            .launchWhenStarted(lifecycleOwner = this)
     }
 
     private fun checkForUpdates() {

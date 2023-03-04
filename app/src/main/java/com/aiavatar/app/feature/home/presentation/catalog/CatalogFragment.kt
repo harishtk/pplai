@@ -16,6 +16,8 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
@@ -41,14 +43,12 @@ import com.aiavatar.app.commons.util.net.NoInternetException
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.cacheKeyForTable
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.LegalsBottomSheet
+import com.aiavatar.app.viewmodels.SharedViewModel
+import com.bumptech.glide.RequestManager
+import com.bumptech.glide.request.RequestOptions
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.distinctUntilChangedBy
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -61,6 +61,7 @@ class CatalogFragment : Fragment() {
     @Inject
     lateinit var analyticsLogger: AnalyticsLogger
 
+    private val sharedViewModel: SharedViewModel by activityViewModels()
     private val userViewModel: UserViewModel by activityViewModels()
     private val viewModel: CatalogViewModel by viewModels()
 
@@ -126,6 +127,7 @@ class CatalogFragment : Fragment() {
 
         val avatarsAdapter = AvatarsAdapter(
             layoutManager = staggeredGridLayoutManager,
+            glide = initGlide(),
             callback = avatarsAdapterCallback,
         )
 
@@ -325,11 +327,12 @@ class CatalogFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            userViewModel.authenticationState.collectLatest { state ->
+        userViewModel.authenticationState
+            .onEach { state ->
                 Timber.d("Login: authentication state = $state")
             }
-        }
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private fun toggleTheme(): Int? {
@@ -398,6 +401,12 @@ class CatalogFragment : Fragment() {
                     }
                 }
             })
+    }
+
+    private fun initGlide(): RequestManager {
+        val options: RequestOptions = RequestOptions()
+        return Glide.with(this)
+            .setDefaultRequestOptions(options)
     }
 
     private fun showGuidedSteps(anchorView: View?) {

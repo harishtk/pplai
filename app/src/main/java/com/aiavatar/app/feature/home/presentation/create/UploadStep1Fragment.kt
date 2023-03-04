@@ -12,6 +12,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
@@ -26,12 +29,17 @@ import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageAdap
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageItem
 import com.aiavatar.app.feature.onboard.presentation.walkthrough.SquareImageUiModel
 import com.aiavatar.app.safeCall
+import com.aiavatar.app.viewmodels.SharedViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class UploadStep1Fragment : Fragment() {
+
+    private val sharedViewModel: SharedViewModel by viewModels()
 
     @Inject
     lateinit var analyticsLogger: AnalyticsLogger
@@ -167,7 +175,14 @@ class UploadStep1Fragment : Fragment() {
     }
 
     private fun setupObservers() {
+        sharedViewModel.createCheckDataFlow
+            .onEach { createCheckData ->
+                if (createCheckData != null) {
 
+                }
+            }
+            .flowWithLifecycle(viewLifecycleOwner.lifecycle)
+            .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private fun gotoUploadStep1() {
