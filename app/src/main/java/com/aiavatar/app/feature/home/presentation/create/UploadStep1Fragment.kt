@@ -27,6 +27,7 @@ import com.aiavatar.app.analytics.AnalyticsLogger
 import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.cancelSpinning
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.net.isConnected
 import com.aiavatar.app.commons.util.setSpinning
 import com.aiavatar.app.databinding.FragmentUploadStep1Binding
 import com.aiavatar.app.di.ApplicationDependencies
@@ -79,7 +80,7 @@ class UploadStep1Fragment : Fragment() {
         binding.bindState(
             uiState = viewModel.uiState
         )
-        setupObservers()
+        // setupObservers()
 
         askNotificationPermission()
     }
@@ -164,10 +165,59 @@ class UploadStep1Fragment : Fragment() {
 
         btnNext.setOnClickListener {
             analyticsLogger.logEvent(Analytics.Event.UPLOAD_STEP_1_CONTINUE_BTN_CLICK)
-            safeCall {
-                findNavController().apply {
-                    navigate(R.id.action_upload_step_1_to_upload_step_2)
+            val modelCount = uiState.value.myModelCount
+            val authenticationState = userViewModel.authenticationState.value
+
+            if (context?.isConnected() == true) {
+                viewModel.checkCreate { result: kotlin.Result<CreateCheckData> ->
+                    result
+                        .onSuccess {
+                            // TODO: handle the fcuking logic!!
+                            when {
+                                it.siteDown -> {
+                                    gotoMaintenance()
+                                }
+                                !it.allowModelCreate -> {
+                                    if (maxModelsReachedDialogWeakRef?.isShowing != true) {
+                                        showMaxModelsReachedAlert {
+                                            gotoProfile()
+                                        }
+                                    } else {
+                                        maxModelsReachedDialogWeakRef?.dismiss()
+                                    }
+                                }
+                                modelCount > 0 -> {
+                                    showModelPickerDialog(
+                                        onModelClick = { modelId ->
+                                            gotoPlans(modelId)
+                                            false
+                                        },
+                                        onSkip = { gotoUploadStep2() }
+                                    )
+                                }
+                                else -> {
+                                    gotoUploadStep2()
+                                }
+                            }
+                        }
+                        .onFailure { t ->
+                            Timber.w(t, "Unable to check create")
+                            gotoUploadStep2()
+                            /*if (t is CreateCreditExhaustedException) {
+                                if (maxModelsReachedDialogWeakRef?.isShowing != true) {
+                                    showMaxModelsReachedAlert {
+                                        gotoProfile()
+                                    }
+                                } else {
+                                    maxModelsReachedDialogWeakRef?.dismiss()
+                                }
+                            } else {
+                                context?.showToast(UiText.somethingWentWrong.asString(requireContext()))
+                            }*/
+                        }
                 }
+            } else {
+                gotoUploadStep2()
             }
         }
 
@@ -235,6 +285,36 @@ class UploadStep1Fragment : Fragment() {
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
+    private fun gotoPlans(modelId: String) = safeCall {
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder()
+                .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
+                .build()
+            val args = Bundle().apply {
+                putString(Constant.ARG_MODEL_ID, modelId)
+            }
+            navigate(R.id.subscription_plans, args, navOpts)
+        }
+    }
+
+    private fun gotoMaintenance() {
+        safeCall {
+            findNavController().apply {
+                val navOptions = defaultNavOptsBuilder()
+                    .build()
+                navigate(R.id.maintenance, null, navOptions)
+            }
+        }
+    }
+
+    private fun gotoUploadStep2() {
+        safeCall {
+            findNavController().apply {
+                navigate(R.id.action_upload_step_1_to_upload_step_2)
+            }
+        }
+    }
+
     private fun gotoUploadStep1() {
         try {
             findNavController().apply {
@@ -260,6 +340,18 @@ class UploadStep1Fragment : Fragment() {
                     .build()
                 navigate(R.id.profile, null, navOptions)
             }
+        }
+    }
+
+    private fun showModelPickerDialog(
+        onModelClick: (modelId: String) -> Boolean,
+        onSkip: () -> Unit
+    ) {
+        ModelPickerDialog(
+            onModelClick = onModelClick,
+            onSkip = onSkip
+        ).also {
+            it.show(childFragmentManager, "model-picker-dialog")
         }
     }
 

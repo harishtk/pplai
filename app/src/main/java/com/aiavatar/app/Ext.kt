@@ -1,13 +1,18 @@
 package com.aiavatar.app
 
 import android.content.Context
+import android.content.res.Resources
 import android.os.Handler
 import android.os.Looper
 import android.text.InputFilter
+import android.text.Spanned
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.annotation.IdRes
+import androidx.annotation.PluralsRes
+import androidx.annotation.StringRes
+import androidx.core.text.HtmlCompat
 import androidx.navigation.NavController
 import com.aiavatar.app.commons.util.ServiceUtil
 import com.aiavatar.app.core.Env
@@ -193,3 +198,19 @@ inline fun Boolean.onElse(block: () -> Unit): Boolean {
     }
     return false
 }
+
+fun Resources.getHtmlSpannedString(@StringRes id: Int): Spanned = getString(id).toHtmlSpan()
+
+fun Resources.getHtmlSpannedString(@StringRes id: Int, vararg formatArgs: Any): Spanned =
+    getString(id, *formatArgs).toHtmlSpan()
+
+fun Resources.getQuantityHtmlSpannedString(@PluralsRes id: Int, quantity: Int): Spanned =
+    getQuantityString(id, quantity).toHtmlSpan()
+
+fun Resources.getQuantityHtmlSpannedString(
+    @PluralsRes id: Int,
+    quantity: Int,
+    vararg formatArgs: Any,
+): Spanned = getQuantityString(id, quantity, *formatArgs).toHtmlSpan()
+
+fun String.toHtmlSpan(): Spanned = HtmlCompat.fromHtml(this, HtmlCompat.FROM_HTML_MODE_LEGACY)

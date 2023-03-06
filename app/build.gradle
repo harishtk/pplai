@@ -14,7 +14,7 @@ ext {
     versionMinor = 0 // Minor
     versionPatch = 5 // Patches, updates
     versionClassifier = null
-    versionRevision = "-revision-1"
+    versionRevision = "-revision-05"
     isSnapshot = false
     minSdk = 26
     targetSdk = 33
