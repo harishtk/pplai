@@ -1,6 +1,7 @@
 package com.aiavatar.app.di;
 
 import android.app.Application;
+import android.util.Size;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -17,6 +18,7 @@ public class ApplicationDependencies {
     private static Provider provider;
     private static AppForegroundObserver appForegroundObserver;
 
+    private static Size                  displaySize;
 
     private static volatile PersistentStore persistentStore;
     private static volatile AppWebSocket appWebSocket;
@@ -50,6 +52,18 @@ public class ApplicationDependencies {
             }
         }
         return appWebSocket;
+    }
+
+    public static @NonNull Size getDisplaySize() {
+        if (displaySize == null) {
+            throw new IllegalStateException("Trying to access ApplicationDependencies#displaySize " +
+                    "while it's not set.");
+        }
+        return displaySize;
+    }
+
+    public static void setDisplaySize(Size newDisplaySize) {
+        ApplicationDependencies.displaySize = newDisplaySize;
     }
 
     public interface Provider {

@@ -357,6 +357,9 @@ class AvatarStatusFragment : Fragment() {
                 } else {
                     btnCreateAvatar.cancelSpinning()
                 }
+
+                retryButton.isVisible = loadState.action is LoadState.Error &&
+                        loadState.action.error is NoInternetException
             }
         }
 
@@ -382,7 +385,7 @@ class AvatarStatusFragment : Fragment() {
                                 btnCreateAvatar.shakeNow()
                             }
                         }
-                        retryButton.isVisible = e is NoInternetException
+
                         uiErr?.let { uiText -> context?.showToast(uiText.asString(requireContext())) }
                         uiAction(AvatarStatusUiAction.ErrorShown(e))
                     }

@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.DiffUtil.ItemCallback
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.aiavatar.app.*
+import com.aiavatar.app.Constant.MIME_TYPE_IMAGE
 import com.aiavatar.app.Constant.MIME_TYPE_JPEG
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
@@ -520,18 +521,17 @@ class UploadStep2Fragment : Fragment() {
         }
 
         if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable()) {
-            photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.SingleMimeType(
-                MIME_TYPE_JPEG)))
+            photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         } else {
             Timber.w("No photo picker available. Using generic picker.")
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 if (!checkStoragePermission()) {
                     askStoragePermission()
                 } else {
-                    photoPickerGenericLauncher.launch(MIME_TYPE_JPEG)
+                    photoPickerGenericLauncher.launch(MIME_TYPE_IMAGE)
                 }
             } else {
-                photoPickerGenericLauncher.launch(MIME_TYPE_JPEG)
+                photoPickerGenericLauncher.launch(MIME_TYPE_IMAGE)
             }
         }
     }

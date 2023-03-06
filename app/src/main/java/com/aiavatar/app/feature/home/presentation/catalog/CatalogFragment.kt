@@ -1,7 +1,6 @@
 package com.aiavatar.app.feature.home.presentation.catalog
 
 import android.annotation.SuppressLint
-import android.app.Dialog
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -11,12 +10,10 @@ import android.view.animation.AnimationUtils
 import android.widget.PopupWindow
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
@@ -26,8 +23,6 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.aiavatar.app.*
 import com.aiavatar.app.analytics.Analytics
 import com.aiavatar.app.analytics.AnalyticsLogger
-import com.aiavatar.app.commons.presentation.dialog.NoInternetDialog
-import com.aiavatar.app.commons.presentation.dialog.WebViewPresenterFragment
 import com.aiavatar.app.commons.util.AnimationUtil.shakeNow
 import com.aiavatar.app.commons.util.AnimationUtil.touchInteractFeedback
 import com.aiavatar.app.commons.util.HapticUtil
@@ -40,20 +35,16 @@ import com.aiavatar.app.viewmodels.UserViewModel
 import com.bumptech.glide.Glide
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.net.NoInternetException
-import com.aiavatar.app.core.data.source.local.AppDatabase
-import com.aiavatar.app.core.data.source.local.entity.cacheKeyForTable
-import com.aiavatar.app.feature.onboard.presentation.walkthrough.LegalsBottomSheet
+import com.aiavatar.app.feature.home.presentation.dialog.ModelPickerDialog
 import com.aiavatar.app.viewmodels.SharedViewModel
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.request.RequestOptions
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.math.log
 
 @AndroidEntryPoint
 class CatalogFragment : Fragment() {

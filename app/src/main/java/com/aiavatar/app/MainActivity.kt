@@ -88,6 +88,8 @@ class MainActivity : AppCompatActivity(), NavController.OnDestinationChangedList
         checkSecureMode()
         setContentView(R.layout.activity_main)
 
+
+        ApplicationDependencies.setDisplaySize(getDisplaySize())
         ifDebug {
             lifecycleScope.launch {
                 val token = ApplicationDependencies.getPersistentStore().fcmToken
