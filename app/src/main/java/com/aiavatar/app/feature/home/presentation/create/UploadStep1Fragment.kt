@@ -353,6 +353,36 @@ class UploadStep1Fragment : Fragment() {
         }
     }
 
+    private fun gotoPlans(modelId: String) = safeCall {
+        findNavController().apply {
+            val navOpts = defaultNavOptsBuilder()
+                .setPopUpTo(R.id.login_fragment, inclusive = true, saveState = true)
+                .build()
+            val args = Bundle().apply {
+                putString(Constant.ARG_MODEL_ID, modelId)
+            }
+            navigate(R.id.subscription_plans, args, navOpts)
+        }
+    }
+
+    private fun gotoMaintenance() {
+        safeCall {
+            findNavController().apply {
+                val navOptions = defaultNavOptsBuilder()
+                    .build()
+                navigate(R.id.maintenance, null, navOptions)
+            }
+        }
+    }
+
+    private fun gotoUploadStep2() {
+        safeCall {
+            findNavController().apply {
+                navigate(R.id.action_upload_step_1_to_upload_step_2)
+            }
+        }
+    }
+
     private fun gotoUploadStep1() {
         try {
             findNavController().apply {
