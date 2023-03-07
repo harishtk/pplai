@@ -58,12 +58,14 @@
         android:layout_height="wrap_content"
         android:padding="@dimen/inset_small"
         android:textAlignment="center"
+        android:visibility="visible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/logo"
         app:layout_constraintBottom_toTopOf="@id/bottom_barrier"
         app:layout_constraintVertical_bias="1.0"
-        tools:text="We're pouring out hearts and souls into this project, we ask for a bit more time"/>
+        tools:text="We're pouring out hearts and souls into this project, we ask for a bit more time"
+        tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/bottom_barrier"
@@ -110,6 +112,7 @@
         android:layout_height="wrap_content"
         android:backgroundTint="@color/transparent"
         android:textColor="@color/signal_inverse_primary"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/progress_indicator"
@@ -173,10 +176,10 @@
 
     <com.google.android.material.button.MaterialButton
         style="@style/Widget.App.Button"
-        android:id="@+id/btn_create_avatar_old"
+        android:id="@+id/btn_alt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Create Avatar"
+        android:text="@string/label_try_again"
         android:insetBottom="@dimen/inset_large"
         android:insetLeft="@dimen/inset_large"
         android:insetTop="@dimen/inset_large"
@@ -186,7 +189,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/bottom_barrier"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
     <ProgressBar android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
@@ -196,5 +199,21 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
+
+    <TextView android:id="@+id/small_description_1"
+        style="@style/TextStyle.VerySmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/inset_large_medium"
+        android:textColor="@color/text_secondary_alt"
+        android:text="We recommend you to stay on this page."
+        android:textAlignment="center"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

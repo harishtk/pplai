@@ -29,6 +29,7 @@ import com.aiavatar.app.feature.onboard.domain.model.UploadImageData
 import com.aiavatar.app.commons.util.loadstate.LoadState
 import com.aiavatar.app.commons.util.loadstate.LoadStates
 import com.aiavatar.app.commons.util.net.UnAuthorizedException
+import com.aiavatar.app.commons.util.runtimetest.MockApiDataProvider
 import com.aiavatar.app.feature.home.presentation.util.UploadUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -43,7 +44,8 @@ class AvatarStatusViewModel @Inject constructor(
     @Deprecated("move to repo")
     private val appDatabase: AppDatabase,
     private val appRepository: AppRepository,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val mockApiDataProvider: MockApiDataProvider,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AvatarStatusState>(AvatarStatusState())

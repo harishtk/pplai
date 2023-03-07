@@ -147,6 +147,7 @@
     </string>
     <string name="skip_and_continue">Skip and Continue</string>
     <string name="content_description_information">Information</string>
+    <string name="label_try_again">TRY AGAIN</string>
 
     <plurals name="hours_ago">
         <item quantity="one">@string/hours_single</item>

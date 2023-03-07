@@ -422,6 +422,7 @@ class SubscriptionFragment : Fragment() {
                         if (productDetailsResult.billingResult.responseCode == BillingResponseCode.OK
                             && productDetailsList != null && productDetailsList.isNotEmpty()) {
 
+                            // TODO: get store provided price and currency symbol
                             val uiModelList = internalPlans.intersect(productDetailsList) { l, r ->
                                 l.productId == r.productId
                             }.map { plan ->

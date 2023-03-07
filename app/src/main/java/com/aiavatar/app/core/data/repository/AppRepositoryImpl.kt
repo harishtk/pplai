@@ -7,6 +7,7 @@ import com.aiavatar.app.commons.util.Result
 import com.aiavatar.app.commons.util.net.ApiException
 import com.aiavatar.app.commons.util.net.BadResponseException
 import com.aiavatar.app.commons.util.net.EmptyResponseException
+import com.aiavatar.app.commons.util.net.HttpResponse
 import com.aiavatar.app.core.data.source.local.AppDatabase
 import com.aiavatar.app.core.data.source.local.entity.toEntity
 import com.aiavatar.app.core.data.source.remote.AppRemoteDataSource
@@ -22,6 +23,7 @@ import com.aiavatar.app.core.domain.model.request.CreateModelRequest
 import com.aiavatar.app.core.domain.model.request.RenameModelRequest
 import com.aiavatar.app.core.domain.model.request.SendFcmTokenRequest
 import com.aiavatar.app.core.domain.repository.AppRepository
+import com.aiavatar.app.feature.home.presentation.create.util.BadPhotoSamplesException
 import com.aiavatar.app.feature.onboard.data.source.remote.dto.asUploadImageData
 import com.aiavatar.app.feature.onboard.data.source.remote.model.UploaderResponse
 import com.aiavatar.app.feature.onboard.domain.model.UploadImageData
@@ -29,6 +31,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import okhttp3.MultipartBody
+import java.net.HttpURLConnection
 import javax.inject.Inject
 import javax.net.ssl.HttpsURLConnection
 
@@ -189,7 +192,15 @@ class AppRepositoryImpl @Inject constructor(
                     badResponse(networkResult)
                 }
             }
-            else -> parseErrorNetworkResult(networkResult)
+            else -> {
+                when (networkResult.code) {
+                    HttpResponse.HTTP_RANGE_NOT_SATISFIABLE -> {
+                        val cause = BadPhotoSamplesException()
+                        Result.Error.NonRecoverableError(ApiException(cause))
+                    }
+                    else -> parseErrorNetworkResult(networkResult)
+                }
+            }
         }
     }
 

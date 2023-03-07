@@ -42,6 +42,8 @@ import com.aiavatar.app.service.MyFirebaseMessagingService
 import com.aiavatar.app.viewmodels.UserViewModel
 import com.aiavatar.app.work.UploadWorker
 import com.aiavatar.app.commons.util.loadstate.LoadState
+import com.aiavatar.app.commons.util.net.ApiException
+import com.aiavatar.app.feature.home.presentation.create.util.BadPhotoSamplesException
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -49,10 +51,8 @@ import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import timber.log.Timber
-import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * TODO: handle offline status, retry upload.
@@ -125,9 +125,10 @@ class AvatarStatusFragment : Fragment() {
                             context?.showToast(event.message.asString(requireContext()))
                         }
                         is AvatarStatusUiEvent.NotifyUploadProgress -> {
-                            if (event.isComplete) {
+                            // Don't notify upload status.
+                            /*if (event.isComplete) {
                                 notifyUploadComplete(requireContext(), event.progress)
-                            }
+                            }*/
                         }
                     }
                 }
@@ -307,7 +308,7 @@ class AvatarStatusFragment : Fragment() {
                         }
                         UploadSessionStatus.UPLOAD_COMPLETE -> {
                             // description.text = "Yay! Your photos are ready for creating avatar!"
-                            description.text = "Please wait.."
+                            description.text = "Please wait.. Don't close this page."
                             btnCreateAvatar.isVisible = false
                             progressIndicator.isVisible = false
                             textProgressHint.isVisible = false
@@ -360,6 +361,20 @@ class AvatarStatusFragment : Fragment() {
 
                 retryButton.isVisible = loadState.action is LoadState.Error &&
                         loadState.action.error is NoInternetException
+
+                when (val e = (loadState.action as? LoadState.Error)?.error as? Exception) {
+                    is ApiException -> {
+                        when (e.cause) {
+                            is BadPhotoSamplesException -> {
+                                description.apply {
+                                    isVisible = true
+                                    text = "Failed creating a model from given photos. Please retry with different photos"
+                                }
+                                btnAlt.isVisible = true
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -434,11 +449,7 @@ class AvatarStatusFragment : Fragment() {
             val sessionStatus = uiState.value.sessionStatus
             if (modelStatus == ModelStatus.COMPLETED) {
                 // TODO: View results
-                ApplicationDependencies.getPersistentStore().apply {
-                    if (isLogged) {
-                        setProcessingModel(false)
-                    }
-                }
+                resetModelProcessing()
                 gotoAvatarResult(uiState.value.avatarStatusId!!)
                 analyticsLogger.logEvent(Analytics.Event.AVATAR_STATUS_VIEW_RESULTS_CLICK)
             } else if (modelStatus == ModelStatus.TRAINING_FAILED) {
@@ -451,6 +462,11 @@ class AvatarStatusFragment : Fragment() {
                     .cancel(UploadWorker.STATUS_NOTIFICATION_ID)
                 uiAction(AvatarStatusUiAction.CreateModel)
             }
+        }
+
+        btnAlt.setOnClickListener {
+            resetModelProcessing()
+            gotoUploads(null)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -542,6 +558,14 @@ class AvatarStatusFragment : Fragment() {
                     }
                 }
             })
+    }
+
+    private fun resetModelProcessing() {
+        ApplicationDependencies.getPersistentStore().apply {
+            if (isLogged) {
+                setProcessingModel(false)
+            }
+        }
     }
 
     private fun gotoAvatarResult(avatarStatusId: String) = safeCall {

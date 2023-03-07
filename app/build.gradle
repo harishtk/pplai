@@ -12,9 +12,9 @@ plugins {
 ext {
     versionMajor = 0 // Major
     versionMinor = 0 // Minor
-    versionPatch = 5 // Patches, updates
+    versionPatch = 6 // Patches, updates
     versionClassifier = null
-    versionRevision = "-revision-05"
+    versionRevision = "-revision-01"
     isSnapshot = false
     minSdk = 26
     targetSdk = 33
@@ -54,8 +54,8 @@ android {
 
     buildTypes {
         release {
-            shrinkResources false
-            minifyEnabled false
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -97,10 +97,8 @@ android {
         dev {
             dimension "default"
 
-            // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
             buildConfigField "String", "BASE_URL", '"https://ai.hifrds.com/api/v1/"'
             // buildConfigField "String", "BASE_URL", '"https://xyaipro.hifrnds.in/api/v1/"'
-            // buildConfigField "String", "BASE_URL", '"http://3.6.31.96/api/v1/"'
             buildConfigField "String", "THUMBNAIL_BASE_URL", '"https://d19quh86lv8eyv.cloudfront.net/thumbnail/"'
             // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52"'
@@ -113,10 +111,8 @@ android {
         internal {
             dimension "default"
 
-            // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
             buildConfigField "String", "BASE_URL", '"https://ai.hifrds.com/api/v1/"'
             buildConfigField "String", "THUMBNAIL_BASE_URL", '"https://d19quh86lv8eyv.cloudfront.net/thumbnail/"'
-            // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
             buildConfigField "String", "ENV", '"internal"'
             buildConfigField "boolean", "IS_SECURED", "false"
@@ -127,10 +123,8 @@ android {
         prod {
             dimension "default"
 
-            // buildConfigField "String", "BASE_URL", '"http://192.168.0.102:3020/api/v1/"'
-            buildConfigField "String", "BASE_URL", '"https://ai.hifrds.com/api/v1/"'
+            buildConfigField "String", "BASE_URL", '"https://xyaipro.hifrnds.in/api/v1/"'
             buildConfigField "String", "THUMBNAIL_BASE_URL", '"https://d19quh86lv8eyv.cloudfront.net/thumbnail/"'
-            // buildConfigField "String", "SOCKET_URL", '"http://192.168.0.102:3020/"'
             buildConfigField "String", "SOCKET_URL", '"http://43.205.53.52/"'
             buildConfigField "String", "ENV", '"prod"'
             buildConfigField "boolean", "IS_SECURED", "true"
